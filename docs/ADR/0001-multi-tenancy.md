@@ -22,7 +22,9 @@ Bitta baza, umumiy sxema, har biznes jadvalida `organization_id` (TZ 5.1). Ajrat
 - Yangi jadval qo'shilganda: `organization_id`, siyosat, `GRANT`. Unutilsa `test/rls-coverage.int-spec.ts` yiqiladi.
 - `audit_logs` partitionlari 13 oy oldinga yaratilgan; `ensure_audit_logs_partition()` ni chaqirib turuvchi fon vazifasi kerak (BullMQ bilan birga). Unutilsa yozuvlar `audit_logs_default` ga tushadi, yo'qolmaydi.
 
-## Ochiq savollar (0.3 da hal qilinadi)
+## Ochiq savollar
+
+Ikkalasi ham 0.3 da hal qilindi, qarang: [ADR 0002](0002-authentication.md) (`users` yopildi, tashkilot `auth_resolve_organization()` orqali topiladi). Quyidagi matn tarix uchun qoldirildi.
 
 - **`users` global va RLS siz.** Bir odam bir nechta tashkilotda ishlashi mumkin (TZ 6). Hozir `gatefit_app` barcha foydalanuvchilarni o'qiy oladi; himoya faqat ilova kodida. Login va xodim qo'shish oqimlari aniq bo'lgach toraytiriladi (masalan, `SECURITY DEFINER` funksiyalar yoki `staff` orqali siyosat).
 - **Tashkilotni subdomen bo'yicha topish** kontekstdan oldin sodir bo'ladi, RLS esa `organizations` ni yashiradi. Buning uchun `platform` ulanishi yoki tor `SECURITY DEFINER` funksiya kerak.

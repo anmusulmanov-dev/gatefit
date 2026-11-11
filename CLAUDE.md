@@ -72,6 +72,10 @@ pnpm --filter api seed                              # demo tashkilot, filiallar,
 - Tashkilot ma'lumotiga faqat `TenantDb.run(orgId, fn)` yoki so'rov ichida `tenantDb.tx` orqali. `PrismaService` ni to'g'ridan-to'g'ri ishlatma: RLS bo'sh natija qaytaradi. Qarang: `docs/ADR/0001-multi-tenancy.md`.
 - Yangi jadval: `organization_id`, kompozit FK `(organization_id, id)`, qo'lda SQL migratsiyada `ENABLE ROW LEVEL SECURITY` + `tenant_isolation` siyosati + `GRANT ... TO gatefit_app`.
 - `prisma migrate dev` ni doim `--name` bilan chaqir: nomsiz chaqirilsa interaktiv savolda osilib qoladi.
+- Har endpoint aynan bitta belgi oladi: `@Public()`, `@AnyAuthenticated()` yoki `@RequirePermission(...)` (`src/modules/auth/auth.decorators.ts`). Ruxsatlar ro'yxati: `packages/shared/src/permissions.ts`. Qarang: `docs/ADR/0002-authentication.md`.
+- Tashkilot subdomendan aniqlanadi: devda `http://demo.localhost:3000`. Testlarda `Host` sarlavhasi (`test/support/app.ts` dagi `hostOf`).
+- `users` jadvaliga API to'g'ridan-to'g'ri yozmaydi va parol/TOTP ustunlarini o'qimaydi: faqat `auth_*` baza funksiyalari orqali.
+- So'rov tanasi: `@Body(new ZodPipe(schema))`, sxema `packages/shared` da. Vaqt: `Clock` servisi.
 - Playwright e2e (`pnpm --filter api test:e2e`) hali yo'q: birinchi foydalanuvchi oqimi bilan qo'shiladi.
 - API porti 4000 emas, 8000: Windows'da 3345–4144 oralig'i Hyper-V tomonidan band bo'lishi mumkin.
 

@@ -4,12 +4,60 @@ Har sessiya oxirida yangilanadi: nima qilindi, nima qoldi, ma'lum muammolar.
 
 ## Holat
 
-| Bosqich                           | Holat               |
-| --------------------------------- | ------------------- |
-| 0.1 Loyiha karkasi                | Tayyor (2026-11-11) |
-| 0.2 Ko'p mijozlilik va RLS        | Tayyor (2026-11-11) |
-| 0.3 Autentifikatsiya va ruxsatlar | Boshlanmagan        |
-| MVP (M1–M8)                       | Boshlanmagan        |
+| Bosqich                           | Holat                          |
+| --------------------------------- | ------------------------------ |
+| 0.1 Loyiha karkasi                | Tayyor (2026-11-11)            |
+| 0.2 Ko'p mijozlilik va RLS        | Tayyor (2026-11-11)            |
+| 0.3 Autentifikatsiya va ruxsatlar | Backend tayyor, frontend qoldi |
+| MVP (M1–M8)                       | Boshlanmagan                   |
+
+## 2026-11-11 — 0.3 Autentifikatsiya va ruxsatlar, A qism (backend)
+
+Branch: `feat/auth` (`feat/tenancy-rls` ustidan). Qarorlar: `docs/ADR/0002-authentication.md`.
+
+### Qilindi
+
+- **Jadvallar:** `sessions`, `otp_codes` (RLS bilan). `users` API roli uchun yopildi; kirish tor `SECURITY DEFINER` funksiyalar orqali.
+- **Tashkilotni aniqlash:** subdomendan (`<slug>.<APP_BASE_DOMAIN>`), band qilingan nomlar ro'yxati bilan. Noma'lum tashkilot 404, bloklangan 403.
+- **Xodim kirishi:** telefon + parol (Argon2id), TOTP. Owner va accountant uchun TOTP majburiy, birinchi kirishda sozlash oqimi. Boshqa rollar ixtiyoriy yoqa oladi.
+- **A'zo kirishi:** telefon + SMS-kod. `SmsProvider` porti va `console` drayveri (productionda taqiqlangan). SMS matni tashkilot tilida, `packages/i18n` dan.
+- **Tokenlar:** access JWT 15 daqiqa, aylanadigan refresh token, httpOnly cookie. Qayta ishlatilgan token butun sessiyani bekor qiladi. `logout`, `logout-all`.
+- **Ruxsatlar:** `packages/shared/permissions.ts` (27 ruxsat, standart rollar matritsasi), `@Public` / `@AnyAuthenticated` / `@RequirePermission`. Har so'rovda bazadan tekshiriladi.
+- **Tezlik cheklovi:** Redis; IP bo'yicha umumiy va kirish uchun qattiq, telefon bo'yicha login va SMS.
+- **CSRF:** `Origin` tekshiruvi.
+- **`GET /me`:** foydalanuvchi, tashkilot, rol, ruxsatlar, filiallar.
+- **Yordamchilar:** `Clock` (3-qoida), `CryptoService` (AES-GCM, HMAC), `uuidv7`, `ZodPipe` va Swagger uchun `zodBody`.
+- **Seed:** standart rollarga ruxsatlar, demo owner (`SEED_OWNER_PHONE`, `SEED_OWNER_PASSWORD`), u ikkala filialga biriktirilgan.
+- **TZ 7-bo'lim:** `/auth/logout-all`, `/auth/totp/setup`, `/auth/totp/confirm` qo'shildi.
+
+### Tekshirildi
+
+- `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build` — yashil. API: 162 test, i18n: 11.
+- **0-bosqich mezoni to'liq yo'l bilan** (`test/permissions.int-spec.ts`): ikki tashkilot xodimi HTTP orqali kiradi, har biri faqat o'z filiallarini ko'radi, birining sessiyasi ikkinchisining manzilida 401.
+- Prompt talab qilgan testlar: to'g'ri va noto'g'ri kirish, token aylanishi, ruxsatsiz endpoint 403. Qo'shimcha: TOTP oqimi va kodni qayta ishlatish, SMS-kod muddati va 5 urinish, bir vaqtdagi ikki refresh, deaktivatsiya qilingan xodim, CSRF, `users` ga to'g'ridan-to'g'ri kirish urinishlari.
+- API qo'lda ishga tushirildi: demo owner bilan login `TOTP_SETUP_REQUIRED` qaytaradi, SMS-kod terminalga chiqadi, so'rov loglarida telefon va parol yo'q, Swagger'da so'rov tanalari ko'rinadi.
+- CI hali GitHub'da ishlab ko'rilmagan.
+
+### Rejadan chetlanishlar
+
+- **Login cheklovi faqat muvaffaqiyatsiz urinishlarni sanaydi** (muvaffaqiyatli kirish hisoblagichni tozalaydi), aks holda tez-tez kiradigan xodim o'zini bloklab qo'yardi.
+- **Ruxsat tekshiruvi guard emas, interceptor** — sababi ADR 0002 da.
+- **`NEXT_PUBLIC_API_URL` o'rniga `API_INTERNAL_URL`:** brauzer API'ga o'z domeni orqali murojaat qiladi (B qismda proxy), manzil faqat Next serveriga kerak.
+- **`APP_BASE_DOMAIN`, `TRUST_PROXY`** sozlamalari qo'shildi.
+
+### Qoldi
+
+- **B qism:** `apps/web` login (parol, TOTP qadami va sozlash), himoyalangan layout, filial tanlash, chiqish; `apps/member` telefon va kod bilan kirish; Next proxy; tarjimalar.
+- A'zo kirishini `members` ga bog'lash — M2.
+- Parolni o'zgartirish va tiklash, TOTP ni tiklash, xodim qo'shish — M1.
+- Super-admin kirishi — M1.
+- Tashkilot va ruxsatlarni Redis'da keshlash — yuklama testi (M8) ko'rsatsa.
+- Standart rollar matritsasini ko'rib chiqish kerak (`packages/shared/src/permissions.ts`): TZ 2-bo'limdagi tavsifdan men chiqardim.
+
+### Ma'lum muammolar
+
+- Demo owner birinchi kirishda TOTP sozlashi shart, ya'ni B qism tayyor bo'lmaguncha u bilan brauzerdan kirib bo'lmaydi.
+- `DATA_ENCRYPTION_KEY` yo'qolsa TOTP sirlari tiklanmaydi; zaxira nusxa rejasiga (M8) kiritish kerak.
 
 ## 2026-11-11 — 0.2 Ko'p mijozlilik va RLS
 

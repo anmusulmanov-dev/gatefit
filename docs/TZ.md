@@ -219,7 +219,7 @@ Qoidalar:
 
 | Guruh | Endpoint | Bosqich |
 | --- | --- | --- |
-| Auth | POST /auth/login, /auth/otp/request, /auth/otp/verify, /auth/refresh, /auth/logout | M |
+| Auth | POST /auth/login, /auth/otp/request, /auth/otp/verify, /auth/refresh, /auth/logout, /auth/logout-all, /auth/totp/setup, /auth/totp/confirm | M |
 | Tashkilot | GET/PATCH /organization, GET/POST/PATCH /locations | M |
 | Xodimlar | GET/POST/PATCH /staff, GET/POST/PATCH /roles | M |
 | A'zolar | GET/POST /members, GET/PATCH /members/{id}, POST /members/import, GET /members/export | M |

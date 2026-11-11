@@ -8,6 +8,9 @@
     "ru": "Русский",
     "en": "English"
   },
+  "sms": {
+    "otp": "Gatefit: your sign-in code is {code}. Do not share it."
+  },
   "web": {
     "home": {
       "title": "Management panel",

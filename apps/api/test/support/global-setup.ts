@@ -33,6 +33,10 @@ export default async function globalSetup(): Promise<void> {
   const adminUrl = requireTestUrl('TEST_DATABASE_ADMIN_URL');
   process.env.DATABASE_URL = appUrl;
   process.env.DATABASE_ADMIN_URL = adminUrl;
+  // Every test request comes from one IP; the per-IP limits must not interfere. Limits per
+  // phone number are fixed in code and are tested with unique numbers.
+  process.env.RATE_LIMIT_PER_MINUTE = '1000000';
+  process.env.AUTH_RATE_LIMIT_PER_MINUTE = '1000000';
 
   const admin = new PrismaClient({ adapter: new PrismaPg({ connectionString: adminUrl }) });
   try {

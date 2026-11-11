@@ -45,6 +45,9 @@ jobs:
       TEST_DATABASE_URL: postgresql://gatefit_app:gatefit_app@localhost:5432/gatefit_test
       TEST_DATABASE_ADMIN_URL: postgresql://gatefit_migrator:gatefit_migrator@localhost:5432/gatefit_test
       REDIS_URL: redis://localhost:6379
+      # Throwaway values for the CI database only.
+      JWT_SECRET: ci-only-jwt-secret-0123456789abcdef0123456789
+      DATA_ENCRYPTION_KEY: Y2ktb25seS1kYXRhLWVuY3J5cHRpb24ta2V5LTMyYnk=
       # Not contacted yet; present because the API validates its whole configuration at startup.
       S3_ENDPOINT: http://localhost:9000
       S3_REGION: us-east-1

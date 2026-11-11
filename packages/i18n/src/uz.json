@@ -8,6 +8,9 @@
     "ru": "Русский",
     "en": "English"
   },
+  "sms": {
+    "otp": "Gatefit: kirish kodi {code}. Uni hech kimga aytmang."
+  },
   "web": {
     "home": {
       "title": "Boshqaruv paneli",

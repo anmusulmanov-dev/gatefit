@@ -54,6 +54,8 @@ model Organization {
   rolePermissions RolePermission[]
   auditLogs       AuditLog[]
   consents        Consent[]
+  sessions        Session[]
+  otpCodes        OtpCode[]
 
   @@map("organizations")
 }
@@ -93,6 +95,7 @@ model User {
 
   staff    Staff[]
   consents Consent[]
+  sessions Session[]
 
   @@map("users")
 }
@@ -188,6 +191,55 @@ model AuditLog {
   @@index([organizationId, at])
   @@index([organizationId, entity, entityId])
   @@map("audit_logs")
+}
+
+enum SessionAudience {
+  staff
+  member
+
+  @@map("session_audience")
+}
+
+// One row per issued refresh token. Rotation adds a row to the same family and stamps the
+// old one; presenting a stamped token again revokes the whole family.
+model Session {
+  id               String          @id @default(uuid(7)) @db.Uuid
+  organizationId   String          @map("organization_id") @db.Uuid
+  userId           String          @map("user_id") @db.Uuid
+  familyId         String          @map("family_id") @db.Uuid
+  audience         SessionAudience
+  // SHA-256 of the token; the token itself is never stored.
+  refreshTokenHash String          @unique @map("refresh_token_hash")
+  userAgent        String?         @map("user_agent")
+  ip               String?         @db.Inet
+  expiresAt        DateTime        @map("expires_at") @db.Timestamptz(3)
+  rotatedAt        DateTime?       @map("rotated_at") @db.Timestamptz(3)
+  revokedAt        DateTime?       @map("revoked_at") @db.Timestamptz(3)
+  createdAt        DateTime        @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  user         User         @relation(fields: [userId], references: [id])
+
+  @@index([organizationId, userId])
+  @@index([organizationId, familyId])
+  @@map("sessions")
+}
+
+// One-time SMS sign-in code. Only a keyed hash of the code is stored.
+model OtpCode {
+  id             String    @id @default(uuid(7)) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  phone          String
+  codeHash       String    @map("code_hash")
+  attempts       Int       @default(0)
+  expiresAt      DateTime  @map("expires_at") @db.Timestamptz(3)
+  consumedAt     DateTime? @map("consumed_at") @db.Timestamptz(3)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@index([organizationId, phone, createdAt])
+  @@map("otp_codes")
 }
 
 // Append-only record of an accepted agreement. member_id is added with the members table.
