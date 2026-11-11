@@ -12,4 +12,6 @@ module.exports = {
   collectCoverageFrom: ['src/**/*.ts', '!src/generated/**', '!src/main.ts'],
   coverageDirectory: './coverage',
   testEnvironment: 'node',
+  // Points the run at the test database and rebuilds its schema from migrations.
+  globalSetup: '<rootDir>/test/support/global-setup.ts',
 };
