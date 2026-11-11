@@ -7,10 +7,14 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-gatefit}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-gatefit}
       POSTGRES_DB: ${POSTGRES_DB:-gatefit}
+      DB_APP_PASSWORD: ${DB_APP_PASSWORD:-gatefit_app}
+      DB_MIGRATOR_PASSWORD: ${DB_MIGRATOR_PASSWORD:-gatefit_migrator}
     ports:
       - '${POSTGRES_PORT:-5432}:5432'
     volumes:
       - postgres-data:/var/lib/postgresql/data
+      # Creates the app and migrator roles and the test database on first start.
+      - ./postgres/init.sh:/docker-entrypoint-initdb.d/10-init.sh:ro
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
       interval: 5s
