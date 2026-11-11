@@ -1,0 +1,14 @@
+// Models are added per stage (see docs/PROMPTS.md). Table and column names are snake_case.
+// RLS policies live in hand-written SQL migrations.
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
+  // Extensionless imports resolve both under ts-jest and in the compiled CommonJS output.
+  importFileExtension = ""
+}
+
+datasource db {
+  provider = "postgresql"
+}
