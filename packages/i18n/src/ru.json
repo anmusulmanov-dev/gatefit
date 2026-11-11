@@ -1,0 +1,23 @@
+{
+  "common": {
+    "appName": "Gatefit",
+    "language": "Язык"
+  },
+  "languages": {
+    "uz": "O'zbekcha",
+    "ru": "Русский",
+    "en": "English"
+  },
+  "web": {
+    "home": {
+      "title": "Панель управления",
+      "subtitle": "Управляйте залом из одного места."
+    }
+  },
+  "member": {
+    "home": {
+      "title": "Приложение клиента",
+      "subtitle": "Здесь будут ваш абонемент и код для входа."
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "common": {
+    "appName": "Gatefit",
+    "language": "Language"
+  },
+  "languages": {
+    "uz": "O'zbekcha",
+    "ru": "Русский",
+    "en": "English"
+  },
+  "web": {
+    "home": {
+      "title": "Management panel",
+      "subtitle": "Run your gym from one place."
+    }
+  },
+  "member": {
+    "home": {
+      "title": "Member app",
+      "subtitle": "Your membership and entry code will live here."
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "common": {
+    "appName": "Gatefit",
+    "language": "Til"
+  },
+  "languages": {
+    "uz": "O'zbekcha",
+    "ru": "Русский",
+    "en": "English"
+  },
+  "web": {
+    "home": {
+      "title": "Boshqaruv paneli",
+      "subtitle": "Zalingizni bitta joydan boshqaring."
+    }
+  },
+  "member": {
+    "home": {
+      "title": "A'zo ilovasi",
+      "subtitle": "Abonementingiz va kirish kodingiz shu yerda bo'ladi."
+    }
+  }
+}
