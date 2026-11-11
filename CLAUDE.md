@@ -61,11 +61,17 @@ pnpm build
 pnpm format                  # prettier --write; tekshirish: pnpm format:check
 pnpm --filter api prisma migrate dev --name <nom>   # yangi migratsiya
 pnpm --filter api prisma migrate deploy             # CI va server
+pnpm --filter api prisma generate                   # sxema o'zgargach (migrate dev o'zi qilmaydi)
+pnpm --filter api seed                              # demo tashkilot, filiallar, rollar (idempotent)
 ```
 
 - API: `http://localhost:8000/api/v1`, Swagger: `/api/docs`, health: `/api/v1/health`.
 - Testlar: `*.spec.ts` kod yonida (birlik), `apps/api/test/*.int-spec.ts` (integratsiya, haqiqiy baza bilan).
 - `packages/*` `dist` ga yig'iladi; turbo `lint`, `typecheck`, `test`, `dev` dan oldin ularni o'zi yig'adi.
+- Baza rollari: API `gatefit_app` (`DATABASE_URL`, RLS ostida), migratsiya va seed `gatefit_migrator` (`DATABASE_ADMIN_URL`). Testlar `gatefit_test` bazasida, har ishga tushishda tozalanadi.
+- Tashkilot ma'lumotiga faqat `TenantDb.run(orgId, fn)` yoki so'rov ichida `tenantDb.tx` orqali. `PrismaService` ni to'g'ridan-to'g'ri ishlatma: RLS bo'sh natija qaytaradi. Qarang: `docs/ADR/0001-multi-tenancy.md`.
+- Yangi jadval: `organization_id`, kompozit FK `(organization_id, id)`, qo'lda SQL migratsiyada `ENABLE ROW LEVEL SECURITY` + `tenant_isolation` siyosati + `GRANT ... TO gatefit_app`.
+- `prisma migrate dev` ni doim `--name` bilan chaqir: nomsiz chaqirilsa interaktiv savolda osilib qoladi.
 - Playwright e2e (`pnpm --filter api test:e2e`) hali yo'q: birinchi foydalanuvchi oqimi bilan qo'shiladi.
 - API porti 4000 emas, 8000: Windows'da 3345–4144 oralig'i Hyper-V tomonidan band bo'lishi mumkin.
 
