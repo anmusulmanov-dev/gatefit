@@ -4,16 +4,53 @@ Har sessiya oxirida yangilanadi: nima qilindi, nima qoldi, ma'lum muammolar.
 
 ## Holat
 
-| Bosqich                           | Holat               |
-| --------------------------------- | ------------------- |
-| 0.1 Loyiha karkasi                | Tayyor (2026-11-11) |
-| 0.2 Ko'p mijozlilik va RLS        | Tayyor (2026-11-11) |
-| 0.3 Autentifikatsiya va ruxsatlar | Tayyor (2026-11-17) |
-| MVP (M1–M8)                       | Boshlanmagan        |
-| M1a Tashkilot ichki API           | Tayyor (2026-11-17) |
-| M1b Platforma API                 | Tayyor (2026-11-17) |
-| M1c Sozlamalar UI                 | Tayyor (2026-11-17) |
-| M1d Super-admin UI                | Boshlanmagan        |
+| Bosqich                           | Holat                            |
+| --------------------------------- | -------------------------------- |
+| 0.1 Loyiha karkasi                | Tayyor (2026-11-11)              |
+| 0.2 Ko'p mijozlilik va RLS        | Tayyor (2026-11-11)              |
+| 0.3 Autentifikatsiya va ruxsatlar | Tayyor (2026-11-17)              |
+| MVP (M1–M8)                       | Boshlanmagan                     |
+| M1a Tashkilot ichki API           | Tayyor (2026-11-17)              |
+| M1b Platforma API                 | Tayyor (2026-11-17)              |
+| M1c Sozlamalar UI                 | Tayyor (2026-11-17)              |
+| M1d Super-admin UI                | Tayyor (2026-11-17) — M1 yopildi |
+
+## 2026-11-17 — M1d: super-admin paneli
+
+Branch: `feat/m1-platform-ui` (`feat/m1-settings-ui` ustidan). Shu bilan M1 yopildi.
+
+### Qilindi
+
+- **Manzilga qarab yo'naltirish:** `admin.localhost` (prodda `admin.gatefit.uz`) ochilganda platforma paneliga o'tadi; `/platform/*` sahifalari boshqa har qanday manzilda 404.
+- **Operator kirishi:** telefon, parol va doim TOTP (birinchi kirishda sozlash).
+- **Tashkilotlar:** ro'yxat (qidiruv, holat filtri, "yana ko'rsatish"), yaratish oynasi (filial, ega, vaqtinchalik parol, tarif, to'lov davri, sinov kunlari, ixtiyoriy oferta versiyasi), tafsilot sahifasi: holat (bloklash), sinov muddati, tarif va to'lov davri, nom, til, mamlakat, valyuta; egalarning parolini va TOTP sini tiklash.
+- **Tariflar:** ro'yxat, yaratish va tahrirlash: narx (so'mda kiritiladi), valyuta, a'zolar limiti yoki cheklanmagan, modullar, sotuvda yoki yo'q.
+- **Pul yordamchilari** (`packages/shared/src/money.ts`): kiritilgan narxni tiyinga va tiyinni ko'rinishga faqat satr arifmetikasi bilan o'tkazadi, `float`siz (2-qoida). `packages/shared` ga Jest qo'shildi, 33 ta birlik testi.
+- **API:** platforma tashkilot tafsilotida joriy `billingPeriod` qaytariladi (test bilan).
+- **API klienti:** `prefix` va `refreshOnExpiry` sozlamalari; `useApiGet` klientni parametr sifatida oladi.
+- **Tarjimalar:** platforma, 15 ta modul nomi, yangi xato kodlari — uch tilda.
+
+### Tekshirildi
+
+- `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build` — yashil. API: 278, shared: 33, i18n: 11.
+- Brauzerda: `demo.localhost:3000/platform` 404; `admin.localhost:3000` kirishga yo'naltiradi; demo operator TOTP ni sozlab kirdi.
+- Panel orqali tashkilot yaratildi: tafsilot sahifasiga o'tdi, 14 kunlik sinov, Start tarifi; bazada audit yozuvlari va oferta roziligi bor.
+- Tashkilot bloklandi, tarifi Standard va yillikka o'zgartirildi: `fitlab-test.localhost:3000` "Tashkilot bloklangan" ko'rsatdi.
+- Egasining paroli tiklandi: bazada `must_change_password` va `platform.staff.password_reset` audit yozuvi.
+- Tarif narxi: "12.345" rad etildi, "350 000,50" bazaga aniq 35000050 tiyin bo'lib yozildi.
+- Tashkilotlar ro'yxati 360 px da gorizontal siljishsiz.
+- Sinov ma'lumotlari keyin dev bazadan o'chirildi; Start narxi va operator TOTP si tiklandi.
+- **Brauzerda sinalmagan:** yangi tarif yaratish, tarifni sotuvdan olish, egasining TOTP sini o'chirish, "yana ko'rsatish". API tomoni testlar bilan qoplangan. Frontend avtotestlari yo'q (Playwright M2 da).
+
+### Rejadan chetlanishlar
+
+- Panel manzili `admin.localhost:3000/platform/...` (yo'lda `/platform` prefiksi qoladi): middleware yozilmadi, manzil tekshiruvi layout'larda.
+- Tafsilot sahifasida tashkilot to'liq manzili emas, faqat slug ko'rsatiladi: web ilova bazaviy domenni bilmaydi.
+
+### Ma'lum muammolar
+
+- Brauzerning `uz` lokal ma'lumotlari to'liq emas: sanalar "2026 M11 17", sonlar "300,000.00" ko'rinishida chiqadi. Rus va ingliz tillarida to'g'ri.
+- Operatorlarni boshqarish (qo'shish, o'chirish, parolini tiklash) uchun UI va API yo'q — hozircha seed va baza orqali (ADR 0004).
 
 ## 2026-11-17 — M1c: sozlamalar UI
 

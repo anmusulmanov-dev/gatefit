@@ -82,6 +82,8 @@ pnpm --filter api seed                              # demo tashkilot, filiallar,
 - So'rov tranzaksiyasi ichida unique xatosini ushlab davom etib bo'lmaydi (tranzaksiya buziladi): avval tekshir, keyin yoz.
 - So'rov tanasi: `@Body(new ZodPipe(schema))`, sxema `packages/shared` da. Vaqt: `Clock` servisi.
 - Web panel: ma'lumotni `useApiGet`, o'zgartirishni `useApiAction` (`apps/web/src/lib/use-api.ts`) orqali; ruxsatga qarab ko'rsatish `useCan` (`components/staff-session.tsx`). Sozlamalar bo'limlari va ularning ruxsatlari: `apps/web/src/app/(app)/settings/sections.ts`.
+- Pulni ko'rsatish va kiritish: `formatMinor`, `decimalToMinor`, `minorToDecimal` (`packages/shared/src/money.ts`). `number` ga aylantirma.
+- Super-admin paneli: `apps/web/src/app/platform`, faqat `admin.*` manzilda (`lib/host.ts`). Klient: `platformApi` (`lib/platform-api.ts`), so'rov: `useApiGet(path, platformApi)`.
 - Playwright e2e (`pnpm --filter api test:e2e`) hali yo'q: birinchi foydalanuvchi oqimi bilan qo'shiladi.
 - API porti 4000 emas, 8000: Windows'da 3345–4144 oralig'i Hyper-V tomonidan band bo'lishi mumkin.
 
