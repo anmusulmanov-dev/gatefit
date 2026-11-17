@@ -1,15 +1,17 @@
 import { randomUUID } from 'node:crypto';
-import { SYSTEM_ROLE_PERMISSIONS, type SystemRole } from '@gatefit/shared';
+import { type Permission, SYSTEM_ROLE_PERMISSIONS, type SystemRole } from '@gatefit/shared';
 import type { ModuleMetadata } from '@nestjs/common';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import { Test } from '@nestjs/testing';
-import type { Response } from 'supertest';
+import request, { type Response } from 'supertest';
 import { AppModule } from '../../src/app.module';
 import { configureApp } from '../../src/app.setup';
 import { Clock } from '../../src/common/clock/clock';
 import { SMS_PROVIDER, type SmsProvider } from '../../src/common/sms/sms.provider';
+import { TenantDb } from '../../src/common/tenancy/tenant-db.service';
+import { SessionService } from '../../src/modules/auth/session.service';
 import type { Organization, PrismaClient } from '../../src/generated/prisma/client';
-import { PasswordService } from '../../src/modules/auth/password.service';
+import { PasswordService } from '../../src/common/security/password.service';
 import { uniquePhone } from './db';
 
 /** A clock tests can move forward. */
@@ -120,12 +122,84 @@ export async function createStaff(
       })),
     });
   }
-  const user = await admin.user.create({
-    data: { phone, passwordHash: await passwords.hash(password) },
-  });
+  const user = await admin.user.create({ data: { phone } });
   const staff = await admin.staff.create({
-    data: { organizationId, userId: user.id, roleId: role.id },
+    data: {
+      organizationId,
+      userId: user.id,
+      roleId: role.id,
+      firstName: 'Test',
+      lastName: roleName,
+      passwordHash: await passwords.hash(password),
+    },
   });
 
   return { userId: user.id, staffId: staff.id, roleId: role.id, phone, password };
+}
+
+/** A staff member holding a custom role with exactly the given permissions. */
+export async function createStaffWithPermissions(
+  admin: PrismaClient,
+  organization: Organization,
+  roleName: string,
+  permissions: Permission[],
+): Promise<StaffFixture> {
+  const organizationId = organization.id;
+  const phone = uniquePhone();
+  const password = `pw-${randomUUID()}`;
+
+  const role = await admin.role.create({ data: { organizationId, name: roleName } });
+  await admin.rolePermission.createMany({
+    data: permissions.map((permission) => ({ organizationId, roleId: role.id, permission })),
+  });
+  const user = await admin.user.create({ data: { phone } });
+  const staff = await admin.staff.create({
+    data: {
+      organizationId,
+      userId: user.id,
+      roleId: role.id,
+      firstName: 'Test',
+      lastName: roleName,
+      passwordHash: await passwords.hash(password),
+    },
+  });
+  return { userId: user.id, staffId: staff.id, roleId: role.id, phone, password };
+}
+
+/**
+ * Session cookies for a staff member, issued directly. For tests of what a signed-in
+ * user may do; sign-in itself (passwords, TOTP) has its own tests.
+ */
+export async function cookiesFor(
+  t: TestApp,
+  organization: Organization,
+  staff: Pick<StaffFixture, 'userId'>,
+): Promise<string[]> {
+  const tokens = await t.app
+    .get(TenantDb)
+    .run(organization.id, (tx) =>
+      t.app
+        .get(SessionService)
+        .issue(
+          tx,
+          organization.id,
+          { userId: staff.userId, audience: 'staff' },
+          { ip: undefined, userAgent: 'test' },
+        ),
+    );
+  return [`gf_staff_access=${tokens.accessToken}`, `gf_staff_refresh=${tokens.refreshToken}`];
+}
+
+/** Requests to the API at an organization's address as the holder of the given cookies. */
+export function apiAs(t: TestApp, organization: Organization, cookies: string[]) {
+  const send = (method: 'get' | 'post' | 'patch', path: string) =>
+    request(t.app.getHttpServer())
+      [method](`/api/v1${path}`)
+      .set('Host', hostOf(organization))
+      .set('Cookie', cookies);
+  return {
+    get: (path: string) => send('get', path),
+    post: (path: string, body?: object) => send('post', path).send(body),
+    patch: (path: string, body: object) => send('patch', path).send(body),
+  };
 }

@@ -238,7 +238,7 @@ describe('Staff sign-in (integration)', () => {
         .expect(200);
 
       // Stored encrypted, never as the raw secret.
-      const stored = await admin.user.findUniqueOrThrow({ where: { id: owner.userId } });
+      const stored = await admin.staff.findUniqueOrThrow({ where: { id: owner.staffId } });
       expect(stored.totpSecret).toMatch(/^v1\./);
       expect(stored.totpSecret).not.toContain(secret);
     });

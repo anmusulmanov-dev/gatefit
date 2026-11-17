@@ -140,7 +140,13 @@ describe('Tenant isolation (integration)', () => {
       await expect(
         tenantDb.run(orgA.id, (tx) =>
           tx.staff.create({
-            data: { organizationId: orgA.id, userId: user.id, roleId: roleB.id },
+            data: {
+              organizationId: orgA.id,
+              userId: user.id,
+              roleId: roleB.id,
+              firstName: 'Cross',
+              lastName: 'Tenant',
+            },
           }),
         ),
       ).rejects.toThrow();

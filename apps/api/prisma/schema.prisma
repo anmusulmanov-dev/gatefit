@@ -8,9 +8,9 @@
 //   describes its columns.
 
 generator client {
-  provider     = "prisma-client"
-  output       = "../src/generated/prisma"
-  moduleFormat = "cjs"
+  provider            = "prisma-client"
+  output              = "../src/generated/prisma"
+  moduleFormat        = "cjs"
   // Extensionless imports resolve both under ts-jest and in the compiled CommonJS output.
   importFileExtension = ""
 }
@@ -80,18 +80,17 @@ model Location {
   @@map("locations")
 }
 
-// Global identity: one person may work at several organizations. Not tenant-scoped,
-// so it has no organization_id and no RLS; tenants reach users only through staff.
+// Global identity: one person, one phone, shared by all organizations. It carries no
+// credentials: a password and an authenticator belong to a staff record, so one
+// organization can never affect sign-in at another (docs/ADR/0003-staff-credentials.md).
 model User {
-  id           String    @id @default(uuid(7)) @db.Uuid
+  id        String    @id @default(uuid(7)) @db.Uuid
   // E.164
-  phone        String    @unique
-  email        String?   @unique
-  passwordHash String?   @map("password_hash")
-  totpSecret   String?   @map("totp_secret")
-  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
-  deletedAt    DateTime? @map("deleted_at") @db.Timestamptz(3)
+  phone     String    @unique
+  email     String?   @unique
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(3)
 
   staff    Staff[]
   consents Consent[]
@@ -134,15 +133,23 @@ model RolePermission {
 }
 
 model Staff {
-  id             String      @id @default(uuid(7)) @db.Uuid
-  organizationId String      @map("organization_id") @db.Uuid
-  userId         String      @map("user_id") @db.Uuid
-  roleId         String      @map("role_id") @db.Uuid
-  position       String?
-  status         StaffStatus @default(active)
-  createdAt      DateTime    @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt      DateTime    @updatedAt @map("updated_at") @db.Timestamptz(3)
-  deletedAt      DateTime?   @map("deleted_at") @db.Timestamptz(3)
+  id                 String      @id @default(uuid(7)) @db.Uuid
+  organizationId     String      @map("organization_id") @db.Uuid
+  userId             String      @map("user_id") @db.Uuid
+  roleId             String      @map("role_id") @db.Uuid
+  position           String?
+  firstName          String      @map("first_name")
+  lastName           String      @map("last_name")
+  // Argon2id. Null until a password is set.
+  passwordHash       String?     @map("password_hash")
+  // AES-256-GCM. Null while no authenticator is enrolled.
+  totpSecret         String?     @map("totp_secret")
+  // Set when someone else chose the password: the next sign-in must replace it.
+  mustChangePassword Boolean     @default(false) @map("must_change_password")
+  status             StaffStatus @default(active)
+  createdAt          DateTime    @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt          DateTime    @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt          DateTime?   @map("deleted_at") @db.Timestamptz(3)
 
   organization Organization    @relation(fields: [organizationId], references: [id])
   user         User            @relation(fields: [userId], references: [id])

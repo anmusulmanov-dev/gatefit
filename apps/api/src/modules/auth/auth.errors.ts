@@ -13,6 +13,21 @@ export const invalidCredentials = () =>
     HttpStatus.UNAUTHORIZED,
   );
 
+export const passwordChangeRequired = (changeToken: string) =>
+  new AppException(
+    ErrorCode.PASSWORD_CHANGE_REQUIRED,
+    'The temporary password must be replaced before signing in',
+    HttpStatus.FORBIDDEN,
+    { changeToken },
+  );
+
+export const passwordUnchanged = () =>
+  new AppException(
+    ErrorCode.PASSWORD_UNCHANGED,
+    'The new password must differ from the current one',
+    HttpStatus.UNPROCESSABLE_ENTITY,
+  );
+
 export const totpRequired = () =>
   new AppException(ErrorCode.TOTP_REQUIRED, 'Authenticator code required', HttpStatus.UNAUTHORIZED);
 

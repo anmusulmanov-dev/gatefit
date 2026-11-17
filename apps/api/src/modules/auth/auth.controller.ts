@@ -1,5 +1,9 @@
 import {
   type OtpRequestInput,
+  type PasswordChangeInput,
+  passwordChangeSchema,
+  type PasswordSetInput,
+  passwordSetSchema,
   otpRequestSchema,
   type OtpVerifyInput,
   otpVerifySchema,
@@ -84,6 +88,38 @@ export class AuthController {
   ): Promise<void> {
     const tokens = await this.staffAuth.login(requireTenant(req), body, clientMeta(req));
     this.setCookies(res, 'staff', tokens);
+  }
+
+  @Post('password/set')
+  @Public()
+  @AuthRateLimit()
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Replace a temporary password using the token from sign-in' })
+  @ApiBody(zodBody(passwordSetSchema))
+  @ApiNoContentResponse({ description: 'Password replaced; sign in again with it' })
+  async setPassword(
+    @Body(new ZodPipe(passwordSetSchema)) body: PasswordSetInput,
+    @Req() req: AppRequest,
+  ): Promise<void> {
+    await this.staffAuth.setPassword(requireTenant(req), body);
+  }
+
+  @Post('password/change')
+  @AnyAuthenticated()
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Change your own password; other devices are signed out' })
+  @ApiBody(zodBody(passwordChangeSchema))
+  @ApiNoContentResponse({ description: 'Password changed' })
+  async changePassword(
+    @Body(new ZodPipe(passwordChangeSchema)) body: PasswordChangeInput,
+    @Req() req: AppRequest,
+  ): Promise<void> {
+    const auth = req.auth;
+    // Members sign in by SMS code and have no password.
+    if (auth?.audience !== 'staff') {
+      throw unauthorized();
+    }
+    await this.staffAuth.changePassword(requireTenant(req), auth, body);
   }
 
   @Post('totp/setup')

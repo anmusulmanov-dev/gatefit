@@ -4,11 +4,10 @@ import { PrismaPg } from '@prisma/adapter-pg';
 import type { Env } from '../../config/env';
 import { type Prisma, PrismaClient } from '../../generated/prisma/client';
 
-// The API role has no privilege to read these columns (see the auth_rls migration), so a
-// query that selected them would fail. Credentials are reached only through the
-// SECURITY DEFINER auth functions.
+// Credentials never ride along with ordinary staff queries: they must be selected
+// explicitly, which only StaffCredentialsService does.
 const OMITTED = {
-  user: { passwordHash: true, totpSecret: true },
+  staff: { passwordHash: true, totpSecret: true },
 } satisfies Prisma.GlobalOmitConfig;
 
 interface ClientOptions {
