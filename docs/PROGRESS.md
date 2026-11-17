@@ -4,15 +4,48 @@ Har sessiya oxirida yangilanadi: nima qilindi, nima qoldi, ma'lum muammolar.
 
 ## Holat
 
-| Bosqich                               | Holat               |
-| ------------------------------------- | ------------------- |
-| 0.1 Loyiha karkasi                    | Tayyor (2026-11-11) |
-| 0.2 Ko'p mijozlilik va RLS            | Tayyor (2026-11-11) |
-| 0.3 Autentifikatsiya va ruxsatlar     | Tayyor (2026-11-17) |
-| MVP (M1–M8)                           | Boshlanmagan        |
-| M1a Tashkilot ichki API               | Tayyor (2026-11-17) |
-| M1b Platforma API                     | Tayyor (2026-11-17) |
-| M1c Sozlamalar UI, M1d Super-admin UI | Boshlanmagan        |
+| Bosqich                           | Holat               |
+| --------------------------------- | ------------------- |
+| 0.1 Loyiha karkasi                | Tayyor (2026-11-11) |
+| 0.2 Ko'p mijozlilik va RLS        | Tayyor (2026-11-11) |
+| 0.3 Autentifikatsiya va ruxsatlar | Tayyor (2026-11-17) |
+| MVP (M1–M8)                       | Boshlanmagan        |
+| M1a Tashkilot ichki API           | Tayyor (2026-11-17) |
+| M1b Platforma API                 | Tayyor (2026-11-17) |
+| M1c Sozlamalar UI                 | Tayyor (2026-11-17) |
+| M1d Super-admin UI                | Boshlanmagan        |
+
+## 2026-11-17 — M1c: sozlamalar UI
+
+Branch: `feat/m1-settings-ui` (`feat/m1-platform-api` ustidan).
+
+### Qilindi
+
+- **Login:** vaqtinchalik parol bilan kirganda "Yangi parol o'rnating" qadami; yangi parol o'rnatilgach avtomatik kirish (kerak bo'lsa TOTP qadamlari bilan davom etadi).
+- **Sozlamalar bo'limi** (`/settings`): menyu ruxsatga qarab; ruxsatsiz bo'limga to'g'ridan-to'g'ri kirilsa "ruxsatingiz yo'q".
+  - **Tashkilot:** nom va til (`organization.update` bo'lmasa faqat ko'rish), manzil, mamlakat, valyuta, holat, sinov muddati, tarif va a'zolar limiti.
+  - **Filiallar:** ro'yxat, qo'shish va tahrirlash (vaqt mintaqasi, kunlar bo'yicha ish vaqti), arxivlash va tiklash.
+  - **Xodimlar:** ro'yxat ("yana ko'rsatish" bilan sahifalash, holat filtri), qo'shish (vaqtinchalik parol avtomatik yaratiladi), tahrirlash, parol va TOTP ni tiklash.
+  - **Rollar:** ro'yxat, standart rollarni ko'rish, o'z rollarini yaratish va tahrirlash (ruxsatlar bo'limlar bo'yicha guruhlangan), arxivlash.
+  - **Mening hisobim:** o'z parolini almashtirish.
+- **Ekran API qoidalarini oldindan aks ettiradi:** o'zingizda yo'q ruxsatlar va sizdan kuchliroq rollar tanlab bo'lmaydi; o'z rolingiz va holatingiz qulflangan; ega va kuchliroq xodim uchun tiklash tugmalari o'rniga sabab ko'rsatiladi. Himoya baribir API'da.
+- **Tarjimalar:** 27 ta ruxsat, 12 ta bo'lim, yangi xato kodlari va barcha sozlamalar matnlari — uch tilda.
+- **Umumiy:** `useApiGet`, `useApiAction` hooklari, `StaffSessionProvider` (`useCan`), Dialog, Select, Badge, maydon komponentlari; API klientiga `patch`.
+
+### Tekshirildi
+
+- `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build` — yashil. API: 278, i18n: 11.
+- Brauzerda, `demo.localhost:3000`, demo ega nomidan: tashkilot nomini saqlash (audit yozuvi bazada), ish vaqti bilan filial qo'shish, 4 ruxsatli "Kassir" rolini yaratish, shu rol bilan xodim qo'shish; o'z tahrirlash oynasida rol va holat qulflangan.
+- Shu xodim nomidan: vaqtinchalik parol → "Yangi parol" qadami (mos kelmagan parollar xabari) → kirish; sozlamalarda faqat "Tashkilot" (faqat ko'rish) va "Mening hisobim"; `/settings/staff` da "ruxsatingiz yo'q"; noto'g'ri va to'g'ri joriy parol bilan almashtirish. "Mening hisobim" 360 px da gorizontal siljishsiz.
+- Sinov ma'lumotlari keyin dev bazadan o'chirildi.
+- **Avtomatik frontend testlari yo'q** (Playwright M2 da).
+- **Brauzerda sinalmagan:** xodim va TOTP ni tiklash tugmalari, rolni arxivlash, filialni arxivlash, "yana ko'rsatish" (50 dan ortiq xodim kerak). Ularning API tomoni integratsiya testlari bilan qoplangan.
+
+### Ma'lum muammolar
+
+- Vaqt mintaqalari ro'yxati brauzerdan olinadi, tekshiruv esa serverda. Eski nomlar (masalan `Asia/Calcutta`) server Node versiyasida bo'lmasa, saqlashda xato chiqishi mumkin. Asosiy zonalar (`Asia/Tashkent`) muammosiz.
+- O'zbek tilida sonlar brauzerga qarab "1,000" ko'rinishida chiqishi mumkin (brauzerning `uz` lokal ma'lumotlari).
+- Demo egasi `staff_credentials` migratsiyasidan oldin yaratilgani uchun ismi bo'sh edi; dev bazada qo'lda to'ldirildi. Yangi bazada seed ismni o'zi qo'yadi.
 
 ## 2026-11-17 — M1b: platforma API
 
