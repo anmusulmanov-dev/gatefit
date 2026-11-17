@@ -2,6 +2,7 @@ import { type MiddlewareConsumer, Module, type NestModule } from '@nestjs/common
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ClockModule } from './common/clock/clock';
 import { CryptoModule } from './common/crypto/crypto.service';
+import { AuditModule } from './common/audit/audit.service';
 import { AllExceptionsFilter } from './common/errors/all-exceptions.filter';
 import { OriginCheckMiddleware } from './common/http/origin-check.middleware';
 import { LoggingModule } from './common/logging/logging.module';
@@ -9,6 +10,7 @@ import { PrismaModule } from './common/prisma/prisma.module';
 import { RateLimitGuard } from './common/rate-limit/rate-limit.guard';
 import { RateLimitModule } from './common/rate-limit/rate-limiter.service';
 import { RedisModule } from './common/redis/redis.module';
+import { SecurityModule } from './common/security/security.module';
 import { SmsModule } from './common/sms/sms.provider';
 import { TenancyModule } from './common/tenancy/tenancy.module';
 import { TenantResolutionMiddleware } from './common/tenancy/tenant-resolution.middleware';
@@ -18,6 +20,8 @@ import { AccessInterceptor } from './modules/auth/access.interceptor';
 import { AuthGuard } from './modules/auth/auth.guard';
 import { AuthModule } from './modules/auth/auth.module';
 import { HealthModule } from './modules/health/health.module';
+import { StaffModule } from './modules/staff/staff.module';
+import { OrganizationModule } from './modules/tenancy/organization.module';
 
 @Module({
   imports: [
@@ -29,8 +33,12 @@ import { HealthModule } from './modules/health/health.module';
     RedisModule,
     RateLimitModule,
     SmsModule,
+    SecurityModule,
+    AuditModule,
     TenancyModule,
     AuthModule,
+    StaffModule,
+    OrganizationModule,
     HealthModule,
   ],
   providers: [
