@@ -4,6 +4,8 @@ import { errorMessageKey } from '@gatefit/i18n/config';
 import {
   type ApiError,
   ErrorCode,
+  newPasswordSchema,
+  passwordChangeRequiredDetailsSchema,
   staffLoginSchema,
   totpConfirmSchema,
   totpSetupRequiredDetailsSchema,
@@ -21,6 +23,8 @@ import { api } from '@/lib/api';
 
 type Step =
   | { name: 'credentials' }
+  /** The password was given by someone else and must be replaced first. */
+  | { name: 'newPassword'; changeToken: string }
   /** The account has an authenticator: the same credentials are sent again with a code. */
   | { name: 'totp' }
   /** The role requires an authenticator that is not set up yet. */
@@ -35,6 +39,8 @@ export function LoginForm() {
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [code, setCode] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   const showError = (apiError: ApiError) => {
@@ -63,11 +69,12 @@ export function LoginForm() {
     setStep({ name: 'setup', ...setup.data });
   }
 
-  async function signIn(): Promise<void> {
+  // `withPassword` is passed right after a new password was set, before state catches up.
+  async function signIn(withPassword = password): Promise<void> {
     // The same schema the API validates with.
     const input = staffLoginSchema.safeParse({
       phone,
-      password,
+      password: withPassword,
       totpCode: step.name === 'totp' ? code : undefined,
     });
     if (!input.success) {
@@ -88,9 +95,40 @@ export function LoginForm() {
       case ErrorCode.TOTP_SETUP_REQUIRED:
         await beginSetup(result.error.details);
         return;
+      case ErrorCode.PASSWORD_CHANGE_REQUIRED: {
+        const details = passwordChangeRequiredDetailsSchema.safeParse(result.error.details);
+        if (!details.success) {
+          setError(t('errors.generic'));
+          return;
+        }
+        setNewPassword('');
+        setConfirmPassword('');
+        setStep({ name: 'newPassword', changeToken: details.data.changeToken });
+        return;
+      }
       default:
         showError(result.error);
     }
+  }
+
+  async function replacePassword(changeToken: string): Promise<void> {
+    if (newPassword !== confirmPassword) {
+      setError(t('auth.passwordsMismatch'));
+      return;
+    }
+    if (!newPasswordSchema.safeParse(newPassword).success) {
+      setError(t('account.passwordHint'));
+      return;
+    }
+    const result = await api.post('/auth/password/set', { changeToken, newPassword });
+    if (!result.ok) {
+      showError(result.error);
+      return;
+    }
+    // Setting the password opens no session: sign in with it, which may ask for TOTP next.
+    setPassword(newPassword);
+    setStep({ name: 'credentials' });
+    await signIn(newPassword);
   }
 
   async function confirmSetup(enrollToken: string): Promise<void> {
@@ -110,7 +148,16 @@ export function LoginForm() {
   function onSubmit(event: SubmitEvent<HTMLFormElement>): void {
     event.preventDefault();
     setError(null);
-    startTransition(() => (step.name === 'setup' ? confirmSetup(step.enrollToken) : signIn()));
+    startTransition(() => {
+      switch (step.name) {
+        case 'setup':
+          return confirmSetup(step.enrollToken);
+        case 'newPassword':
+          return replacePassword(step.changeToken);
+        default:
+          return signIn();
+      }
+    });
   }
 
   const codeField = (
@@ -142,7 +189,11 @@ export function LoginForm() {
           {step.name === 'credentials' && t('auth.signIn')}
           {step.name === 'totp' && t('auth.totpTitle')}
           {step.name === 'setup' && t('auth.totpSetupTitle')}
+          {step.name === 'newPassword' && t('auth.newPasswordTitle')}
         </CardTitle>
+        {step.name === 'newPassword' && (
+          <CardDescription>{t('auth.newPasswordHint')}</CardDescription>
+        )}
         {step.name === 'totp' && <CardDescription>{t('auth.totpHint')}</CardDescription>}
         {step.name === 'setup' && <CardDescription>{t('auth.totpSetupIntro')}</CardDescription>}
       </CardHeader>
@@ -189,6 +240,46 @@ export function LoginForm() {
         )}
 
         {step.name === 'totp' && codeField}
+
+        {step.name === 'newPassword' && (
+          <>
+            {/* Lets password managers save the new password under the right account. */}
+            <input type="hidden" name="username" autoComplete="username" value={phone} />
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="new-password">{t('auth.newPassword')}</Label>
+              <Input
+                id="new-password"
+                type="password"
+                autoComplete="new-password"
+                required
+                autoFocus
+                value={newPassword}
+                onChange={(event) => {
+                  setNewPassword(event.target.value);
+                }}
+                aria-describedby="new-password-hint"
+              />
+              <p id="new-password-hint" className="text-sm text-muted-foreground">
+                {t('account.passwordHint')}
+              </p>
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="confirm-password">{t('auth.confirmPassword')}</Label>
+              <Input
+                id="confirm-password"
+                type="password"
+                autoComplete="new-password"
+                required
+                value={confirmPassword}
+                onChange={(event) => {
+                  setConfirmPassword(event.target.value);
+                }}
+                aria-invalid={error ? true : undefined}
+                aria-describedby={error ? 'form-error' : undefined}
+              />
+            </div>
+          </>
+        )}
 
         {step.name === 'setup' && (
           <>
