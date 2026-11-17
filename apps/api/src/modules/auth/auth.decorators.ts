@@ -4,8 +4,11 @@ import { SetMetadata } from '@nestjs/common';
 export const PUBLIC_KEY = 'gatefit:public';
 export const ANY_AUTHENTICATED_KEY = 'gatefit:any-authenticated';
 export const PERMISSIONS_KEY = 'gatefit:permissions';
+// Set by @Platform() (modules/platform): the endpoint belongs to Gatefit's back office and
+// brings its own authentication, so the tenant checks step aside.
+export const PLATFORM_KEY = 'gatefit:platform';
 
-// Every endpoint carries exactly one of the three markers below. An endpoint with none is
+// Every tenant endpoint carries exactly one of the three markers below. An endpoint with none is
 // refused at runtime and fails test/endpoint-protection.int-spec.ts.
 
 /** No sign-in needed: health, the sign-in endpoints themselves. */

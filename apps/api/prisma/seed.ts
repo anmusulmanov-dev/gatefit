@@ -1,6 +1,12 @@
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { phoneSchema, SYSTEM_ROLE_PERMISSIONS, SYSTEM_ROLES } from '@gatefit/shared';
+import {
+  DEFAULT_PLAN_MODULES,
+  type DefaultPlanKey,
+  phoneSchema,
+  SYSTEM_ROLE_PERMISSIONS,
+  SYSTEM_ROLES,
+} from '@gatefit/shared';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../src/generated/prisma/client';
 import { PasswordService } from '../src/common/security/password.service';
@@ -15,6 +21,17 @@ const DEMO_LOCATIONS = [
   { name: 'Yunusobod', address: 'Toshkent, Yunusobod tumani' },
 ];
 
+// The three tariffs of docs/TZ.md section 12. Prices are placeholders until confirmed
+// (UZS per location per month, in tiyin); real ones are set in the platform panel.
+const PLANS: Record<
+  DefaultPlanKey,
+  { name: string; activeMembersPerLocation: number | null; priceMinor: bigint }
+> = {
+  start: { name: 'Start', activeMembersPerLocation: 200, priceMinor: 30_000_000n },
+  standard: { name: 'Standard', activeMembersPerLocation: 1000, priceMinor: 60_000_000n },
+  pro: { name: 'Pro', activeMembersPerLocation: null, priceMinor: 120_000_000n },
+};
+
 function requireEnv(name: string): string {
   const value = process.env[name];
   if (!value) {
@@ -24,6 +41,28 @@ function requireEnv(name: string): string {
 }
 
 async function seed(prisma: PrismaClient): Promise<void> {
+  // Plans are created once; later edits made in the platform panel are kept.
+  const planIds = new Map<string, string>();
+  for (const [key, plan] of Object.entries(PLANS)) {
+    const row = await prisma.saasPlan.upsert({
+      where: { key },
+      update: {},
+      create: {
+        key,
+        name: plan.name,
+        limits: { activeMembersPerLocation: plan.activeMembersPerLocation },
+        modules: DEFAULT_PLAN_MODULES[key as DefaultPlanKey],
+        priceMinor: plan.priceMinor,
+        currency: 'UZS',
+      },
+    });
+    planIds.set(key, row.id);
+  }
+  const demoPlanId = planIds.get('standard');
+  if (!demoPlanId) {
+    throw new Error('The standard plan was not created');
+  }
+
   const organization = await prisma.organization.upsert({
     where: { slug: DEMO_SLUG },
     update: {},
@@ -34,9 +73,28 @@ async function seed(prisma: PrismaClient): Promise<void> {
       currency: 'UZS',
       locale: 'uz',
       status: 'active',
+      saasPlanId: demoPlanId,
     },
   });
   const organizationId = organization.id;
+
+  // An organization seeded before plans existed gets one now.
+  if (!organization.saasPlanId) {
+    await prisma.organization.update({
+      where: { id: organizationId },
+      data: { saasPlanId: demoPlanId },
+    });
+  }
+  if ((await prisma.saasSubscription.count({ where: { organizationId } })) === 0) {
+    await prisma.saasSubscription.create({
+      data: {
+        organizationId,
+        saasPlanId: demoPlanId,
+        billingPeriod: 'monthly',
+        startsAt: new Date(),
+      },
+    });
+  }
 
   const locations = [];
   for (const location of DEMO_LOCATIONS) {
@@ -99,8 +157,20 @@ async function seed(prisma: PrismaClient): Promise<void> {
     skipDuplicates: true,
   });
 
+  // The platform operator. An existing one keeps their password and authenticator.
+  const operatorPhone = phoneSchema.parse(requireEnv('SEED_PLATFORM_ADMIN_PHONE'));
+  await prisma.platformAdmin.upsert({
+    where: { phone: operatorPhone },
+    update: {},
+    create: {
+      phone: operatorPhone,
+      name: 'Demo Operator',
+      passwordHash: await new PasswordService().hash(requireEnv('SEED_PLATFORM_ADMIN_PASSWORD')),
+    },
+  });
+
   console.log(
-    `Seeded organization "${organization.slug}": ${locations.length} locations, ${SYSTEM_ROLES.length} roles, 1 owner (credentials: SEED_OWNER_* in .env).`,
+    `Seeded organization "${organization.slug}": ${locations.length} locations, ${SYSTEM_ROLES.length} roles, 1 owner, 3 plans, 1 platform operator (credentials: SEED_* in .env).`,
   );
 }
 

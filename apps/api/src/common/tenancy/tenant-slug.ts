@@ -1,17 +1,4 @@
-// A DNS label: letters, digits and inner hyphens, at most 63 characters.
-const SLUG_PATTERN = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/;
-
-/** Subdomains that belong to the platform itself and can never be an organization. */
-export const RESERVED_SLUGS: readonly string[] = [
-  'admin',
-  'api',
-  'app',
-  'mail',
-  'my',
-  'static',
-  'status',
-  'www',
-];
+import { RESERVED_SLUGS, SLUG_PATTERN } from '@gatefit/shared';
 
 /**
  * Extracts the organization slug from a host name: `demo.gatefit.uz` -> `demo` when the
