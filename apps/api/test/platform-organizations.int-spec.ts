@@ -100,6 +100,7 @@ describe('Platform: organizations (integration)', () => {
         locale: 'uz',
         status: 'trial',
         plan: { id: start.id },
+        billingPeriod: 'monthly',
         locationCount: 1,
         staffCount: 1,
         owners: [
@@ -286,6 +287,7 @@ describe('Platform: organizations (integration)', () => {
           .expect(200)
       ).body as PlatformOrganizationDetailDto;
       expect(updated.plan).toMatchObject({ id: standard.id });
+      expect(updated.billingPeriod).toBe('yearly');
 
       const history = await admin.saasSubscription.findMany({
         where: { organizationId: created.id },

@@ -118,6 +118,11 @@ export class PlatformOrganizationsService {
 
   async get(organizationId: string): Promise<PlatformOrganizationDetailDto> {
     const row = await this.find(this.db, organizationId);
+    const subscription = await this.db.saasSubscription.findFirst({
+      where: { organizationId, endsAt: null },
+      orderBy: { startsAt: 'desc' },
+      select: { billingPeriod: true },
+    });
     const owners = await this.db.staff.findMany({
       where: {
         organizationId,
@@ -137,6 +142,7 @@ export class PlatformOrganizationsService {
 
     return {
       ...toDto(row),
+      billingPeriod: subscription?.billingPeriod ?? null,
       owners: owners.map((owner) => ({
         staffId: owner.id,
         phone: owner.user.phone,
