@@ -195,6 +195,7 @@ Barcha biznes jadvallarida: `id` (UUID v7), `organization_id`, `created_at`, `up
 | audit_logs | actor, action, entity, before, after, ip, at | organization | M |
 | saas_plans | name, limits (JSONB), modules (JSONB), price_minor, currency | — | M |
 | saas_subscriptions, saas_invoices | period, status | organization | M (qo'lda), 1 (avtomatik) |
+| platform_admins, platform_sessions | phone, name, password_hash, totp_secret, status; token_hash, expires_at | — (platforma, tashkilotga tegishli emas) | M |
 | devices, agents | type, model, status, last_seen_at | location | 1 |
 | products, stock_movements | name, price_minor, quantity | location | 1 |
 | classes, class_sessions, bookings | — | — | 1 |
@@ -231,7 +232,7 @@ Qoidalar:
 | Kassa | POST /cash-shifts/open, POST /cash-shifts/{id}/close, GET /cash-shifts/current | M |
 | Hisobotlar | GET /reports/daily | M |
 | A'zo | GET /me, GET /me/memberships, GET /me/payments | M |
-| Platforma | GET/POST /platform/organizations, PATCH /platform/organizations/{id}, GET/POST /platform/saas-plans | M |
+| Platforma | POST /platform/auth/login, /platform/auth/totp/setup, /platform/auth/totp/confirm, /platform/auth/logout, GET /platform/me; GET/POST /platform/organizations, GET/PATCH /platform/organizations/{id}, POST /platform/organizations/{id}/staff/{staffId}/reset-password, .../reset-totp; GET/POST /platform/saas-plans, PATCH /platform/saas-plans/{id} | M |
 | Jadval, CRM, Agent, Webhooks | TZ ning v1 qismida | 1 |
 
 `POST /access/verify`: QR tokenni qabul qiladi, imzo va muddatni, abonement, vaqt cheklovi, kunlik limit, muzlatish va qarzni tekshiradi, `check_ins` ga yozadi, `{ allowed, reason, member, membership }` qaytaradi. Javob 500 ms dan tez.

@@ -4,14 +4,58 @@ Har sessiya oxirida yangilanadi: nima qilindi, nima qoldi, ma'lum muammolar.
 
 ## Holat
 
-| Bosqich                           | Holat               |
-| --------------------------------- | ------------------- |
-| 0.1 Loyiha karkasi                | Tayyor (2026-11-11) |
-| 0.2 Ko'p mijozlilik va RLS        | Tayyor (2026-11-11) |
-| 0.3 Autentifikatsiya va ruxsatlar | Tayyor (2026-11-17) |
-| MVP (M1–M8)                       | Boshlanmagan        |
-| M1a Tashkilot ichki API           | Tayyor (2026-11-17) |
-| M1b Platforma API, M1c–d UI       | Boshlanmagan        |
+| Bosqich                               | Holat               |
+| ------------------------------------- | ------------------- |
+| 0.1 Loyiha karkasi                    | Tayyor (2026-11-11) |
+| 0.2 Ko'p mijozlilik va RLS            | Tayyor (2026-11-11) |
+| 0.3 Autentifikatsiya va ruxsatlar     | Tayyor (2026-11-17) |
+| MVP (M1–M8)                           | Boshlanmagan        |
+| M1a Tashkilot ichki API               | Tayyor (2026-11-17) |
+| M1b Platforma API                     | Tayyor (2026-11-17) |
+| M1c Sozlamalar UI, M1d Super-admin UI | Boshlanmagan        |
+
+## 2026-11-17 — M1b: platforma API
+
+Branch: `feat/m1-platform-api` (`feat/m1-settings-api` ustidan). Qaror: `docs/ADR/0004-platform.md`.
+
+### Qilindi
+
+- **Jadvallar:** `saas_plans`, `saas_subscriptions` (RLS), `platform_admins`, `platform_sessions`; `organizations.saas_plan_id`.
+- **Super-admin kirishi:** `admin.localhost` da; telefon, parol va doim TOTP (birinchi kirishda sozlash). 12 soatlik sessiya, `SameSite=Strict` cookie.
+- **Tashkilotlar:** ro'yxat (sahifalash, qidiruv, holat filtri), bitta tashkilot (owner'lari bilan), yaratish (filial, 5 standart rol ruxsatlari bilan, owner vaqtinchalik parol bilan, obuna, ixtiyoriy rozilik — hammasi bitta tranzaksiyada), o'zgartirish (bloklash, sinov muddati, tarif, mamlakat, valyuta).
+- **Xodim parol va TOTP sini platformadan tiklash** — owner uchun yagona yo'l.
+- **Tariflar:** ro'yxat, yaratish, o'zgartirish (narx, limit, modullar, faollik).
+- **`@RequireModule`** va `EntitlementsService`; `GET /organization` endi tashkilot tarifini ham qaytaradi.
+- **Baza darajasidagi cheklov:** tashkilot `organizations` da faqat nom va tilni yangilay oladi.
+- **Seed:** Start, Standard, Pro (taxminiy narx), demo tashkilotga Standard, demo operator (`SEED_PLATFORM_ADMIN_*`).
+- **TZ yangilandi:** 6-bo'lim (platforma jadvallari), 7-bo'lim (platforma endpointlari).
+
+### Tekshirildi
+
+- `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build` — yashil. API: 278 test, i18n: 11.
+- Platforma kirishi, tashkilotlar, tariflar va modullar uchun integratsiya testlari; yangi tashkilot owner'i o'z manzilida vaqtinchalik parol → yangi parol → TOTP sozlash talabigacha boradi.
+- Ajratish: platforma endpointlari tashkilot manzilida 404; xodim sessiyasi platformada, platforma sessiyasi tashkilotda ishlamaydi; `gatefit_app` platforma jadvallarini o'qiy olmaydi; tashkilot o'z tarifini SQL orqali ham o'zgartira olmaydi.
+- "Qo'riqchi" testlar: RLS qamrovi (yangi global jadvallar), endpoint belgilari (`@Platform`), platforma ulanishi faqat `modules/platform` da.
+- Ishga tushirilgan API da qo'lda: `admin.localhost` da operator kirishi TOTP sozlashni so'raydi, `demo.localhost` da shu yo'l 404.
+- CI hali GitHub'da ishlab ko'rilmagan. Brauzerda tekshirilmagan (UI M1d da).
+
+### Rejadan chetlanishlar
+
+- **`PATCH /platform/saas-plans/{id}` va `GET /platform/organizations/{id}` qo'shildi** (TZ da yo'q edi): narxni panelda o'zgartirish va owner'larni ko'rish uchun kerak.
+- **Platforma sessiyasi JWT emas**, oddiy token (ADR 0004).
+- **`saas_invoices` qilinmadi:** M1 promptida yo'q, avtomatik hisob-kitob v1 da.
+- **`saas_subscriptions` da `status` ustuni yo'q:** joriy obuna — `ends_at` bo'sh qator.
+
+### Qoldi
+
+- M1c: sozlamalar UI va login'da vaqtinchalik parol qadami. M1d: super-admin paneli.
+- ADR 0004 dagi ochiq qolganlar: rozilik oqimi, operatorlarni boshqarish, mijoz hisobiga kirish, platforma audit jadvali.
+- Faol a'zolar hisoblagichi — M2.
+
+### Ma'lum muammolar
+
+- Tarif narxlari taxminiy (TZ 12): Start 300 000, Standard 600 000, Pro 1 200 000 so'm/filial/oy.
+- Demo operator ham birinchi kirishda TOTP sozlashi kerak; M1d gacha uni faqat API orqali qilish mumkin.
 
 ## 2026-11-17 — M1a: tashkilot ichki API
 
