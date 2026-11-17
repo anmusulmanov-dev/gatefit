@@ -1,7 +1,7 @@
 'use client';
 
 import { errorMessageKey } from '@gatefit/i18n/config';
-import type { ApiError, ApiResult } from '@gatefit/shared';
+import type { ApiClient, ApiError, ApiResult } from '@gatefit/shared';
 import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useState, useTransition } from 'react';
 
@@ -17,14 +17,14 @@ interface Loaded<T> {
  * Loads `path` from the API and reloads it on demand. While a reload runs, the previous
  * data stays on screen so lists do not flicker.
  */
-export function useApiGet<T>(path: string) {
+export function useApiGet<T>(path: string, client: Pick<ApiClient, 'get'> = api) {
   const [version, setVersion] = useState(0);
   const [loaded, setLoaded] = useState<Loaded<T> | null>(null);
   const key = `${String(version)}:${path}`;
 
   useEffect(() => {
     let cancelled = false;
-    void api.get<T>(path).then((result) => {
+    void client.get<T>(path).then((result) => {
       if (!cancelled) {
         setLoaded(
           result.ok
@@ -36,7 +36,7 @@ export function useApiGet<T>(path: string) {
     return () => {
       cancelled = true;
     };
-  }, [key, path]);
+  }, [client, key, path]);
 
   const reload = useCallback(() => {
     setVersion((current) => current + 1);

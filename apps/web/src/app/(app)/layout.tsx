@@ -9,12 +9,17 @@ import { MainNav } from '@/components/main-nav';
 import { OrganizationNotice, SessionExpired } from '@/components/session-gate';
 import { SignOutButton } from '@/components/sign-out-button';
 import { StaffSessionProvider } from '@/components/staff-session';
+import { isPlatformHost, requestHost } from '@/lib/host';
 import { currentLocation } from '@/lib/location';
 import { getSession } from '@/lib/session';
 
 // Everything under (app) requires a staff session. Hiding pages here is a convenience:
 // the API enforces authentication and permissions on every request.
 export default async function AppLayout({ children }: { children: ReactNode }) {
+  // The admin address hosts the platform panel, not an organization.
+  if (isPlatformHost(await requestHost())) {
+    redirect('/platform');
+  }
   const session = await getSession();
 
   if (session.kind === 'unauthenticated') {
