@@ -5,8 +5,10 @@ import type { ReactNode } from 'react';
 
 import { LocaleSwitcher } from '@/components/locale-switcher';
 import { LocationSelect } from '@/components/location-select';
+import { MainNav } from '@/components/main-nav';
 import { OrganizationNotice, SessionExpired } from '@/components/session-gate';
 import { SignOutButton } from '@/components/sign-out-button';
+import { StaffSessionProvider } from '@/components/staff-session';
 import { currentLocation } from '@/lib/location';
 import { getSession } from '@/lib/session';
 
@@ -33,26 +35,31 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   const location = await currentLocation(me.staff.locations);
 
   return (
-    <div className="mx-auto flex min-h-dvh max-w-5xl flex-col px-4">
-      <header className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-b py-3">
-        <div className="flex items-baseline gap-3">
-          <span className="text-lg font-semibold">{t('common.appName')}</span>
-          <span className="text-sm text-muted-foreground">{me.organization.name}</span>
-        </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <LocationSelect locations={me.staff.locations} currentId={location?.id ?? null} />
-          <span className="text-sm">
-            <span className="font-medium">{me.user.phone}</span>
-            <span className="text-muted-foreground">
-              {' · '}
-              {roleKey ? t(roleKey) : me.staff.role.name}
+    <StaffSessionProvider staffId={me.staff.id} permissions={me.staff.permissions}>
+      <div className="mx-auto flex min-h-dvh max-w-5xl flex-col px-4">
+        <header className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-b py-3">
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+            <div className="flex items-baseline gap-3">
+              <span className="text-lg font-semibold">{t('common.appName')}</span>
+              <span className="text-sm text-muted-foreground">{me.organization.name}</span>
+            </div>
+            <MainNav />
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <LocationSelect locations={me.staff.locations} currentId={location?.id ?? null} />
+            <span className="text-sm">
+              <span className="font-medium">{me.user.phone}</span>
+              <span className="text-muted-foreground">
+                {' · '}
+                {roleKey ? t(roleKey) : me.staff.role.name}
+              </span>
             </span>
-          </span>
-          <LocaleSwitcher />
-          <SignOutButton />
-        </div>
-      </header>
-      <main className="flex flex-1 flex-col py-8">{children}</main>
-    </div>
+            <LocaleSwitcher />
+            <SignOutButton />
+          </div>
+        </header>
+        <main className="flex flex-1 flex-col py-8">{children}</main>
+      </div>
+    </StaffSessionProvider>
   );
 }
