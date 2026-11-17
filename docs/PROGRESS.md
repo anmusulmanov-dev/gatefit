@@ -10,6 +10,49 @@ Har sessiya oxirida yangilanadi: nima qilindi, nima qoldi, ma'lum muammolar.
 | 0.2 Ko'p mijozlilik va RLS        | Tayyor (2026-11-11) |
 | 0.3 Autentifikatsiya va ruxsatlar | Tayyor (2026-11-17) |
 | MVP (M1–M8)                       | Boshlanmagan        |
+| M1a Tashkilot ichki API           | Tayyor (2026-11-17) |
+| M1b Platforma API, M1c–d UI       | Boshlanmagan        |
+
+## 2026-11-17 — M1a: tashkilot ichki API
+
+Branch: `feat/m1-settings-api` (`feat/auth` ustidan). Qaror: `docs/ADR/0003-staff-credentials.md`.
+
+### Qilindi
+
+- **Parol va TOTP `staff` ga ko'chdi** (Anvar tasdiqlagan). Sabab: global `users` da turganida bir tashkilot xodim parolini tiklab, boshqa tashkilotga kira olardi. Mavjud ma'lumot migratsiyada ko'chirildi.
+- **`staff` ga `first_name`, `last_name`, `must_change_password`** qo'shildi.
+- **`tenancy` moduli:** `GET/PATCH /organization` (nom, til), `GET/POST/PATCH /locations` (vaqt mintaqasi va ish vaqti tekshiruvi, arxivlash va tiklash).
+- **`staff` moduli:** `GET/POST/PATCH /staff` (kursor bilan sahifalash, holat filtri), `GET/POST/PATCH /roles` (o'z rollari, arxivlash).
+- **Vaqtinchalik parol:** xodim qo'shilganda yoki paroli tiklanganda. Birinchi kirish `PASSWORD_CHANGE_REQUIRED` qaytaradi; `POST /auth/password/set`. O'z parolini almashtirish: `POST /auth/password/change` (boshqa qurilmalar chiqariladi).
+- **Tiklash:** `POST /staff/{id}/reset-password`, `POST /staff/{id}/reset-totp` — nishonning sessiyalari tugaydi.
+- **Qoidalar:** standart rollar o'zgarmaydi; faqat o'zingda bor ruxsatni bera olasan (rol yaratish, tahrirlash, xodimga rol berish, tiklash); o'z roling va holatingni o'zgartira olmaysan; kamida bitta faol owner qolishi shart; owner'ning parol va TOTP sini tashkilot ichidan tiklab bo'lmaydi.
+- **Audit:** `organization.update`, `role.create/update/archive`, `staff.create/update`, `staff.password_reset`, `staff.totp_reset` — o'zgarish bilan bitta tranzaksiyada.
+- **Modul chegarasi:** `auth` endi `staff` jadvallarini faqat `StaffCredentialsService`, `StaffAccessService`, `StaffService` orqali o'qiydi.
+- **Umumiy:** `AuditService`, kursor sahifalash (`pageArgs`, `toPage`), `packages/shared` da tashkilot, filial, xodim, rol sxemalari.
+- **TZ yangilandi:** 6-bo'lim (`users`, `staff` ustunlari), 7-bo'lim (yangi endpointlar).
+
+### Tekshirildi
+
+- `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build` — yashil. API: 225 test, i18n: 11.
+- Har yangi endpointga integratsiya testi: `organization`, `roles`, `staff` fayllari. Ruxsatni oshirish urinishlari, oxirgi owner, boshqa tashkilot yozuvlariga murojaat (404), audit yozuvlari tekshirilgan.
+- Bir odamning ikki tashkilotdagi parollari mustaqilligi: `test/users-lockdown.int-spec.ts`.
+- Migratsiya dev bazada qo'llandi: demo owner paroli saqlanib qoldi.
+- CI hali GitHub'da ishlab ko'rilmagan. Brauzerda tekshirilmagan (bu qismda UI yo'q).
+
+### Rejadan chetlanishlar
+
+- Parol va TOTP ning ko'chishi (yuqorida) — TZ dan chetlanish, tasdiqlangan.
+- `first_name`, `last_name`: TZ jadvalida yo'q edi, lekin xodimlar ro'yxati ismsiz ishlamaydi.
+- `GET /locations` sahifalanmagan: filiallar oz va har ekranga hammasi kerak.
+- Tiklash endpointlari `auth` modulida (sessiyalarni tugatishi kerak), yo'li `/staff/...`.
+
+### Qoldi
+
+- **Web login `PASSWORD_CHANGE_REQUIRED` ni hali bilmaydi** — umumiy xato ko'rsatadi. M1c da parol almashtirish qadami qo'shiladi. Ungacha yangi qo'shilgan xodim brauzerdan kira olmaydi.
+- M1b: platforma (super-admin, tariflar, owner parolini tiklash). M1c, M1d: UI.
+- Arxivlangan rol va filial nomi band qoladi (qayta shu nom bilan yaratib bo'lmaydi).
+- Filial darajasidagi cheklov (menejer faqat o'z filiali) — M2.
+- "Parolni unutdim" — M7 (SMS).
 
 ## 2026-11-17 — 0.3 Autentifikatsiya va ruxsatlar, B qism (frontend)
 

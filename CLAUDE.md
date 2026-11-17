@@ -74,7 +74,10 @@ pnpm --filter api seed                              # demo tashkilot, filiallar,
 - `prisma migrate dev` ni doim `--name` bilan chaqir: nomsiz chaqirilsa interaktiv savolda osilib qoladi.
 - Har endpoint aynan bitta belgi oladi: `@Public()`, `@AnyAuthenticated()` yoki `@RequirePermission(...)` (`src/modules/auth/auth.decorators.ts`). Ruxsatlar ro'yxati: `packages/shared/src/permissions.ts`. Qarang: `docs/ADR/0002-authentication.md`.
 - Tashkilot subdomendan aniqlanadi: devda `http://demo.localhost:3000`. Testlarda `Host` sarlavhasi (`test/support/app.ts` dagi `hostOf`).
-- `users` jadvaliga API to'g'ridan-to'g'ri yozmaydi va parol/TOTP ustunlarini o'qimaydi: faqat `auth_*` baza funksiyalari orqali.
+- `users` — faqat shaxs (telefon); API unga yozmaydi, yangi yozuv `auth_find_or_create_user()` orqali. Xodim paroli va TOTP si `staff` da (har tashkilot uchun alohida), ularni faqat `StaffCredentialsService` o'qiydi. Qarang: `docs/ADR/0003-staff-credentials.md`.
+- Ruxsatga oid o'zgarishda chaqiruvchi faqat o'zida bor ruxsatlarni bera oladi (`holdsAll`). O'zgarishni `AuditService.record` bilan shu tranzaksiyada yoz.
+- Ro'yxat endpointi: `pageQuerySchema` + `pageArgs` / `toPage` (`src/common/pagination`). Testda sessiya: `cookiesFor` va `apiAs` (`test/support/app.ts`).
+- So'rov tranzaksiyasi ichida unique xatosini ushlab davom etib bo'lmaydi (tranzaksiya buziladi): avval tekshir, keyin yoz.
 - So'rov tanasi: `@Body(new ZodPipe(schema))`, sxema `packages/shared` da. Vaqt: `Clock` servisi.
 - Playwright e2e (`pnpm --filter api test:e2e`) hali yo'q: birinchi foydalanuvchi oqimi bilan qo'shiladi.
 - API porti 4000 emas, 8000: Windows'da 3345–4144 oralig'i Hyper-V tomonidan band bo'lishi mumkin.

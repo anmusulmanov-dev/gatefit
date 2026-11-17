@@ -2,6 +2,8 @@
 
 Sana: 2026-11-11. Holat: qabul qilingan. ADR 0001 dagi ikki ochiq savolni yopadi.
 
+> 8–10-bandlar [ADR 0003](0003-staff-credentials.md) bilan o'zgardi: parol va TOTP endi `users` da emas, `staff` da; `auth_staff_credentials` va `auth_enroll_totp` funksiyalari olib tashlangan.
+
 ## Qaror
 
 1. **Tashkilot subdomendan aniqlanadi.** Xost nomining birinchi bo'lagi slug (`demo.gatefit.uz`, devda `demo.localhost`). `TenantResolutionMiddleware` uni `auth_resolve_organization()` orqali topadi. Access token faqat o'z tashkiloti manzilida qabul qilinadi (TZ 5.1).
