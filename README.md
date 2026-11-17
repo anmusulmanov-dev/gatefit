@@ -51,13 +51,19 @@ Shundan keyin:
 
 | Nima             | Manzil                              |
 | ---------------- | ----------------------------------- |
-| Boshqaruv paneli | http://localhost:3000               |
-| A'zo ilovasi     | http://localhost:3001               |
+| Boshqaruv paneli | http://demo.localhost:3000          |
+| A'zo ilovasi     | http://demo.localhost:3001          |
 | API health       | http://localhost:8000/api/v1/health |
 | Swagger          | http://localhost:8000/api/docs      |
 | MinIO konsoli    | http://localhost:9001               |
 
 MinIO konsoliga kirish ma'lumotlari `.env` dagi `S3_ACCESS_KEY` va `S3_SECRET_KEY`.
+
+### Kirish
+
+- **Manzil tashkilotni bildiradi.** `demo` — seed yaratgan tashkilot. `localhost:3000` ning o'zi "tashkilot topilmadi" ko'rsatadi. `*.localhost` brauzerlarda sozlamasiz ishlaydi.
+- **Boshqaruv paneli:** telefon va parol `.env` dagi `SEED_OWNER_PHONE` va `SEED_OWNER_PASSWORD`. Owner uchun ikki bosqichli himoya majburiy: birinchi kirishda ko'rsatilgan kalitni autentifikator ilovasiga (Google Authenticator va shu kabi) kiriting.
+- **A'zo ilovasi:** istalgan telefon raqam. SMS-kod yuborilmaydi, `pnpm dev` ishlayotgan terminalda `[sms:console]` qatorida chiqadi.
 
 ## Buyruqlar
 

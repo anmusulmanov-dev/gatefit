@@ -2,6 +2,9 @@ import { z } from 'zod';
 
 const booleanFlag = z.enum(['true', 'false']).transform((value) => value === 'true');
 
+// Drivers that print messages instead of sending them.
+const DEV_ONLY_SMS_DRIVERS: readonly string[] = ['console'];
+
 export const envSchema = z
   .object({
     NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
@@ -48,7 +51,7 @@ export const envSchema = z
   })
   .superRefine((env, context) => {
     // The console driver prints sign-in codes: acceptable on a developer machine only.
-    if (env.NODE_ENV === 'production' && env.SMS_DRIVER === 'console') {
+    if (env.NODE_ENV === 'production' && DEV_ONLY_SMS_DRIVERS.includes(env.SMS_DRIVER)) {
       context.addIssue({
         code: 'custom',
         path: ['SMS_DRIVER'],

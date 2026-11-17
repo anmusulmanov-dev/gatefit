@@ -1,6 +1,5 @@
 import {
   type StaffLoginInput,
-  type SystemRole,
   TOTP_REQUIRED_ROLES,
   type TotpConfirmInput,
   type TotpSetupResponse,
@@ -40,7 +39,7 @@ interface StaffCredentials {
 function mustUseTotp(credentials: StaffCredentials): boolean {
   return (
     credentials.role_is_system &&
-    (TOTP_REQUIRED_ROLES as readonly string[]).includes(credentials.role_name as SystemRole)
+    (TOTP_REQUIRED_ROLES as readonly string[]).includes(credentials.role_name)
   );
 }
 

@@ -17,3 +17,34 @@ export function isLocale(value: unknown): value is Locale {
 export function resolveLocale(value: unknown): Locale {
   return isLocale(value) ? value : defaultLocale;
 }
+
+/** API error codes that have their own message under `errors.*` in the catalogues. */
+const TRANSLATED_ERROR_CODES = [
+  'VALIDATION_FAILED',
+  'RATE_LIMITED',
+  'INVALID_CREDENTIALS',
+  'INVALID_TOTP',
+  'INVALID_OTP',
+  'OTP_EXPIRED',
+  'OTP_ATTEMPTS_EXCEEDED',
+  'ORGANIZATION_NOT_FOUND',
+  'ORGANIZATION_BLOCKED',
+] as const;
+
+export type ErrorMessageKey = `errors.${(typeof TRANSLATED_ERROR_CODES)[number] | 'generic'}`;
+
+/** The message key for an API error code; unknown codes get the generic message. */
+export function errorMessageKey(code: string): ErrorMessageKey {
+  const known = TRANSLATED_ERROR_CODES.find((candidate) => candidate === code);
+  return `errors.${known ?? 'generic'}`;
+}
+
+/** Standard role names that are translated under `roles.*`; custom roles keep their own name. */
+const TRANSLATED_ROLES = ['owner', 'manager', 'receptionist', 'trainer', 'accountant'] as const;
+
+export type RoleMessageKey = `roles.${(typeof TRANSLATED_ROLES)[number]}`;
+
+export function roleMessageKey(role: { name: string; isSystem: boolean }): RoleMessageKey | null {
+  const known = role.isSystem && TRANSLATED_ROLES.find((candidate) => candidate === role.name);
+  return known ? `roles.${known}` : null;
+}

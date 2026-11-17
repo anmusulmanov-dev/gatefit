@@ -22,18 +22,19 @@ export class ConsoleSmsProvider implements SmsProvider {
   }
 }
 
+// A new driver is added here and to the SMS_DRIVER enum in src/config/env.ts.
+const drivers: Record<Env['SMS_DRIVER'], () => SmsProvider> = {
+  console: () => new ConsoleSmsProvider(),
+};
+
 @Global()
 @Module({
   providers: [
     {
       provide: SMS_PROVIDER,
       inject: [ConfigService],
-      useFactory: (config: ConfigService<Env, true>): SmsProvider => {
-        switch (config.get('SMS_DRIVER', { infer: true })) {
-          case 'console':
-            return new ConsoleSmsProvider();
-        }
-      },
+      useFactory: (config: ConfigService<Env, true>): SmsProvider =>
+        drivers[config.get('SMS_DRIVER', { infer: true })](),
     },
   ],
   exports: [SMS_PROVIDER],

@@ -3,6 +3,8 @@
   "compilerOptions": {
     "module": "nodenext",
     "moduleResolution": "nodenext",
+    // DOM for fetch and Response: the API client runs in browsers and on web servers.
+    "lib": ["ES2023", "DOM"],
     "rootDir": "src",
     "outDir": "dist",
     "declaration": true,

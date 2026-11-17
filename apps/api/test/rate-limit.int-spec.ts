@@ -63,16 +63,11 @@ describe('Rate limiting (integration, Redis)', () => {
   });
 
   describe('RateLimitGuard', () => {
-    class Routes {
-      ordinary(): void {
-        return undefined;
-      }
-
-      @AuthRateLimit()
-      signIn(): void {
-        return undefined;
-      }
-    }
+    class Routes {}
+    const ordinaryHandler = (): void => undefined;
+    const signInHandler = (): void => undefined;
+    // What @AuthRateLimit() does to a controller method.
+    AuthRateLimit()(signInHandler);
 
     function guardFor(general: number, auth: number): RateLimitGuard {
       const config = {
@@ -89,19 +84,17 @@ describe('Rate limiting (integration, Redis)', () => {
       } as unknown as ExecutionContext;
     }
 
-    const routes = new Routes();
-
     it('applies the general limit per IP address', async () => {
       const guard = guardFor(2, 100);
       const ip = `10.0.0.${randomUUID()}`;
-      const ordinary = contextFor(routes.ordinary.bind(routes), ip);
+      const ordinary = contextFor(ordinaryHandler, ip);
 
       await expect(guard.canActivate(ordinary)).resolves.toBe(true);
       await expect(guard.canActivate(ordinary)).resolves.toBe(true);
       await expect(guard.canActivate(ordinary)).rejects.toMatchObject({ status: 429 });
 
       // Another address is unaffected.
-      const elsewhere = contextFor(routes.ordinary.bind(routes), `10.0.1.${randomUUID()}`);
+      const elsewhere = contextFor(ordinaryHandler, `10.0.1.${randomUUID()}`);
       await expect(guard.canActivate(elsewhere)).resolves.toBe(true);
     });
 
@@ -109,13 +102,11 @@ describe('Rate limiting (integration, Redis)', () => {
       const guard = guardFor(100, 1);
       const ip = `10.0.2.${randomUUID()}`;
 
-      await expect(guard.canActivate(contextFor(Routes.prototype.signIn, ip))).resolves.toBe(true);
-      await expect(
-        guard.canActivate(contextFor(Routes.prototype.signIn, ip)),
-      ).rejects.toMatchObject({ status: 429 });
-      await expect(guard.canActivate(contextFor(Routes.prototype.ordinary, ip))).resolves.toBe(
-        true,
-      );
+      await expect(guard.canActivate(contextFor(signInHandler, ip))).resolves.toBe(true);
+      await expect(guard.canActivate(contextFor(signInHandler, ip))).rejects.toMatchObject({
+        status: 429,
+      });
+      await expect(guard.canActivate(contextFor(ordinaryHandler, ip))).resolves.toBe(true);
     });
   });
 });

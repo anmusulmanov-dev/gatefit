@@ -3,7 +3,7 @@ import { Reflector } from '@nestjs/core';
 import type { AppRequest } from '../../common/http/app-request';
 import { clientAudience, readAccessToken } from './auth.cookies';
 import { PUBLIC_KEY } from './auth.decorators';
-import { unauthorized } from './auth.errors';
+import { organizationRequired, unauthorized } from './auth.errors';
 import { TokenService } from './token.service';
 
 /**
@@ -31,7 +31,11 @@ export class AuthGuard implements CanActivate {
     const audience = clientAudience(req);
     const claims = this.tokens.verifyAccess(readAccessToken(req, audience), audience);
 
-    if (!claims || !req.tenant || claims.organizationId !== req.tenant.id) {
+    // Protected endpoints exist only at an organization's address.
+    if (!req.tenant) {
+      throw organizationRequired();
+    }
+    if (claims?.organizationId !== req.tenant.id) {
       throw unauthorized();
     }
 

@@ -4,12 +4,51 @@ Har sessiya oxirida yangilanadi: nima qilindi, nima qoldi, ma'lum muammolar.
 
 ## Holat
 
-| Bosqich                           | Holat                          |
-| --------------------------------- | ------------------------------ |
-| 0.1 Loyiha karkasi                | Tayyor (2026-11-11)            |
-| 0.2 Ko'p mijozlilik va RLS        | Tayyor (2026-11-11)            |
-| 0.3 Autentifikatsiya va ruxsatlar | Backend tayyor, frontend qoldi |
-| MVP (M1–M8)                       | Boshlanmagan                   |
+| Bosqich                           | Holat               |
+| --------------------------------- | ------------------- |
+| 0.1 Loyiha karkasi                | Tayyor (2026-11-11) |
+| 0.2 Ko'p mijozlilik va RLS        | Tayyor (2026-11-11) |
+| 0.3 Autentifikatsiya va ruxsatlar | Tayyor (2026-11-17) |
+| MVP (M1–M8)                       | Boshlanmagan        |
+
+## 2026-11-17 — 0.3 Autentifikatsiya va ruxsatlar, B qism (frontend)
+
+Branch: `feat/auth`. Shu bilan 0-bosqich yopildi.
+
+### Qilindi
+
+- **API bilan aloqa:** brauzer API'ga ilovaning o'z manzili orqali murojaat qiladi (`next.config.ts` dagi `/api/*` proxy), shuning uchun cookie'lar birinchi tomon va CORS kerak emas. `packages/shared` da `createApiClient` (401 da sessiyani bir marta yangilab, so'rovni takrorlaydi; parallel so'rovlar bitta yangilashni kutadi) va server komponentlar uchun `fetchSession`.
+- **apps/web:** `/login` (telefon + parol, TOTP qadami, majburiy TOTP ni sozlash), `(app)` himoyalangan layout (tashkilot nomi, filial tanlash, telefon va rol, til, chiqish). Filial tanlovi cookie'da saqlanadi.
+- **apps/member:** `/login` (telefon, SMS-kod, qayta yuborish, raqamni o'zgartirish), himoyalangan bosh sahifa, chiqish.
+- **Holat sahifalari:** tashkilot topilmadi, bloklangan, xizmat ishlamayapti. Access token muddati tugaganda sahifa o'rniga sessiyani tiklovchi komponent chiqadi.
+- **Tarjimalar:** `auth`, `errors`, `roles`, `organization` bo'limlari uch tilda. API xato kodlari `errorMessageKey` orqali tarjimaga bog'lanadi.
+- **API:** himoyalangan endpoint tashkilotsiz manzilda 401 emas, 404 `ORGANIZATION_NOT_FOUND` qaytaradi.
+- A qismdan qolgan 8 ta lint xatosi tuzatildi.
+
+### Tekshirildi
+
+- `pnpm lint`, `pnpm typecheck`, `pnpm test` (API 162, i18n 11), `pnpm build` — yashil.
+- Brauzerda, `http://demo.localhost:3000`: himoyalangan sahifa login'ga yo'naltiradi; noto'g'ri parol xabari; owner uchun TOTP sozlash va kirish; chiqib, kod bilan qayta kirish (noto'g'ri va to'g'ri kod); filial tanlash sahifa yangilangach saqlanadi; kirgan holda `/login` bosh sahifaga qaytaradi; rol va interfeys rus tilida ham to'g'ri; `localhost:3000` da "tashkilot topilmadi".
+- Brauzerda, `http://demo.localhost:3001`, 360 px: SMS-kod so'rash, noto'g'ri kod xabari, to'g'ri kod bilan kirish, chiqish. Xodim va a'zo sessiyalari bitta brauzerda bir-biriga xalaqit bermaydi.
+- **Brauzerda tekshirilmadi:** access token muddati tugagach sessiyaning avtomatik tiklanishi (15 daqiqa kutish kerak). API tomoni testlar bilan qoplangan; brauzerdagi komponentning faqat "tiklab bo'lmadi, login'ga" tarmog'i ko'rildi.
+- Frontend uchun avtomatik test yo'q (Playwright M2 ga qoldirilgan).
+- CI hali GitHub'da ishlab ko'rilmagan.
+
+### Rejadan chetlanishlar
+
+- **TOTP sozlashda QR-kod yo'q:** kalit matn ko'rinishida va `otpauth://` havolasi bilan beriladi. QR chizish uchun paket kerak; M5/M6 da a'zo QR kodi uchun baribir tanlanadi, o'shanda shu yerga ham qo'shiladi.
+- `.next/dev/types` `tsconfig` dan olib tashlandi: sahifa ko'chirilganda eskirgan tiplar typecheck'ni buzardi.
+
+### Qoldi
+
+- A qismdagi ro'yxat (pastda) o'zgarmadi: a'zo kirishini `members` ga bog'lash (M2), parol va TOTP ni tiklash (M1), super-admin (M1).
+- TOTP sozlash sahifasiga QR-kod.
+- Playwright e2e: login oqimlari uchun (M2).
+
+### Ma'lum muammolar
+
+- Devda tashkilot manzili `demo.localhost`; `localhost:3000` ning o'zi "tashkilot topilmadi" ko'rsatadi — bu kutilgan holat.
+- Devda web va member bitta xostda (portlar farqli) bo'lgani uchun til cookie'si umumiy.
 
 ## 2026-11-11 — 0.3 Autentifikatsiya va ruxsatlar, A qism (backend)
 
@@ -32,7 +71,7 @@ Branch: `feat/auth` (`feat/tenancy-rls` ustidan). Qarorlar: `docs/ADR/0002-authe
 
 ### Tekshirildi
 
-- `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build` — yashil. API: 162 test, i18n: 11.
+- `pnpm typecheck` va `pnpm test` yashil (API: 162 test, i18n: 11). `pnpm lint` shu qism oxirida qizil edi (8 xato); B qismda tuzatildi.
 - **0-bosqich mezoni to'liq yo'l bilan** (`test/permissions.int-spec.ts`): ikki tashkilot xodimi HTTP orqali kiradi, har biri faqat o'z filiallarini ko'radi, birining sessiyasi ikkinchisining manzilida 401.
 - Prompt talab qilgan testlar: to'g'ri va noto'g'ri kirish, token aylanishi, ruxsatsiz endpoint 403. Qo'shimcha: TOTP oqimi va kodni qayta ishlatish, SMS-kod muddati va 5 urinish, bir vaqtdagi ikki refresh, deaktivatsiya qilingan xodim, CSRF, `users` ga to'g'ridan-to'g'ri kirish urinishlari.
 - API qo'lda ishga tushirildi: demo owner bilan login `TOTP_SETUP_REQUIRED` qaytaradi, SMS-kod terminalga chiqadi, so'rov loglarida telefon va parol yo'q, Swagger'da so'rov tanalari ko'rinadi.
@@ -47,7 +86,6 @@ Branch: `feat/auth` (`feat/tenancy-rls` ustidan). Qarorlar: `docs/ADR/0002-authe
 
 ### Qoldi
 
-- **B qism:** `apps/web` login (parol, TOTP qadami va sozlash), himoyalangan layout, filial tanlash, chiqish; `apps/member` telefon va kod bilan kirish; Next proxy; tarjimalar.
 - A'zo kirishini `members` ga bog'lash — M2.
 - Parolni o'zgartirish va tiklash, TOTP ni tiklash, xodim qo'shish — M1.
 - Super-admin kirishi — M1.
@@ -56,7 +94,7 @@ Branch: `feat/auth` (`feat/tenancy-rls` ustidan). Qarorlar: `docs/ADR/0002-authe
 
 ### Ma'lum muammolar
 
-- Demo owner birinchi kirishda TOTP sozlashi shart, ya'ni B qism tayyor bo'lmaguncha u bilan brauzerdan kirib bo'lmaydi.
+- Demo owner birinchi kirishda TOTP sozlashi shart (B qismda sahifasi qo'shildi).
 - `DATA_ENCRYPTION_KEY` yo'qolsa TOTP sirlari tiklanmaydi; zaxira nusxa rejasiga (M8) kiritish kerak.
 
 ## 2026-11-11 — 0.2 Ko'p mijozlilik va RLS

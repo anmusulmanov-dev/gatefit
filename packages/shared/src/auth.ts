@@ -35,6 +35,9 @@ export const totpConfirmSchema = z.object({
 });
 export type TotpConfirmInput = z.infer<typeof totpConfirmSchema>;
 
+/** `details` of the TOTP_SETUP_REQUIRED error. */
+export const totpSetupRequiredDetailsSchema = z.object({ setupToken: z.string().min(1) });
+
 export interface TotpSetupResponse {
   /** Base32 secret for manual entry into an authenticator app. */
   secret: string;

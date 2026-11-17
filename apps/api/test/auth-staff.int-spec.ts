@@ -139,6 +139,9 @@ describe('Staff sign-in (integration)', () => {
         .send({ phone: manager.phone, password: manager.password })
         .expect(404);
       expect(response.body).toMatchObject({ code: 'ORGANIZATION_NOT_FOUND' });
+
+      const me = await http().get('/api/v1/me').set('Host', 'localhost').expect(404);
+      expect(me.body).toMatchObject({ code: 'ORGANIZATION_NOT_FOUND' });
     });
 
     it('answers 404 for an unknown organization', async () => {
@@ -194,8 +197,8 @@ describe('Staff sign-in (integration)', () => {
     });
 
     it("rejects a setup token on another organization's address", async () => {
-      const { body } = await login(orgA, { phone: owner.phone, password: owner.password });
-      const { setupToken } = (body as { details: { setupToken: string } }).details;
+      const refused = await login(orgA, { phone: owner.phone, password: owner.password });
+      const { setupToken } = (refused.body as { details: { setupToken: string } }).details;
 
       await http()
         .post('/api/v1/auth/totp/setup')
@@ -205,8 +208,8 @@ describe('Staff sign-in (integration)', () => {
     });
 
     it('enrols with a setup token and signs in once the first code is confirmed', async () => {
-      const { body } = await login(orgA, { phone: owner.phone, password: owner.password });
-      const { setupToken } = (body as { details: { setupToken: string } }).details;
+      const refused = await login(orgA, { phone: owner.phone, password: owner.password });
+      const { setupToken } = (refused.body as { details: { setupToken: string } }).details;
 
       const setup = await http()
         .post('/api/v1/auth/totp/setup')
