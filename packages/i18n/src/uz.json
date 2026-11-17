@@ -79,7 +79,11 @@
     "CANNOT_MODIFY_SELF": "Buni o'zingiz uchun qila olmaysiz.",
     "PERMISSION_ESCALATION": "O'zingizda yo'q ruxsatlarni bera olmaysiz yoki sizdan kengroq ruxsatli xodimni o'zgartira olmaysiz.",
     "INVALID_REFERENCE": "Tanlangan rol yoki filial endi mavjud emas. Sahifani yangilang.",
-    "MODULE_NOT_AVAILABLE": "Bu imkoniyat tarifingizga kirmaydi."
+    "MODULE_NOT_AVAILABLE": "Bu imkoniyat tarifingizga kirmaydi.",
+    "SLUG_TAKEN": "Bu manzil band.",
+    "PLAN_KEY_TAKEN": "Bu kalitli tarif allaqachon bor.",
+    "PLAN_INACTIVE": "Bu tarif sotuvda emas.",
+    "TOTP_SETUP_REQUIRED": "Avval ikki bosqichli himoyani sozlang."
   },
   "organization": {
     "missingTitle": "Tashkilot topilmadi",
@@ -296,5 +300,98 @@
     "audit": {
       "read": "Audit jurnalini ko'rish"
     }
+  },
+  "platform": {
+    "title": "Gatefit platformasi",
+    "signInTitle": "Platformaga kirish",
+    "nav": {
+      "organizations": "Tashkilotlar",
+      "plans": "Tariflar"
+    },
+    "notHere": "Platforma paneli faqat admin manzilida ochiladi."
+  },
+  "platformOrgs": {
+    "add": "Tashkilot qo'shish",
+    "search": "Nomi yoki manzili bo'yicha qidirish",
+    "allStatuses": "Barcha holatlar",
+    "empty": "Tashkilot topilmadi.",
+    "locationsCount": "{count} filial",
+    "staffCount": "{count} xodim",
+    "createdAt": "Yaratilgan",
+    "open": "Ochish",
+    "back": "Tashkilotlar ro'yxati",
+    "name": "Nomi",
+    "slug": "Manzil",
+    "slugHint": "Zal manzili: {slug}.gatefit.uz. Kichik lotin harflari, raqamlar va chiziqcha.",
+    "country": "Mamlakat (ISO kodi)",
+    "currency": "Valyuta (ISO kodi)",
+    "locale": "Tili",
+    "plan": "Tarif",
+    "noPlan": "Tarif yo'q",
+    "billingPeriod": "To'lov davri",
+    "billing": {
+      "monthly": "Oylik",
+      "yearly": "Yillik"
+    },
+    "trialDays": "Sinov muddati (kun)",
+    "trialDaysHint": "0 — sinovsiz, darhol faol.",
+    "locationSection": "Birinchi filial",
+    "ownerSection": "Ega",
+    "offerVersion": "Oferta versiyasi",
+    "offerVersionHint": "Mijoz ofertani qabul qilgan bo'lsa, versiyasini yozing: rozilik uning nomidan qayd etiladi.",
+    "status": "Holati",
+    "trialEndsAt": "Sinov muddati tugashi",
+    "noTrial": "Sinov muddati yo'q",
+    "clearTrial": "Sinov muddatini olib tashlash",
+    "settingsSection": "Holat va tarif",
+    "detailsSection": "Ma'lumotlar",
+    "platformOnlyHint": "Mamlakat va valyutani to'lovlar boshlangandan keyin o'zgartirish xavfli.",
+    "block": "Bloklash",
+    "unblock": "Blokdan chiqarish",
+    "blockHint": "Bloklangan tashkilot manzili ochilmaydi, xodimlar va a'zolar kira olmaydi.",
+    "owners": "Egalar",
+    "noOwners": "Faol ega yo'q.",
+    "resetPassword": "Parolni tiklash",
+    "resetPasswordHint": "Egaga yangi vaqtinchalik parol beriladi; barcha sessiyalari tugaydi. Shaxsini telefon orqali tasdiqlagandan keyingina qiling.",
+    "resetTotp": "Ikki bosqichli himoyani o'chirish",
+    "done": "Bajarildi."
+  },
+  "platformPlans": {
+    "add": "Tarif qo'shish",
+    "edit": "Tarifni tahrirlash",
+    "key": "Kalit",
+    "keyHint": "Kodda ishlatiladigan nom (masalan, standard). Keyin o'zgartirib bo'lmaydi.",
+    "name": "Nomi",
+    "price": "Narx",
+    "priceHint": "{currency} da, bitta filial uchun oyiga.",
+    "perLocationMonth": "filial / oy",
+    "currency": "Valyuta (ISO kodi)",
+    "limit": "Bir filialdagi faol a'zolar",
+    "unlimited": "Cheklanmagan",
+    "limitValue": "{count} tagacha a'zo",
+    "modules": "Modullar",
+    "active": "Sotuvda",
+    "inactive": "Sotuvda emas",
+    "activeHint": "Sotuvdan olingan tarif uni olgan tashkilotlarda qoladi, lekin yangilariga berilmaydi.",
+    "invalidPrice": "Narxni to'g'ri kiriting: musbat son, ko'pi bilan {digits} ta kasr raqam.",
+    "empty": "Hali tarif yo'q.",
+    "changeWarning": "O'zgarish shu tarifdagi barcha tashkilotlarga darhol ta'sir qiladi."
+  },
+  "modules": {
+    "members": "A'zolar",
+    "memberships": "Abonementlar",
+    "access": "QR kirish",
+    "payments": "To'lovlar",
+    "cash_shifts": "Kassa",
+    "reports_daily": "Kunlik hisobot",
+    "member_app": "A'zo ilovasi",
+    "online_payments": "Onlayn to'lov",
+    "schedule": "Jadval",
+    "personal_training": "Shaxsiy mashg'ulotlar",
+    "crm": "CRM",
+    "reports_extended": "Kengaytirilgan hisobotlar",
+    "turnstile": "Turniket",
+    "network_membership": "Tarmoq abonementi",
+    "api_webhooks": "API va vebhuklar"
   }
 }

@@ -21,7 +21,17 @@ const unexpected: ApiError = {
  * When the access token has expired the client refreshes the session once and repeats the
  * request, so callers only ever see a 401 when the user really has to sign in again.
  */
-export function createApiClient(audience: SessionAudience) {
+export interface ApiClientOptions {
+  /** Path prefix of the API, as seen from the browser. */
+  prefix?: string;
+  /** Renew an expired staff or member session and repeat the request once. */
+  refreshOnExpiry?: boolean;
+}
+
+export function createApiClient(
+  audience: SessionAudience,
+  { prefix = API_PREFIX, refreshOnExpiry = true }: ApiClientOptions = {},
+) {
   // Shared by concurrent requests: a refresh token works once, so only one refresh may run.
   let refreshing: Promise<boolean> | null = null;
 
@@ -37,7 +47,7 @@ export function createApiClient(audience: SessionAudience) {
   async function send<T>(method: Method, path: string, body?: unknown): Promise<ApiResult<T>> {
     let response: Response;
     try {
-      response = await fetch(`${API_PREFIX}${path}`, {
+      response = await fetch(`${prefix}${path}`, {
         method,
         credentials: 'same-origin',
         headers: {
@@ -67,7 +77,10 @@ export function createApiClient(audience: SessionAudience) {
     const result = await send<T>(method, path, body);
 
     const sessionExpired =
-      !result.ok && result.error.code === ErrorCode.UNAUTHORIZED && !path.startsWith('/auth/');
+      refreshOnExpiry &&
+      !result.ok &&
+      result.error.code === ErrorCode.UNAUTHORIZED &&
+      !path.startsWith('/auth/');
     if (!sessionExpired) {
       return result;
     }
