@@ -2,7 +2,19 @@
   "common": {
     "appName": "Gatefit",
     "language": "Til",
-    "loading": "Yuklanmoqda…"
+    "loading": "Yuklanmoqda…",
+    "save": "Saqlash",
+    "cancel": "Bekor qilish",
+    "add": "Qo'shish",
+    "edit": "Tahrirlash",
+    "close": "Yopish",
+    "loadMore": "Yana ko'rsatish",
+    "saved": "Saqlandi.",
+    "retry": "Qayta urinish",
+    "loadError": "Ma'lumotni yuklab bo'lmadi.",
+    "optional": "ixtiyoriy",
+    "actions": "Amallar",
+    "confirm": "Tasdiqlash"
   },
   "languages": {
     "uz": "O'zbekcha",
@@ -37,7 +49,12 @@
     "codeSentTo": "Kod {phone} raqamiga yuborildi.",
     "smsCode": "SMS kod",
     "resendCode": "Kodni qayta yuborish",
-    "changePhone": "Raqamni o'zgartirish"
+    "changePhone": "Raqamni o'zgartirish",
+    "newPasswordTitle": "Yangi parol o'rnating",
+    "newPasswordHint": "Sizga berilgan parol vaqtinchalik. Faqat o'zingiz biladigan yangi parol o'ylab toping.",
+    "newPassword": "Yangi parol",
+    "confirmPassword": "Yangi parolni takrorlang",
+    "passwordsMismatch": "Parollar bir xil emas."
   },
   "errors": {
     "generic": "Xatolik yuz berdi. Qaytadan urinib ko'ring.",
@@ -49,7 +66,20 @@
     "OTP_EXPIRED": "Kod muddati tugagan. Yangi kod so'rang.",
     "OTP_ATTEMPTS_EXCEEDED": "Juda ko'p noto'g'ri urinish. Yangi kod so'rang.",
     "ORGANIZATION_NOT_FOUND": "Tashkilot topilmadi. Manzilni tekshiring.",
-    "ORGANIZATION_BLOCKED": "Tashkilot bloklangan."
+    "ORGANIZATION_BLOCKED": "Tashkilot bloklangan.",
+    "PERMISSION_DENIED": "Bu amalga ruxsatingiz yo'q.",
+    "NOT_FOUND": "Topilmadi. Sahifani yangilang.",
+    "PASSWORD_UNCHANGED": "Yangi parol eskisidan farq qilishi kerak.",
+    "LOCATION_NAME_TAKEN": "Bu nomdagi filial allaqachon bor (arxivdagilar ham hisobga olinadi).",
+    "ROLE_NAME_TAKEN": "Bu nomdagi rol allaqachon bor.",
+    "ROLE_IN_USE": "Bu rol xodimlarga biriktirilgan. Avval ularning rolini o'zgartiring.",
+    "SYSTEM_ROLE_IMMUTABLE": "Standart rollarni o'zgartirib bo'lmaydi.",
+    "STAFF_EXISTS": "Bu telefon raqamli xodim allaqachon bor.",
+    "LAST_OWNER": "Tashkilotda kamida bitta faol ega qolishi kerak.",
+    "CANNOT_MODIFY_SELF": "Buni o'zingiz uchun qila olmaysiz.",
+    "PERMISSION_ESCALATION": "O'zingizda yo'q ruxsatlarni bera olmaysiz yoki sizdan kengroq ruxsatli xodimni o'zgartira olmaysiz.",
+    "INVALID_REFERENCE": "Tanlangan rol yoki filial endi mavjud emas. Sahifani yangilang.",
+    "MODULE_NOT_AVAILABLE": "Bu imkoniyat tarifingizga kirmaydi."
   },
   "organization": {
     "missingTitle": "Tashkilot topilmadi",
@@ -76,6 +106,195 @@
     "home": {
       "title": "A'zo ilovasi",
       "subtitle": "Abonementingiz va kirish kodingiz shu yerda bo'ladi."
+    }
+  },
+  "nav": {
+    "home": "Bosh sahifa",
+    "settings": "Sozlamalar"
+  },
+  "settings": {
+    "title": "Sozlamalar",
+    "noAccess": "Bu bo'limga ruxsatingiz yo'q.",
+    "nav": {
+      "organization": "Tashkilot",
+      "locations": "Filiallar",
+      "staff": "Xodimlar",
+      "roles": "Rollar",
+      "account": "Mening hisobim"
+    }
+  },
+  "orgSettings": {
+    "name": "Tashkilot nomi",
+    "locale": "Tashkilot tili",
+    "localeHint": "SMS va xabarlar shu tilda yuboriladi. Interfeys tilini har kim o'zi tanlaydi.",
+    "address": "Manzil",
+    "country": "Mamlakat",
+    "currency": "Valyuta",
+    "status": "Holati",
+    "statusValues": {
+      "trial": "Sinov davri",
+      "active": "Faol",
+      "blocked": "Bloklangan"
+    },
+    "trialEndsAt": "Sinov muddati tugaydi",
+    "plan": "Tarif",
+    "noPlan": "Tarif biriktirilmagan",
+    "memberLimit": "Har filialda {count} tagacha faol a'zo",
+    "unlimited": "Faol a'zolar soni cheklanmagan",
+    "platformHint": "Mamlakat, valyuta va tarifni Gatefit o'zgartiradi.",
+    "readOnly": "Ma'lumotlarni o'zgartirishga ruxsatingiz yo'q."
+  },
+  "locations": {
+    "add": "Filial qo'shish",
+    "edit": "Filialni tahrirlash",
+    "name": "Nomi",
+    "address": "Manzili",
+    "timezone": "Vaqt mintaqasi",
+    "workingHours": "Ish vaqti",
+    "setHours": "Ish vaqtini belgilash",
+    "clearHours": "Ish vaqtini olib tashlash",
+    "noHours": "Ish vaqti belgilanmagan",
+    "closed": "Dam olish kuni",
+    "opens": "Ochiladi",
+    "closes": "Yopiladi",
+    "days": {
+      "mon": "Dushanba",
+      "tue": "Seshanba",
+      "wed": "Chorshanba",
+      "thu": "Payshanba",
+      "fri": "Juma",
+      "sat": "Shanba",
+      "sun": "Yakshanba"
+    },
+    "archive": "Arxivlash",
+    "restore": "Tiklash",
+    "archived": "Arxivda",
+    "showArchived": "Arxivdagilarni ko'rsatish",
+    "empty": "Hali filial yo'q."
+  },
+  "staffSettings": {
+    "add": "Xodim qo'shish",
+    "edit": "Xodimni tahrirlash",
+    "phone": "Telefon",
+    "firstName": "Ism",
+    "lastName": "Familiya",
+    "position": "Lavozim",
+    "role": "Rol",
+    "locations": "Filiallar",
+    "status": "Holati",
+    "statusValues": {
+      "active": "Faol",
+      "inactive": "Nofaol"
+    },
+    "allStatuses": "Hammasi",
+    "temporaryPassword": "Vaqtinchalik parol",
+    "temporaryPasswordHint": "Xodimga bu parolni o'zingiz yetkazing. Birinchi kirishda u uni almashtiradi.",
+    "generate": "Yaratish",
+    "totp": "Ikki bosqichli himoya",
+    "totpOn": "Yoqilgan",
+    "totpOff": "O'chiq",
+    "mustChangePassword": "Parolni almashtirishi kerak",
+    "resetPassword": "Parolni tiklash",
+    "resetPasswordHint": "Xodimning barcha qurilmalardagi sessiyasi tugaydi, keyingi kirishda yangi parolni o'rnatadi.",
+    "passwordResetDone": "Parol almashtirildi. Yangi vaqtinchalik parolni xodimga yetkazing.",
+    "resetTotp": "Ikki bosqichli himoyani o'chirish",
+    "resetTotpHint": "Xodim keyingi kirishda autentifikatorni qayta sozlaydi; barcha sessiyalari tugaydi.",
+    "totpResetDone": "Ikki bosqichli himoya o'chirildi.",
+    "you": "Siz",
+    "selfHint": "O'z rolingiz va holatingizni o'zgartira olmaysiz.",
+    "strongerHint": "Bu xodimning roli sizdagidan kengroq ruxsatlarga ega.",
+    "ownerHint": "Ega parolini faqat Gatefit qo'llab-quvvatlash xizmati tiklaydi.",
+    "noRolesHint": "Faqat o'zingizdagi ruxsatlardan iborat rollarni bera olasiz.",
+    "empty": "Hali xodim yo'q."
+  },
+  "rolesSettings": {
+    "add": "Rol qo'shish",
+    "edit": "Rolni tahrirlash",
+    "view": "Ruxsatlar",
+    "name": "Rol nomi",
+    "permissions": "Ruxsatlar",
+    "system": "Standart",
+    "staffCount": "{count} xodim",
+    "archive": "Arxivlash",
+    "archiveHint": "Rol o'chiriladi. Unga biriktirilgan xodim bo'lsa, avval ularning rolini o'zgartiring.",
+    "systemReadOnly": "Standart rollarni o'zgartirib bo'lmaydi.",
+    "notHeldHint": "Faqat o'zingizda bor ruxsatlarni bera olasiz.",
+    "permissionCount": "{count} ta ruxsat"
+  },
+  "account": {
+    "currentPassword": "Joriy parol",
+    "newPassword": "Yangi parol",
+    "confirmPassword": "Yangi parolni takrorlang",
+    "change": "Parolni almashtirish",
+    "changed": "Parol almashtirildi. Boshqa qurilmalardagi sessiyalar tugatildi.",
+    "passwordHint": "Kamida 8 belgi.",
+    "wrongCurrent": "Joriy parol noto'g'ri."
+  },
+  "permissionAreas": {
+    "organization": "Tashkilot",
+    "locations": "Filiallar",
+    "staff": "Xodimlar",
+    "roles": "Rollar",
+    "members": "A'zolar",
+    "plans": "Tariflar",
+    "memberships": "Abonementlar",
+    "access": "Kirish nazorati",
+    "payments": "To'lovlar",
+    "cash_shifts": "Kassa",
+    "reports": "Hisobotlar",
+    "audit": "Audit"
+  },
+  "permissions": {
+    "organization": {
+      "read": "Tashkilot ma'lumotlarini ko'rish",
+      "update": "Tashkilot ma'lumotlarini o'zgartirish"
+    },
+    "locations": {
+      "read": "Filiallarni ko'rish",
+      "manage": "Filiallarni boshqarish"
+    },
+    "staff": {
+      "read": "Xodimlarni ko'rish",
+      "manage": "Xodimlarni boshqarish"
+    },
+    "roles": {
+      "read": "Rollarni ko'rish",
+      "manage": "Rollarni boshqarish"
+    },
+    "members": {
+      "read": "A'zolarni ko'rish",
+      "manage": "A'zolarni qo'shish va tahrirlash",
+      "import": "A'zolarni import qilish",
+      "export": "A'zolarni eksport qilish"
+    },
+    "plans": {
+      "read": "Tariflarni ko'rish",
+      "manage": "Tariflarni boshqarish"
+    },
+    "memberships": {
+      "sell": "Abonement sotish",
+      "freeze": "Abonementni muzlatish",
+      "cancel": "Abonementni bekor qilish"
+    },
+    "access": {
+      "verify": "Kirishni tekshirish",
+      "manual": "Kirishni qo'lda qayd etish",
+      "read": "Kirish jurnalini ko'rish"
+    },
+    "payments": {
+      "read": "To'lovlarni ko'rish",
+      "accept": "To'lov qabul qilish",
+      "refund": "To'lovni qaytarish"
+    },
+    "cash_shifts": {
+      "manage": "Kassa smenasini boshqarish"
+    },
+    "reports": {
+      "daily": "Kunlik hisobot",
+      "financial": "Moliyaviy hisobotlar"
+    },
+    "audit": {
+      "read": "Audit jurnalini ko'rish"
     }
   }
 }
