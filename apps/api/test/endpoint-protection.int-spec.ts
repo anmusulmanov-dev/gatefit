@@ -6,6 +6,7 @@ import { AppModule } from '../src/app.module';
 import {
   ANY_AUTHENTICATED_KEY,
   PERMISSIONS_KEY,
+  PLATFORM_KEY,
   PUBLIC_KEY,
 } from '../src/modules/auth/auth.decorators';
 
@@ -18,7 +19,8 @@ interface Endpoint {
 
 /**
  * Guards CLAUDE.md rule 4 for endpoints added in the future: every route must state who
- * may call it with exactly one of @Public, @AnyAuthenticated or @RequirePermission.
+ * may call it with exactly one of @Public, @AnyAuthenticated, @RequirePermission or, for
+ * Gatefit's back office, @Platform.
  */
 describe('Endpoint protection coverage', () => {
   let endpoints: Endpoint[];
@@ -53,6 +55,7 @@ describe('Endpoint protection coverage', () => {
               has(PUBLIC_KEY) && 'Public',
               has(ANY_AUTHENTICATED_KEY) && 'AnyAuthenticated',
               has(PERMISSIONS_KEY) && 'RequirePermission',
+              has(PLATFORM_KEY) && 'Platform',
             ].filter((marker): marker is string => typeof marker === 'string'),
           };
         });
@@ -79,6 +82,14 @@ describe('Endpoint protection coverage', () => {
     expect(offenders).toEqual([]);
   });
 
+  it('platform endpoints live under /platform and nowhere else', () => {
+    const platform = endpoints.filter((endpoint) => endpoint.markers.includes('Platform'));
+    expect(platform.length).toBeGreaterThan(5);
+    for (const endpoint of platform) {
+      expect(endpoint.name).toMatch(/ Platform\w+Controller\./);
+    }
+  });
+
   it('only the expected endpoints are public', () => {
     const publicEndpoints = endpoints
       .filter((endpoint) => endpoint.markers.includes('Public'))
@@ -95,6 +106,9 @@ describe('Endpoint protection coverage', () => {
       'POST AuthController.requestOtp',
       'POST AuthController.setPassword',
       'POST AuthController.verifyOtp',
+      'POST PlatformAuthController.beginTotpSetup',
+      'POST PlatformAuthController.confirmTotpSetup',
+      'POST PlatformAuthController.login',
     ]);
   });
 });

@@ -1,5 +1,11 @@
 import { randomUUID } from 'node:crypto';
-import { type Permission, SYSTEM_ROLE_PERMISSIONS, type SystemRole } from '@gatefit/shared';
+import {
+  DEFAULT_PLAN_MODULES,
+  type DefaultPlanKey,
+  type Permission,
+  SYSTEM_ROLE_PERMISSIONS,
+  type SystemRole,
+} from '@gatefit/shared';
 import type { ModuleMetadata } from '@nestjs/common';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import { Test } from '@nestjs/testing';
@@ -10,7 +16,8 @@ import { Clock } from '../../src/common/clock/clock';
 import { SMS_PROVIDER, type SmsProvider } from '../../src/common/sms/sms.provider';
 import { TenantDb } from '../../src/common/tenancy/tenant-db.service';
 import { SessionService } from '../../src/modules/auth/session.service';
-import type { Organization, PrismaClient } from '../../src/generated/prisma/client';
+import { PlatformSessionService } from '../../src/modules/platform/platform-session.service';
+import type { Organization, PrismaClient, SaasPlan } from '../../src/generated/prisma/client';
 import { PasswordService } from '../../src/common/security/password.service';
 import { uniquePhone } from './db';
 
@@ -196,6 +203,69 @@ export function apiAs(t: TestApp, organization: Organization, cookies: string[])
     request(t.app.getHttpServer())
       [method](`/api/v1${path}`)
       .set('Host', hostOf(organization))
+      .set('Cookie', cookies);
+  return {
+    get: (path: string) => send('get', path),
+    post: (path: string, body?: object) => send('post', path).send(body),
+    patch: (path: string, body: object) => send('patch', path).send(body),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Platform
+// ---------------------------------------------------------------------------
+
+/** The Host header of Gatefit's back office. */
+export const PLATFORM_HOST = 'admin.localhost';
+
+const PLAN_LIMITS: Record<DefaultPlanKey, number | null> = {
+  start: 200,
+  standard: 1000,
+  pro: null,
+};
+
+/** A plan modelled on one of the standard tariffs, under a key unique to this test. */
+export function createPlan(admin: PrismaClient, template: DefaultPlanKey): Promise<SaasPlan> {
+  return admin.saasPlan.create({
+    data: {
+      key: `${template}_${randomUUID().slice(0, 8)}`,
+      name: template,
+      limits: { activeMembersPerLocation: PLAN_LIMITS[template] },
+      modules: DEFAULT_PLAN_MODULES[template],
+      priceMinor: 30_000_000n,
+      currency: 'UZS',
+    },
+  });
+}
+
+export interface PlatformAdminFixture {
+  id: string;
+  phone: string;
+  password: string;
+}
+
+export async function createPlatformAdmin(admin: PrismaClient): Promise<PlatformAdminFixture> {
+  const phone = uniquePhone();
+  const password = `pw-${randomUUID()}`;
+  const created = await admin.platformAdmin.create({
+    data: { phone, name: 'Test Operator', passwordHash: await passwords.hash(password) },
+  });
+  return { id: created.id, phone, password };
+}
+
+/** Requests to the platform API as a signed-in operator (or as nobody, with no fixture). */
+export async function platformApi(t: TestApp, operator?: PlatformAdminFixture) {
+  const cookies = operator
+    ? [
+        `gf_platform_session=${await t.app
+          .get(PlatformSessionService)
+          .start(operator.id, { ip: undefined, userAgent: 'test' })}`,
+      ]
+    : [];
+  const send = (method: 'get' | 'post' | 'patch', path: string) =>
+    request(t.app.getHttpServer())
+      [method](`/api/v1/platform${path}`)
+      .set('Host', PLATFORM_HOST)
       .set('Cookie', cookies);
   return {
     get: (path: string) => send('get', path),
