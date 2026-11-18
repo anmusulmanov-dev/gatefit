@@ -21,7 +21,7 @@ docs            TZ, promptlar, jurnal
 
 ## Talab qilinadi
 
-- Node.js 22 yoki undan yuqori (`.nvmrc` da 22)
+- Node.js 24.9 yoki undan yuqori (`.nvmrc` da 24). API testlari (Jest) NestJS 12 ni yuklash uchun shuni talab qiladi.
 - pnpm 12 (`npm install -g pnpm`)
 - Docker Desktop (PostgreSQL, Redis, MinIO uchun)
 
