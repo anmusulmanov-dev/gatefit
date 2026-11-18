@@ -15,6 +15,14 @@ Har sessiya oxirida yangilanadi: nima qilindi, nima qoldi, ma'lum muammolar.
 | M1c Sozlamalar UI                 | Tayyor (2026-11-17)              |
 | M1d Super-admin UI                | Tayyor (2026-11-17) — M1 yopildi |
 
+## 2026-11-18 — GitHub, CI va Node 24
+
+- Repozitoriy: https://github.com/anmusulmanov-dev/gatefit (ochiq). PR #1 (chore/scaffold) main'ga birlashtirildi.
+- **CI birinchi marta ishladi va API testlarida yiqildi:** Jest NestJS 12 (ESM) paketlarini faqat Node 24.9+ da yuklaydi (require(esm)), CI esa Node 22 da edi. Mahalliy Node 22.23.5 da aynan takrorlandi. Lokal tekshiruvlar Node 26 da bo'lgani uchun oldin ko'rinmagan.
+- **Qaror (Anvar tasdiqlagan):** loyiha Node 24 LTS ga o'tdi (`.nvmrc`, `engines` >=24.9, CLAUDE.md, README). CI action'lari v6 ga ko'tarildi (Node 20 ogohlantirishi). O'zgarish feat/tenancy-rls da qilinib, zanjirdagi har branchga birlashtirildi.
+- **Bilib qo'yish kerak:** bu repozitoriyda PR CI'si workflow fayli main'ga tushmaguncha ishga tushmadi. Endi main'da bor.
+- **Qoldi:** PR #2–#7 ni ochish va CI yashil ekanini ko'rish; server (staging).
+
 ## 2026-11-17 — M1d: super-admin paneli
 
 Branch: `feat/m1-platform-ui` (`feat/m1-settings-ui` ustidan). Shu bilan M1 yopildi.
