@@ -42,6 +42,10 @@ const TRANSLATED_ERROR_CODES = [
   'PERMISSION_ESCALATION',
   'INVALID_REFERENCE',
   'MODULE_NOT_AVAILABLE',
+  'SLUG_TAKEN',
+  'PLAN_KEY_TAKEN',
+  'PLAN_INACTIVE',
+  'TOTP_SETUP_REQUIRED',
 ] as const;
 
 export type ErrorMessageKey = `errors.${(typeof TRANSLATED_ERROR_CODES)[number] | 'generic'}`;

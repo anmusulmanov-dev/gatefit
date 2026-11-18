@@ -158,6 +158,8 @@ export interface PlatformOrganizationDto {
 }
 
 export interface PlatformOrganizationDetailDto extends PlatformOrganizationDto {
+  /** Billing period of the current subscription; null when there is none. */
+  billingPeriod: 'monthly' | 'yearly' | null;
   /** The people whose credentials only the platform may reset. */
   owners: {
     staffId: string;

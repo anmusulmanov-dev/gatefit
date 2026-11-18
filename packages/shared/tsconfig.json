@@ -9,7 +9,7 @@
     "outDir": "dist",
     "declaration": true,
     "sourceMap": true,
-    "types": []
+    "types": ["jest"]
   },
   "include": ["src"]
 }

@@ -2,6 +2,7 @@ export * from './api-client';
 export * from './auth';
 export * from './errors';
 export * from './modules';
+export * from './money';
 export * from './organization';
 export * from './pagination';
 export * from './permissions';

@@ -79,7 +79,11 @@
     "CANNOT_MODIFY_SELF": "You cannot do this to yourself.",
     "PERMISSION_ESCALATION": "You cannot grant permissions you lack or change someone with wider permissions than yours.",
     "INVALID_REFERENCE": "The selected role or location no longer exists. Refresh the page.",
-    "MODULE_NOT_AVAILABLE": "Your plan does not include this feature."
+    "MODULE_NOT_AVAILABLE": "Your plan does not include this feature.",
+    "SLUG_TAKEN": "This address is taken.",
+    "PLAN_KEY_TAKEN": "A plan with this key already exists.",
+    "PLAN_INACTIVE": "This plan is no longer on sale.",
+    "TOTP_SETUP_REQUIRED": "Set up two-step sign-in first."
   },
   "organization": {
     "missingTitle": "Organization not found",
@@ -296,5 +300,98 @@
     "audit": {
       "read": "View audit log"
     }
+  },
+  "platform": {
+    "title": "Gatefit platform",
+    "signInTitle": "Platform sign-in",
+    "nav": {
+      "organizations": "Organizations",
+      "plans": "Plans"
+    },
+    "notHere": "The platform panel opens only at the admin address."
+  },
+  "platformOrgs": {
+    "add": "Add organization",
+    "search": "Search by name or address",
+    "allStatuses": "All statuses",
+    "empty": "No organizations found.",
+    "locationsCount": "{count} locations",
+    "staffCount": "{count} staff",
+    "createdAt": "Created",
+    "open": "Open",
+    "back": "All organizations",
+    "name": "Name",
+    "slug": "Address",
+    "slugHint": "Gym address: {slug}.gatefit.uz. Lower-case Latin letters, digits and hyphens.",
+    "country": "Country (ISO code)",
+    "currency": "Currency (ISO code)",
+    "locale": "Language",
+    "plan": "Plan",
+    "noPlan": "No plan",
+    "billingPeriod": "Billing period",
+    "billing": {
+      "monthly": "Monthly",
+      "yearly": "Yearly"
+    },
+    "trialDays": "Trial (days)",
+    "trialDaysHint": "0 means no trial: active straight away.",
+    "locationSection": "First location",
+    "ownerSection": "Owner",
+    "offerVersion": "Offer version",
+    "offerVersionHint": "If the customer accepted the public offer, enter its version: consent is recorded on their behalf.",
+    "status": "Status",
+    "trialEndsAt": "Trial ends",
+    "noTrial": "No trial",
+    "clearTrial": "Remove the trial",
+    "settingsSection": "Status and plan",
+    "detailsSection": "Details",
+    "platformOnlyHint": "Changing country or currency after payments have started is risky.",
+    "block": "Block",
+    "unblock": "Unblock",
+    "blockHint": "A blocked organization’s address stops working; staff and members cannot sign in.",
+    "owners": "Owners",
+    "noOwners": "No active owner.",
+    "resetPassword": "Reset password",
+    "resetPasswordHint": "The owner gets a new temporary password and all their sessions end. Only do this after verifying who they are by phone.",
+    "resetTotp": "Turn off two-step sign-in",
+    "done": "Done."
+  },
+  "platformPlans": {
+    "add": "Add plan",
+    "edit": "Edit plan",
+    "key": "Key",
+    "keyHint": "The name used in code (for example standard). It cannot be changed later.",
+    "name": "Name",
+    "price": "Price",
+    "priceHint": "In {currency}, per location per month.",
+    "perLocationMonth": "location / month",
+    "currency": "Currency (ISO code)",
+    "limit": "Active members per location",
+    "unlimited": "Unlimited",
+    "limitValue": "Up to {count} members",
+    "modules": "Modules",
+    "active": "On sale",
+    "inactive": "Withdrawn",
+    "activeHint": "A withdrawn plan stays with organizations that have it but is not assigned to new ones.",
+    "invalidPrice": "Enter a valid price: a positive number with at most {digits} decimals.",
+    "empty": "No plans yet.",
+    "changeWarning": "A change applies at once to every organization on this plan."
+  },
+  "modules": {
+    "members": "Members",
+    "memberships": "Memberships",
+    "access": "QR entry",
+    "payments": "Payments",
+    "cash_shifts": "Cash desk",
+    "reports_daily": "Daily report",
+    "member_app": "Member app",
+    "online_payments": "Online payments",
+    "schedule": "Schedule",
+    "personal_training": "Personal training",
+    "crm": "CRM",
+    "reports_extended": "Extended reports",
+    "turnstile": "Turnstile",
+    "network_membership": "Network membership",
+    "api_webhooks": "API and webhooks"
   }
 }
