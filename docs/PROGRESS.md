@@ -21,6 +21,8 @@ Har sessiya oxirida yangilanadi: nima qilindi, nima qoldi, ma'lum muammolar.
 - **CI birinchi marta ishladi va API testlarida yiqildi:** Jest NestJS 12 (ESM) paketlarini faqat Node 24.9+ da yuklaydi (require(esm)), CI esa Node 22 da edi. Mahalliy Node 22.23.5 da aynan takrorlandi. Lokal tekshiruvlar Node 26 da bo'lgani uchun oldin ko'rinmagan.
 - **Qaror (Anvar tasdiqlagan):** loyiha Node 24 LTS ga o'tdi (`.nvmrc`, `engines` >=24.9, CLAUDE.md, README). CI action'lari v6 ga ko'tarildi (Node 20 ogohlantirishi). O'zgarish feat/tenancy-rls da qilinib, zanjirdagi har branchga birlashtirildi.
 - **Bilib qo'yish kerak:** bu repozitoriyda PR CI'si workflow fayli main'ga tushmaguncha ishga tushmadi. Endi main'da bor.
+- **Ikkinchi yiqilish — S3 sozlamalari "undefined":** Turborepo strict env rejimida e'lon qilinmagan muhit o'zgaruvchilarini vazifalarga o'tkazmaydi. `turbo.json` da `envMode: "loose"` (CI `.env` siz, faqat workflow `env` bilan ishlaydi).
+- **Uchinchi yiqilish — staff testlarida `beforeAll` 5 s dan oshdi:** fixturalar bir nechta Argon2 xeshlaydi, CI'ga o'xshash muhitda sekinroq. Bitta hook yiqilishi o'nlab testni ergashtirib yiqitdi (79 ta). Jest `testTimeout: 30000`. CI'ga aynan o'xshash muhitda (toza Postgres/Redis konteynerlari, `.env` siz) eng yuqori branch tekshirildi: format, lint, typecheck, build va 278 + 33 + 11 test — yashil.
 - **Qoldi:** PR #2–#7 ni ochish va CI yashil ekanini ko'rish; server (staging).
 
 ## 2026-11-17 — M1d: super-admin paneli
