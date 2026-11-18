@@ -1,5 +1,6 @@
 {
   "$schema": "https://turborepo.com/schema.json",
+  "envMode": "loose",
   "globalDependencies": [".env", "tsconfig.base.json", "eslint.config.mjs"],
   "globalEnv": [
     "NODE_ENV",
