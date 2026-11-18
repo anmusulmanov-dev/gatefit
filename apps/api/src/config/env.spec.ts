@@ -2,6 +2,7 @@ import { validateEnv } from './env';
 
 const valid = {
   DATABASE_URL: 'postgresql://user:pass@localhost:5432/db',
+  DATABASE_ADMIN_URL: 'postgresql://admin:pass@localhost:5432/db',
   REDIS_URL: 'redis://localhost:6379',
   JWT_SECRET: 'x'.repeat(32),
   DATA_ENCRYPTION_KEY: Buffer.alloc(32, 1).toString('base64'),

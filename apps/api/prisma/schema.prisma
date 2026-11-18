@@ -43,6 +43,8 @@ model Organization {
   locale      String
   status      OrganizationStatus @default(trial)
   trialEndsAt DateTime?          @map("trial_ends_at") @db.Timestamptz(3)
+  // The plan in force now; saas_subscriptions keeps the history.
+  saasPlanId  String?            @map("saas_plan_id") @db.Uuid
   createdAt   DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt   DateTime           @updatedAt @map("updated_at") @db.Timestamptz(3)
   deletedAt   DateTime?          @map("deleted_at") @db.Timestamptz(3)
@@ -56,6 +58,8 @@ model Organization {
   consents        Consent[]
   sessions        Session[]
   otpCodes        OtpCode[]
+  saasPlan        SaasPlan?          @relation(fields: [saasPlanId], references: [id])
+  subscriptions   SaasSubscription[]
 
   @@map("organizations")
 }
@@ -264,4 +268,96 @@ model Consent {
 
   @@index([organizationId, type])
   @@map("consents")
+}
+
+// ---------------------------------------------------------------------------
+// Platform (Gatefit itself, not a tenant). These tables are global.
+// ---------------------------------------------------------------------------
+
+enum SaasBillingPeriod {
+  monthly
+  yearly
+
+  @@map("saas_billing_period")
+}
+
+enum PlatformAdminStatus {
+  active
+  inactive
+
+  @@map("platform_admin_status")
+}
+
+// A tariff. Prices and limits live here, never in code (docs/TZ.md section 12).
+model SaasPlan {
+  id         String   @id @default(uuid(7)) @db.Uuid
+  // Stable identifier used by code and seed: start, standard, pro.
+  key        String   @unique
+  name       String
+  // { activeMembersPerLocation: number | null }
+  limits     Json
+  // Module keys from packages/shared/src/modules.ts
+  modules    Json
+  // Per location per month, in the smallest unit of the currency.
+  priceMinor BigInt   @map("price_minor")
+  currency   String   @db.Char(3)
+  isActive   Boolean  @default(true) @map("is_active")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  organizations Organization[]
+  subscriptions SaasSubscription[]
+
+  @@map("saas_plans")
+}
+
+// History of the plans an organization has been on. The row without ends_at is current.
+model SaasSubscription {
+  id             String            @id @default(uuid(7)) @db.Uuid
+  organizationId String            @map("organization_id") @db.Uuid
+  saasPlanId     String            @map("saas_plan_id") @db.Uuid
+  billingPeriod  SaasBillingPeriod @map("billing_period")
+  startsAt       DateTime          @map("starts_at") @db.Timestamptz(3)
+  endsAt         DateTime?         @map("ends_at") @db.Timestamptz(3)
+  createdAt      DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  plan         SaasPlan     @relation(fields: [saasPlanId], references: [id])
+
+  @@index([organizationId, startsAt])
+  @@map("saas_subscriptions")
+}
+
+// Gatefit's own operators. Deliberately separate from users: a platform identity shares
+// nothing with any tenant identity. The API role has no access to this table at all.
+model PlatformAdmin {
+  id           String              @id @default(uuid(7)) @db.Uuid
+  phone        String              @unique
+  name         String
+  passwordHash String              @map("password_hash")
+  totpSecret   String?             @map("totp_secret")
+  status       PlatformAdminStatus @default(active)
+  createdAt    DateTime            @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime            @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  sessions PlatformSession[]
+
+  @@map("platform_admins")
+}
+
+model PlatformSession {
+  id        String    @id @default(uuid(7)) @db.Uuid
+  adminId   String    @map("admin_id") @db.Uuid
+  // SHA-256 of the session token; the token itself is never stored.
+  tokenHash String    @unique @map("token_hash")
+  userAgent String?   @map("user_agent")
+  ip        String?   @db.Inet
+  expiresAt DateTime  @map("expires_at") @db.Timestamptz(3)
+  revokedAt DateTime? @map("revoked_at") @db.Timestamptz(3)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  admin PlatformAdmin @relation(fields: [adminId], references: [id])
+
+  @@index([adminId])
+  @@map("platform_sessions")
 }

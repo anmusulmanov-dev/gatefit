@@ -39,6 +39,12 @@ export const ErrorCode = {
   // Granting, assigning or acting on more permissions than the caller holds.
   PERMISSION_ESCALATION: 'PERMISSION_ESCALATION',
   INVALID_REFERENCE: 'INVALID_REFERENCE',
+
+  // Platform and plans
+  MODULE_NOT_AVAILABLE: 'MODULE_NOT_AVAILABLE',
+  SLUG_TAKEN: 'SLUG_TAKEN',
+  PLAN_KEY_TAKEN: 'PLAN_KEY_TAKEN',
+  PLAN_INACTIVE: 'PLAN_INACTIVE',
 } as const;
 
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];

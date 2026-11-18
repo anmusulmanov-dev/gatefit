@@ -2,7 +2,7 @@ import { type CanActivate, type ExecutionContext, Injectable } from '@nestjs/com
 import { Reflector } from '@nestjs/core';
 import type { AppRequest } from '../../common/http/app-request';
 import { clientAudience, readAccessToken } from './auth.cookies';
-import { PUBLIC_KEY } from './auth.decorators';
+import { PLATFORM_KEY, PUBLIC_KEY } from './auth.decorators';
 import { organizationRequired, unauthorized } from './auth.errors';
 import { TokenService } from './token.service';
 
@@ -23,7 +23,11 @@ export class AuthGuard implements CanActivate {
       context.getHandler(),
       context.getClass(),
     ]);
-    if (isPublic) {
+    const isPlatform = this.reflector.getAllAndOverride<boolean | undefined>(PLATFORM_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+    if (isPublic || isPlatform) {
       return true;
     }
 

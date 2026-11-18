@@ -107,6 +107,15 @@ export class TokenService {
     return this.verify(token, TOTP_ENROLL_AUDIENCE, totpEnrollClaims);
   }
 
+  /** A short-lived token for one step of a flow. `audience` names the step and must be unique to it. */
+  signPurpose(audience: string, claims: Record<string, unknown>, ttlSeconds: number): string {
+    return this.sign(audience, claims, ttlSeconds);
+  }
+
+  verifyPurpose<Claims>(audience: string, token: string, schema: z.ZodType<Claims>): Claims | null {
+    return this.verify(token, audience, schema);
+  }
+
   private sign(audience: string, claims: Record<string, unknown>, ttlSeconds: number): string {
     const issuedAt = this.clock.nowSeconds();
     return this.jwt.sign(

@@ -59,6 +59,7 @@ describe('Organization settings and locations (integration)', () => {
         locale: 'uz',
         status: 'trial',
         trialEndsAt: null,
+        plan: null,
       });
     });
 

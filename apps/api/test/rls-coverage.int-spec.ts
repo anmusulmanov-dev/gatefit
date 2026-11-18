@@ -10,6 +10,11 @@ const GLOBAL_TABLES = [
   '_prisma_migrations',
   // Global identity, reached by tenants only through staff (docs/ADR/0001-multi-tenancy.md).
   'users',
+  // The price list: one for all organizations, read-only for them.
+  'saas_plans',
+  // Gatefit's own operators; the API role has no access to these at all.
+  'platform_admins',
+  'platform_sessions',
 ];
 
 // The tenant itself: no organization_id column, isolated by its own id.
@@ -73,6 +78,13 @@ describe('RLS coverage of the schema', () => {
       .map((table) => table.name)
       .filter((name) => !GLOBAL_TABLES.includes(name));
     expect(unexpected).toEqual([]);
+  });
+
+  it('the API role has no privileges on platform identities', async () => {
+    const grants = await admin.$queryRaw<{ table_name: string }[]>`
+      SELECT DISTINCT table_name FROM information_schema.role_table_grants
+      WHERE grantee = 'gatefit_app' AND table_name IN ('platform_admins', 'platform_sessions')`;
+    expect(grants).toEqual([]);
   });
 
   it('the API role cannot bypass RLS', async () => {

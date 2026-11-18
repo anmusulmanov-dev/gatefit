@@ -63,6 +63,7 @@ MinIO konsoliga kirish ma'lumotlari `.env` dagi `S3_ACCESS_KEY` va `S3_SECRET_KE
 
 - **Manzil tashkilotni bildiradi.** `demo` — seed yaratgan tashkilot. `localhost:3000` ning o'zi "tashkilot topilmadi" ko'rsatadi. `*.localhost` brauzerlarda sozlamasiz ishlaydi.
 - **Boshqaruv paneli:** telefon va parol `.env` dagi `SEED_OWNER_PHONE` va `SEED_OWNER_PASSWORD`. Owner uchun ikki bosqichli himoya majburiy: birinchi kirishda ko'rsatilgan kalitni autentifikator ilovasiga (Google Authenticator va shu kabi) kiriting.
+- **Platforma (super-admin):** API tayyor (`admin.localhost`, `SEED_PLATFORM_ADMIN_PHONE` va `SEED_PLATFORM_ADMIN_PASSWORD`), paneli hali yo'q.
 - **A'zo ilovasi:** istalgan telefon raqam. SMS-kod yuborilmaydi, `pnpm dev` ishlayotgan terminalda `[sms:console]` qatorida chiqadi.
 
 ## Buyruqlar

@@ -19,7 +19,9 @@ import { ConfigModule } from './config/config.module';
 import { AccessInterceptor } from './modules/auth/access.interceptor';
 import { AuthGuard } from './modules/auth/auth.guard';
 import { AuthModule } from './modules/auth/auth.module';
+import { EntitlementsModule } from './modules/entitlements/entitlements.service';
 import { HealthModule } from './modules/health/health.module';
+import { PlatformModule } from './modules/platform/platform.module';
 import { StaffModule } from './modules/staff/staff.module';
 import { OrganizationModule } from './modules/tenancy/organization.module';
 
@@ -36,8 +38,10 @@ import { OrganizationModule } from './modules/tenancy/organization.module';
     SecurityModule,
     AuditModule,
     TenancyModule,
+    EntitlementsModule,
     AuthModule,
     StaffModule,
+    PlatformModule,
     OrganizationModule,
     HealthModule,
   ],

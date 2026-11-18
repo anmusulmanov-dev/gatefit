@@ -27,7 +27,10 @@ export const envSchema = z
     // Behind a reverse proxy (Caddy, the Next dev proxy): trust X-Forwarded-* headers.
     TRUST_PROXY: booleanFlag.default(false),
 
+    // gatefit_app: every tenant request, always under row-level security.
     DATABASE_URL: z.url({ protocol: /^postgres(ql)?$/ }),
+    // gatefit_migrator: the platform module only. Bypasses row-level security.
+    DATABASE_ADMIN_URL: z.url({ protocol: /^postgres(ql)?$/ }),
     REDIS_URL: z.url({ protocol: /^rediss?$/ }),
 
     // Signs access tokens.

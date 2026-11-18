@@ -30,6 +30,6 @@ import { TotpService } from './totp.service';
     TotpService,
   ],
   // The guard and interceptor are registered globally, in a fixed order, by AppModule.
-  exports: [AccessInterceptor, AuthGuard],
+  exports: [AccessInterceptor, AuthGuard, SessionService, TokenService, TotpService],
 })
 export class AuthModule {}

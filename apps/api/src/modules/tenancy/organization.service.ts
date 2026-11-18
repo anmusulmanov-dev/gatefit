@@ -14,6 +14,7 @@ import { conflict, isUniqueViolation, notFound } from '../../common/errors/domai
 import type { StaffCaller } from '../../common/http/staff-request';
 import type { TenantTransaction } from '../../common/prisma/prisma.service';
 import { Prisma } from '../../generated/prisma/client';
+import { EntitlementsService } from '../entitlements/entitlements.service';
 
 interface OrganizationRow {
   id: string;
@@ -35,7 +36,7 @@ interface LocationRow {
   deletedAt: Date | null;
 }
 
-function toOrganizationDto(row: OrganizationRow): OrganizationDto {
+function toOrganizationDto(row: OrganizationRow, plan: OrganizationDto['plan']): OrganizationDto {
   return {
     id: row.id,
     name: row.name,
@@ -45,6 +46,7 @@ function toOrganizationDto(row: OrganizationRow): OrganizationDto {
     locale: row.locale,
     status: row.status,
     trialEndsAt: row.trialEndsAt?.toISOString() ?? null,
+    plan,
   };
 }
 
@@ -70,12 +72,15 @@ export class OrganizationService {
   constructor(
     private readonly audit: AuditService,
     private readonly clock: Clock,
+    private readonly entitlements: EntitlementsService,
   ) {}
 
   async get(tx: TenantTransaction, organizationId: string): Promise<OrganizationDto> {
-    return toOrganizationDto(
-      await tx.organization.findUniqueOrThrow({ where: { id: organizationId } }),
-    );
+    const [row, plan] = await Promise.all([
+      tx.organization.findUniqueOrThrow({ where: { id: organizationId } }),
+      this.entitlements.forOrganization(tx, organizationId),
+    ]);
+    return toOrganizationDto(row, plan);
   }
 
   /** Changes the name or default language. Country and currency belong to the platform. */
@@ -97,7 +102,7 @@ export class OrganizationService {
       before: { name: before.name, locale: before.locale },
       after: { name: updated.name, locale: updated.locale },
     });
-    return toOrganizationDto(updated);
+    return toOrganizationDto(updated, before.plan);
   }
 
   async listLocations(tx: TenantTransaction, includeArchived: boolean): Promise<LocationDto[]> {

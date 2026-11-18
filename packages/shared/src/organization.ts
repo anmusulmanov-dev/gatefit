@@ -1,4 +1,6 @@
 import { z } from 'zod';
+import type { SaasModule } from './modules';
+import type { PlanLimits } from './platform';
 
 export const ORGANIZATION_LOCALES = ['uz', 'ru', 'en'] as const;
 
@@ -22,6 +24,13 @@ export interface OrganizationDto {
   locale: string;
   status: 'trial' | 'active' | 'blocked';
   trialEndsAt: string | null;
+  /** What the organization's tariff includes; null until the platform assigns one. */
+  plan: {
+    key: string;
+    name: string;
+    modules: SaasModule[];
+    limits: PlanLimits;
+  } | null;
 }
 
 // ---------------------------------------------------------------------------

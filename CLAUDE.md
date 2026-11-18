@@ -75,6 +75,8 @@ pnpm --filter api seed                              # demo tashkilot, filiallar,
 - Har endpoint aynan bitta belgi oladi: `@Public()`, `@AnyAuthenticated()` yoki `@RequirePermission(...)` (`src/modules/auth/auth.decorators.ts`). Ruxsatlar ro'yxati: `packages/shared/src/permissions.ts`. Qarang: `docs/ADR/0002-authentication.md`.
 - Tashkilot subdomendan aniqlanadi: devda `http://demo.localhost:3000`. Testlarda `Host` sarlavhasi (`test/support/app.ts` dagi `hostOf`).
 - `users` — faqat shaxs (telefon); API unga yozmaydi, yangi yozuv `auth_find_or_create_user()` orqali. Xodim paroli va TOTP si `staff` da (har tashkilot uchun alohida), ularni faqat `StaffCredentialsService` o'qiydi. Qarang: `docs/ADR/0003-staff-credentials.md`.
+- Platforma (super-admin): `admin.localhost`, endpointlar `/api/v1/platform/*`, belgisi `@Platform()`. RLS dan tashqari ulanish (`PlatformPrismaService`) faqat `src/modules/platform` da. Qarang: `docs/ADR/0004-platform.md`.
+- Pullik modulga tegishli endpoint: `@RequireModule('<kalit>')` (`packages/shared/src/modules.ts`). Pul API da satr (`priceMinor: "45000000"`), bazada `bigint`.
 - Ruxsatga oid o'zgarishda chaqiruvchi faqat o'zida bor ruxsatlarni bera oladi (`holdsAll`). O'zgarishni `AuditService.record` bilan shu tranzaksiyada yoz.
 - Ro'yxat endpointi: `pageQuerySchema` + `pageArgs` / `toPage` (`src/common/pagination`). Testda sessiya: `cookiesFor` va `apiAs` (`test/support/app.ts`).
 - So'rov tranzaksiyasi ichida unique xatosini ushlab davom etib bo'lmaydi (tranzaksiya buziladi): avval tekshir, keyin yoz.
