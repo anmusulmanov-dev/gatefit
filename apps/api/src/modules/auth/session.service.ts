@@ -140,6 +140,32 @@ export class SessionService {
     });
   }
 
+  /** Ends every staff session of the user, e.g. after their credentials were reset. */
+  async revokeStaffSessions(tx: TenantTransaction, userId: string): Promise<void> {
+    await tx.session.updateMany({
+      where: { userId, audience: 'staff', revokedAt: null },
+      data: { revokedAt: this.clock.now() },
+    });
+  }
+
+  /** Ends the user's other staff sessions and keeps the one making this request. */
+  async revokeOtherStaffSessions(
+    tx: TenantTransaction,
+    userId: string,
+    currentSessionId: string,
+  ): Promise<void> {
+    const current = await tx.session.findUnique({ where: { id: currentSessionId } });
+    await tx.session.updateMany({
+      where: {
+        userId,
+        audience: 'staff',
+        revokedAt: null,
+        ...(current ? { familyId: { not: current.familyId } } : {}),
+      },
+      data: { revokedAt: this.clock.now() },
+    });
+  }
+
   /** True while the session behind an access token has not been revoked or expired. */
   async isActive(tx: TenantTransaction, sessionId: string): Promise<boolean> {
     const session = await tx.session.findUnique({ where: { id: sessionId } });

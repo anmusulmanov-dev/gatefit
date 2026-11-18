@@ -9,6 +9,9 @@ export const phoneSchema = z
 
 const sixDigitCode = z.string().regex(/^\d{6}$/, 'Code must be 6 digits');
 
+/** A password a person chooses or is given. */
+export const newPasswordSchema = z.string().min(8).max(200);
+
 export const staffLoginSchema = z.object({
   phone: phoneSchema,
   password: z.string().min(1).max(200),
@@ -34,6 +37,23 @@ export const totpConfirmSchema = z.object({
   code: sixDigitCode,
 });
 export type TotpConfirmInput = z.infer<typeof totpConfirmSchema>;
+
+/** `details` of the PASSWORD_CHANGE_REQUIRED error. */
+export const passwordChangeRequiredDetailsSchema = z.object({ changeToken: z.string().min(1) });
+
+/** Replaces a temporary password before the first sign-in. */
+export const passwordSetSchema = z.object({
+  changeToken: z.string().min(1),
+  newPassword: newPasswordSchema,
+});
+export type PasswordSetInput = z.infer<typeof passwordSetSchema>;
+
+/** A signed-in staff member changes their own password. */
+export const passwordChangeSchema = z.object({
+  currentPassword: z.string().min(1).max(200),
+  newPassword: newPasswordSchema,
+});
+export type PasswordChangeInput = z.infer<typeof passwordChangeSchema>;
 
 /** `details` of the TOTP_SETUP_REQUIRED error. */
 export const totpSetupRequiredDetailsSchema = z.object({ setupToken: z.string().min(1) });

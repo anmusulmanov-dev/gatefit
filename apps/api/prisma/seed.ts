@@ -3,7 +3,7 @@ import { resolve } from 'node:path';
 import { phoneSchema, SYSTEM_ROLE_PERMISSIONS, SYSTEM_ROLES } from '@gatefit/shared';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../src/generated/prisma/client';
-import { PasswordService } from '../src/modules/auth/password.service';
+import { PasswordService } from '../src/common/security/password.service';
 
 // Development and demo data. Safe to run repeatedly: every row is upserted by a natural key.
 // Run from apps/api: pnpm --filter api seed
@@ -69,14 +69,10 @@ async function seed(prisma: PrismaClient): Promise<void> {
     });
   }
 
-  // The demo owner. An existing user keeps their password and authenticator.
+  // The demo owner. An existing staff record keeps its password and authenticator.
   const phone = phoneSchema.parse(requireEnv('SEED_OWNER_PHONE'));
   const passwordHash = await new PasswordService().hash(requireEnv('SEED_OWNER_PASSWORD'));
-  const owner = await prisma.user.upsert({
-    where: { phone },
-    update: {},
-    create: { phone, passwordHash },
-  });
+  const owner = await prisma.user.upsert({ where: { phone }, update: {}, create: { phone } });
   const ownerRoleId = roleIds.get('owner');
   if (!ownerRoleId) {
     throw new Error('The owner role was not created');
@@ -84,7 +80,15 @@ async function seed(prisma: PrismaClient): Promise<void> {
   const staff = await prisma.staff.upsert({
     where: { organizationId_userId: { organizationId, userId: owner.id } },
     update: {},
-    create: { organizationId, userId: owner.id, roleId: ownerRoleId, position: 'Owner' },
+    create: {
+      organizationId,
+      userId: owner.id,
+      roleId: ownerRoleId,
+      firstName: 'Demo',
+      lastName: 'Owner',
+      position: 'Owner',
+      passwordHash,
+    },
   });
   await prisma.staffLocation.createMany({
     data: locations.map((location) => ({

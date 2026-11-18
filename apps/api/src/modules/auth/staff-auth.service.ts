@@ -1,4 +1,6 @@
 import {
+  type PasswordChangeInput,
+  type PasswordSetInput,
   type StaffLoginInput,
   TOTP_REQUIRED_ROLES,
   type TotpConfirmInput,
@@ -6,40 +8,34 @@ import {
 } from '@gatefit/shared';
 import { Injectable } from '@nestjs/common';
 import { CryptoService } from '../../common/crypto/crypto.service';
-import type { ResolvedTenant } from '../../common/http/app-request';
-import { RateLimiter } from '../../common/rate-limit/rate-limiter.service';
-import { TenantDb } from '../../common/tenancy/tenant-db.service';
+import type { AuthContext, ResolvedTenant } from '../../common/http/app-request';
 import type { TenantTransaction } from '../../common/prisma/prisma.service';
+import { RateLimiter } from '../../common/rate-limit/rate-limiter.service';
+import { PasswordService } from '../../common/security/password.service';
+import { TenantDb } from '../../common/tenancy/tenant-db.service';
+import { type StaffCredentials, StaffCredentialsService } from '../staff/staff-credentials.service';
 import { LOGIN_LIMIT, TOTP_LIMIT } from './auth.constants';
 import type { SessionTokens } from './auth.cookies';
 import {
   invalidCredentials,
   invalidTotp,
+  passwordChangeRequired,
+  passwordUnchanged,
   totpAlreadyEnabled,
   totpRequired,
   totpSetupRequired,
   unauthorized,
 } from './auth.errors';
-import { PasswordService } from './password.service';
 import { type ClientMeta, SessionService } from './session.service';
 import { TokenService } from './token.service';
 import { TotpService } from './totp.service';
 
 const TOTP_PURPOSE = 'totp-secret';
 
-interface StaffCredentials {
-  user_id: string;
-  staff_id: string;
-  password_hash: string | null;
-  totp_secret: string | null;
-  role_name: string;
-  role_is_system: boolean;
-}
-
 function mustUseTotp(credentials: StaffCredentials): boolean {
   return (
-    credentials.role_is_system &&
-    (TOTP_REQUIRED_ROLES as readonly string[]).includes(credentials.role_name)
+    credentials.role.isSystem &&
+    (TOTP_REQUIRED_ROLES as readonly string[]).includes(credentials.role.name)
   );
 }
 
@@ -48,6 +44,7 @@ function mustUseTotp(credentials: StaffCredentials): boolean {
 export class StaffAuthService {
   constructor(
     private readonly tenantDb: TenantDb,
+    private readonly credentials: StaffCredentialsService,
     private readonly passwords: PasswordService,
     private readonly totp: TotpService,
     private readonly tokens: TokenService,
@@ -57,8 +54,9 @@ export class StaffAuthService {
   ) {}
 
   /**
-   * Signs a staff member in. Throws INVALID_CREDENTIALS, TOTP_REQUIRED (send the code
-   * with the same phone and password), INVALID_TOTP, or TOTP_SETUP_REQUIRED carrying a
+   * Signs a staff member in. Throws INVALID_CREDENTIALS; PASSWORD_CHANGE_REQUIRED with a
+   * change token when the password was chosen by someone else; TOTP_REQUIRED (send the
+   * code with the same phone and password); INVALID_TOTP; or TOTP_SETUP_REQUIRED with a
    * setup token when the role demands a second factor that is not set up yet.
    */
   async login(
@@ -69,27 +67,32 @@ export class StaffAuthService {
     const loginKey = `login:${tenant.id}:${input.phone}`;
     await this.rateLimiter.consume(loginKey, LOGIN_LIMIT);
 
-    const credentials = await this.tenantDb.run(tenant.id, (tx) =>
-      this.findCredentials(tx, { phone: input.phone }),
+    const staff = await this.tenantDb.run(tenant.id, (tx) =>
+      this.credentials.findByPhone(tx, input.phone),
     );
 
     // Hashing runs outside the transaction so it does not hold a database connection.
-    const passwordOk = await this.passwords.verify(credentials?.password_hash, input.password);
-    if (!credentials || !passwordOk) {
+    const passwordOk = await this.passwords.verify(staff?.passwordHash, input.password);
+    if (!staff || !passwordOk) {
       throw invalidCredentials();
     }
 
-    if (!credentials.totp_secret) {
-      if (mustUseTotp(credentials)) {
-        throw totpSetupRequired(this.tokens.signTotpSetup(credentials.user_id, tenant.id));
+    if (staff.mustChangePassword) {
+      await this.rateLimiter.reset(loginKey);
+      throw passwordChangeRequired(this.tokens.signPasswordChange(staff.userId, tenant.id));
+    }
+
+    if (!staff.totpSecret) {
+      if (mustUseTotp(staff)) {
+        throw totpSetupRequired(this.tokens.signTotpSetup(staff.userId, tenant.id));
       }
     } else {
       if (!input.totpCode) {
         throw totpRequired();
       }
-      await this.rateLimiter.consume(`totp:${credentials.user_id}`, TOTP_LIMIT);
-      const secret = this.crypto.decrypt(TOTP_PURPOSE, credentials.totp_secret);
-      if (!(await this.totp.verify(credentials.user_id, secret, input.totpCode))) {
+      await this.rateLimiter.consume(`totp:${staff.userId}`, TOTP_LIMIT);
+      const secret = this.crypto.decrypt(TOTP_PURPOSE, staff.totpSecret);
+      if (!(await this.totp.verify(staff.userId, secret, input.totpCode))) {
         throw invalidTotp();
       }
     }
@@ -97,9 +100,50 @@ export class StaffAuthService {
     // Only failed attempts count towards the limits.
     await Promise.all([
       this.rateLimiter.reset(loginKey),
-      this.rateLimiter.reset(`totp:${credentials.user_id}`),
+      this.rateLimiter.reset(`totp:${staff.userId}`),
     ]);
-    return this.startSession(tenant.id, credentials.user_id, meta);
+    return this.startSession(tenant.id, staff.userId, meta);
+  }
+
+  /**
+   * Replaces a temporary password, proving identity with the change token that sign-in
+   * returned. It does not sign in: the client signs in again with the new password, which
+   * then runs the usual second-factor checks.
+   */
+  async setPassword(tenant: ResolvedTenant, input: PasswordSetInput): Promise<void> {
+    const claims = this.tokens.verifyPasswordChange(input.changeToken);
+    if (claims?.organizationId !== tenant.id) {
+      throw unauthorized('Change token is invalid or expired');
+    }
+
+    const staff = await this.tenantDb.run(tenant.id, (tx) =>
+      this.credentials.findByUserId(tx, claims.userId),
+    );
+    // The flag is cleared by the first use, so a change token works once.
+    if (!staff?.mustChangePassword) {
+      throw unauthorized('Change token is invalid or expired');
+    }
+
+    await this.replacePassword(tenant.id, staff, input.newPassword);
+  }
+
+  /** A signed-in staff member changes their own password; their other devices are signed out. */
+  async changePassword(
+    tenant: ResolvedTenant,
+    auth: AuthContext,
+    input: PasswordChangeInput,
+  ): Promise<void> {
+    const staff = await this.tenantDb.run(tenant.id, (tx) =>
+      this.credentials.findByUserId(tx, auth.userId),
+    );
+    const currentOk = await this.passwords.verify(staff?.passwordHash, input.currentPassword);
+    if (!staff || !currentOk) {
+      throw invalidCredentials();
+    }
+
+    await this.replacePassword(tenant.id, staff, input.newPassword, (tx) =>
+      this.sessions.revokeOtherStaffSessions(tx, auth.userId, auth.sessionId),
+    );
   }
 
   /**
@@ -122,13 +166,13 @@ export class StaffAuthService {
       userId = identity.sessionUserId;
     }
 
-    const credentials = await this.tenantDb.run(tenant.id, (tx) =>
-      this.findCredentials(tx, { userId }),
+    const staff = await this.tenantDb.run(tenant.id, (tx) =>
+      this.credentials.findByUserId(tx, userId),
     );
-    if (!credentials) {
+    if (!staff) {
       throw unauthorized();
     }
-    if (credentials.totp_secret) {
+    if (staff.totpSecret) {
       throw totpAlreadyEnabled();
     }
 
@@ -163,15 +207,32 @@ export class StaffAuthService {
     }
 
     const enrolled = await this.tenantDb.run(tenant.id, async (tx) => {
-      const [row] = await tx.$queryRaw<{ enrolled: boolean }[]>`
-        SELECT auth_enroll_totp(${claims.sub}::uuid, ${claims.sec}) AS enrolled`;
-      return row?.enrolled === true;
+      const staff = await this.credentials.findByUserId(tx, claims.sub);
+      // Never overwrites an existing authenticator: replacing one requires a reset.
+      return !!staff && this.credentials.enrollTotp(tx, staff.staffId, claims.sec);
     });
     if (!enrolled) {
       throw totpAlreadyEnabled();
     }
 
     return claims.login ? this.startSession(tenant.id, claims.sub, meta) : null;
+  }
+
+  private async replacePassword(
+    organizationId: string,
+    staff: StaffCredentials,
+    newPassword: string,
+    also?: (tx: TenantTransaction) => Promise<void>,
+  ): Promise<void> {
+    if (await this.passwords.verify(staff.passwordHash, newPassword)) {
+      throw passwordUnchanged();
+    }
+    const passwordHash = await this.passwords.hash(newPassword);
+
+    await this.tenantDb.run(organizationId, async (tx) => {
+      await this.credentials.setPassword(tx, staff.staffId, passwordHash, false);
+      await also?.(tx);
+    });
   }
 
   private startSession(
@@ -182,19 +243,5 @@ export class StaffAuthService {
     return this.tenantDb.run(organizationId, (tx) =>
       this.sessions.issue(tx, organizationId, { userId, audience: 'staff' }, meta),
     );
-  }
-
-  /** Active staff member of the current organization, or undefined. */
-  private async findCredentials(
-    tx: TenantTransaction,
-    by: { phone: string } | { userId: string },
-  ): Promise<StaffCredentials | undefined> {
-    const rows =
-      'phone' in by
-        ? await tx.$queryRaw<StaffCredentials[]>`
-            SELECT * FROM auth_staff_credentials(${by.phone}, NULL)`
-        : await tx.$queryRaw<StaffCredentials[]>`
-            SELECT * FROM auth_staff_credentials(NULL, ${by.userId}::uuid)`;
-    return rows[0];
   }
 }

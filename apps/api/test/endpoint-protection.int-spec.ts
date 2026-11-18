@@ -93,6 +93,7 @@ describe('Endpoint protection coverage', () => {
       'POST AuthController.logout',
       'POST AuthController.refresh',
       'POST AuthController.requestOtp',
+      'POST AuthController.setPassword',
       'POST AuthController.verifyOtp',
     ]);
   });

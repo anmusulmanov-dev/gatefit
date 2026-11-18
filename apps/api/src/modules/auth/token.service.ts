@@ -15,6 +15,7 @@ const accessClaims = z.object({
   aud: z.enum(['staff', 'member']),
 });
 
+// Shared by the short-lived tokens that only identify a staff member mid sign-in.
 const totpSetupClaims = z.object({ sub: z.uuid(), org: z.uuid() });
 
 const totpEnrollClaims = z.object({
@@ -28,6 +29,7 @@ const totpEnrollClaims = z.object({
 
 export type TotpEnrollClaims = z.infer<typeof totpEnrollClaims>;
 
+const PASSWORD_CHANGE_AUDIENCE = 'password-change';
 const TOTP_SETUP_AUDIENCE = 'totp-setup';
 const TOTP_ENROLL_AUDIENCE = 'totp-enroll';
 
@@ -69,6 +71,19 @@ export class TokenService {
           organizationId: claims.org,
         }
       : null;
+  }
+
+  signPasswordChange(userId: string, organizationId: string): string {
+    return this.sign(
+      PASSWORD_CHANGE_AUDIENCE,
+      { sub: userId, org: organizationId },
+      TOTP_SETUP_TOKEN_TTL_SECONDS,
+    );
+  }
+
+  verifyPasswordChange(token: string): { userId: string; organizationId: string } | null {
+    const claims = this.verify(token, PASSWORD_CHANGE_AUDIENCE, totpSetupClaims);
+    return claims ? { userId: claims.sub, organizationId: claims.org } : null;
   }
 
   signTotpSetup(userId: string, organizationId: string): string {

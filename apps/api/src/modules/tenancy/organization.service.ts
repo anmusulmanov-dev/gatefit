@@ -1,0 +1,168 @@
+import {
+  ErrorCode,
+  type LocationCreateInput,
+  type LocationDto,
+  type LocationUpdateInput,
+  type OrganizationDto,
+  type OrganizationUpdateInput,
+  workingHoursSchema,
+} from '@gatefit/shared';
+import { Injectable } from '@nestjs/common';
+import { AuditService } from '../../common/audit/audit.service';
+import { Clock } from '../../common/clock/clock';
+import { conflict, isUniqueViolation, notFound } from '../../common/errors/domain-errors';
+import type { StaffCaller } from '../../common/http/staff-request';
+import type { TenantTransaction } from '../../common/prisma/prisma.service';
+import { Prisma } from '../../generated/prisma/client';
+
+interface OrganizationRow {
+  id: string;
+  name: string;
+  slug: string;
+  country: string;
+  currency: string;
+  locale: string;
+  status: 'trial' | 'active' | 'blocked';
+  trialEndsAt: Date | null;
+}
+
+interface LocationRow {
+  id: string;
+  name: string;
+  address: string | null;
+  timezone: string;
+  workingHours: unknown;
+  deletedAt: Date | null;
+}
+
+function toOrganizationDto(row: OrganizationRow): OrganizationDto {
+  return {
+    id: row.id,
+    name: row.name,
+    slug: row.slug,
+    country: row.country,
+    currency: row.currency,
+    locale: row.locale,
+    status: row.status,
+    trialEndsAt: row.trialEndsAt?.toISOString() ?? null,
+  };
+}
+
+function toLocationDto(row: LocationRow): LocationDto {
+  // Stored as JSONB: re-validated on the way out rather than trusted.
+  const workingHours = workingHoursSchema.safeParse(row.workingHours);
+  return {
+    id: row.id,
+    name: row.name,
+    address: row.address,
+    timezone: row.timezone,
+    workingHours: workingHours.success ? workingHours.data : null,
+    archived: row.deletedAt !== null,
+  };
+}
+
+const nameTaken = () =>
+  conflict(ErrorCode.LOCATION_NAME_TAKEN, 'A location with this name already exists');
+
+/** An organization's own settings and its locations. */
+@Injectable()
+export class OrganizationService {
+  constructor(
+    private readonly audit: AuditService,
+    private readonly clock: Clock,
+  ) {}
+
+  async get(tx: TenantTransaction, organizationId: string): Promise<OrganizationDto> {
+    return toOrganizationDto(
+      await tx.organization.findUniqueOrThrow({ where: { id: organizationId } }),
+    );
+  }
+
+  /** Changes the name or default language. Country and currency belong to the platform. */
+  async update(
+    tx: TenantTransaction,
+    caller: StaffCaller,
+    input: OrganizationUpdateInput,
+  ): Promise<OrganizationDto> {
+    const before = await this.get(tx, caller.organizationId);
+    const updated = await tx.organization.update({
+      where: { id: caller.organizationId },
+      data: { name: input.name, locale: input.locale },
+    });
+
+    await this.audit.record(tx, caller.organizationId, caller.actor, {
+      action: 'organization.update',
+      entity: 'organization',
+      entityId: caller.organizationId,
+      before: { name: before.name, locale: before.locale },
+      after: { name: updated.name, locale: updated.locale },
+    });
+    return toOrganizationDto(updated);
+  }
+
+  async listLocations(tx: TenantTransaction, includeArchived: boolean): Promise<LocationDto[]> {
+    const rows = await tx.location.findMany({
+      where: includeArchived ? {} : { deletedAt: null },
+      orderBy: { id: 'asc' },
+    });
+    return rows.map(toLocationDto);
+  }
+
+  async createLocation(
+    tx: TenantTransaction,
+    caller: StaffCaller,
+    input: LocationCreateInput,
+  ): Promise<LocationDto> {
+    // Checked up front: a unique violation would abort the request's transaction.
+    await this.assertNameFree(tx, input.name);
+    const row = await tx.location.create({
+      data: {
+        organizationId: caller.organizationId,
+        name: input.name,
+        address: input.address ?? null,
+        timezone: input.timezone,
+        workingHours: input.workingHours ?? Prisma.DbNull,
+      },
+    });
+    return toLocationDto(row);
+  }
+
+  /** Edits a location, archives it or brings it back. Archived locations keep their history. */
+  async updateLocation(
+    tx: TenantTransaction,
+    locationId: string,
+    input: LocationUpdateInput,
+  ): Promise<LocationDto> {
+    const existing = await tx.location.findUnique({ where: { id: locationId } });
+    if (!existing) {
+      throw notFound('Location');
+    }
+    if (input.name !== undefined && input.name !== existing.name) {
+      await this.assertNameFree(tx, input.name);
+    }
+
+    try {
+      const row = await tx.location.update({
+        where: { id: locationId },
+        data: {
+          name: input.name,
+          address: input.address,
+          timezone: input.timezone,
+          workingHours: input.workingHours === null ? Prisma.DbNull : input.workingHours,
+          deletedAt:
+            input.archived === undefined ? undefined : input.archived ? this.clock.now() : null,
+        },
+      });
+      return toLocationDto(row);
+    } catch (error) {
+      throw isUniqueViolation(error) ? nameTaken() : error;
+    }
+  }
+
+  private async assertNameFree(tx: TenantTransaction, name: string): Promise<void> {
+    // Archived locations keep their name: restoring one must not create a duplicate.
+    if (await tx.location.findFirst({ where: { name } })) {
+      throw nameTaken();
+    }
+  }
+}

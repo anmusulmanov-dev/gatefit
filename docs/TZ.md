@@ -177,8 +177,8 @@ Barcha biznes jadvallarida: `id` (UUID v7), `organization_id`, `created_at`, `up
 | --- | --- | --- | --- |
 | organizations | name, slug, country, currency, locale, status, saas_plan_id, trial_ends_at | — | M |
 | locations | name, address, timezone, working_hours | organization | M |
-| users | phone (E.164), email, password_hash, totp_secret | — | M |
-| staff | position, status | user, organization, locations (M:N) | M |
+| users | phone (E.164), email | — | M |
+| staff | first_name, last_name, position, status, password_hash, totp_secret, must_change_password | user, organization, role, locations (M:N) | M |
 | roles, role_permissions | name, permissions | organization | M |
 | members | first_name, last_name, phone, birth_date, gender, photo_key, status, source, notes | organization, user?, home_location | M |
 | plans | name, type, duration, visit_limit, price_minor, currency, restrictions (JSONB), is_active | organization | M |
@@ -205,6 +205,7 @@ Qoidalar:
 - Bitta a'zoda bir nechta faol abonement bo'lishi mumkin; kirishda ustuvorlik: avval muddati ertaroq tugaydigani.
 - `check_ins` va `audit_logs` faqat qo'shiladi; oy bo'yicha partition.
 - Telefon tashkilot ichida yagona.
+- Xodimning paroli va TOTP si `staff` da, ya'ni har tashkilot uchun alohida (`docs/ADR/0003-staff-credentials.md`).
 - To'lov yozuvlari o'chirilmaydi.
 
 ## 7. API
@@ -219,9 +220,9 @@ Qoidalar:
 
 | Guruh | Endpoint | Bosqich |
 | --- | --- | --- |
-| Auth | POST /auth/login, /auth/otp/request, /auth/otp/verify, /auth/refresh, /auth/logout, /auth/logout-all, /auth/totp/setup, /auth/totp/confirm | M |
+| Auth | POST /auth/login, /auth/otp/request, /auth/otp/verify, /auth/refresh, /auth/logout, /auth/logout-all, /auth/totp/setup, /auth/totp/confirm, /auth/password/set, /auth/password/change | M |
 | Tashkilot | GET/PATCH /organization, GET/POST/PATCH /locations | M |
-| Xodimlar | GET/POST/PATCH /staff, GET/POST/PATCH /roles | M |
+| Xodimlar | GET/POST/PATCH /staff, POST /staff/{id}/reset-password, POST /staff/{id}/reset-totp, GET/POST/PATCH /roles | M |
 | A'zolar | GET/POST /members, GET/PATCH /members/{id}, POST /members/import, GET /members/export | M |
 | Tariflar | GET/POST /plans, PATCH /plans/{id} | M |
 | Abonementlar | POST /members/{id}/memberships, POST /memberships/{id}/freeze, /unfreeze, /cancel | M |
