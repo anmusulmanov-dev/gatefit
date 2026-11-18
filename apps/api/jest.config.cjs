@@ -12,4 +12,8 @@ module.exports = {
   collectCoverageFrom: ['src/**/*.ts', '!src/generated/**', '!src/main.ts'],
   coverageDirectory: './coverage',
   testEnvironment: 'node',
+  // Points the run at the test database and rebuilds its schema from migrations.
+  globalSetup: '<rootDir>/test/support/global-setup.ts',
+  // Integration hooks create apps and hash passwords (Argon2); 5 s is too tight on CI runners.
+  testTimeout: 30000,
 };

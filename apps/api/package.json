@@ -4,13 +4,14 @@
   "private": true,
   "scripts": {
     "dev": "nest start --watch",
-    "build": "nest build",
+    "build": "prisma generate && nest build",
     "start": "node dist/main.js",
     "lint": "eslint .",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js",
     "prisma": "prisma",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "seed": "tsc -p tsconfig.seed.json && node dist-seed/prisma/seed.js"
   },
   "dependencies": {
     "@gatefit/shared": "workspace:*",

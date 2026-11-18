@@ -40,7 +40,10 @@ jobs:
 
     env:
       TURBO_TELEMETRY_DISABLED: 1
-      DATABASE_URL: postgresql://gatefit:gatefit@localhost:5432/gatefit
+      DATABASE_URL: postgresql://gatefit_app:gatefit_app@localhost:5432/gatefit
+      DATABASE_ADMIN_URL: postgresql://gatefit_migrator:gatefit_migrator@localhost:5432/gatefit
+      TEST_DATABASE_URL: postgresql://gatefit_app:gatefit_app@localhost:5432/gatefit_test
+      TEST_DATABASE_ADMIN_URL: postgresql://gatefit_migrator:gatefit_migrator@localhost:5432/gatefit_test
       REDIS_URL: redis://localhost:6379
       # Not contacted yet; present because the API validates its whole configuration at startup.
       S3_ENDPOINT: http://localhost:9000
@@ -50,16 +53,26 @@ jobs:
       S3_BUCKET: gatefit-ci
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version-file: .nvmrc
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
+
+      - name: Create database roles and test database
+        run: bash infra/postgres/init.sh
+        env:
+          PGHOST: localhost
+          PGPASSWORD: gatefit
+          POSTGRES_USER: gatefit
+          POSTGRES_DB: gatefit
+          DB_APP_PASSWORD: gatefit_app
+          DB_MIGRATOR_PASSWORD: gatefit_migrator
 
       - name: Apply migrations
         run: pnpm --filter api prisma migrate deploy
