@@ -1,0 +1,58 @@
+name: gatefit-dev
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-gatefit}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-gatefit}
+      POSTGRES_DB: ${POSTGRES_DB:-gatefit}
+    ports:
+      - '${POSTGRES_PORT:-5432}:5432'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - '${REDIS_PORT:-6379}:6379'
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # Official MinIO images are no longer published; Chainguard ships a maintained build.
+  minio:
+    image: cgr.dev/chainguard/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY:-gatefit}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY:-gatefit-secret}
+    ports:
+      - '${MINIO_PORT:-9000}:9000'
+      - '${MINIO_CONSOLE_PORT:-9001}:9001'
+    volumes:
+      - minio-data:/data
+
+  # One-shot job: creates the dev bucket, then exits. Retries until MinIO accepts connections.
+  minio-init:
+    image: cgr.dev/chainguard/minio-client:latest
+    depends_on:
+      - minio
+    restart: on-failure
+    environment:
+      MC_HOST_local: http://${S3_ACCESS_KEY:-gatefit}:${S3_SECRET_KEY:-gatefit-secret}@minio:9000
+    command: mb --ignore-existing local/${S3_BUCKET:-gatefit-dev}
+
+volumes:
+  postgres-data:
+  redis-data:
+  minio-data:

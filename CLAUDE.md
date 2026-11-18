@@ -46,18 +46,28 @@ infra/        docker-compose.*.yml, Caddyfile, backup skriptlari
 
 ## Buyruqlar
 
-Loyiha karkasi yaratilgach shu bo'limni haqiqiy buyruqlar bilan yangila. Kutilayotgan to'plam:
+Barchasi repozitoriy ildizidan ishga tushiriladi. Muhit: ildizdagi bitta `.env` (`.env.example` dan nusxa).
 
 ```
-pnpm install
-pnpm dev                 # barcha ilovalar
-pnpm --filter api dev
+pnpm install                 # bog'liqliklar + prisma generate
+pnpm infra:up                # postgres, redis, minio (docker compose -f infra/docker-compose.dev.yml up -d)
+pnpm infra:down
+pnpm dev                     # barcha ilovalar: web :3000, member :3001, api :8000
+pnpm --filter api dev        # bitta ilova: api | web | member
 pnpm lint && pnpm typecheck
-pnpm test                # birlik va integratsiya
-pnpm --filter api test:e2e
-pnpm --filter api prisma migrate dev
-docker compose -f infra/docker-compose.dev.yml up -d   # postgres, redis, minio
+pnpm test                    # birlik va integratsiya (postgres va redis ishlab turishi kerak)
+pnpm --filter api test       # bitta paket; bitta fayl: pnpm --filter api test -- health
+pnpm build
+pnpm format                  # prettier --write; tekshirish: pnpm format:check
+pnpm --filter api prisma migrate dev --name <nom>   # yangi migratsiya
+pnpm --filter api prisma migrate deploy             # CI va server
 ```
+
+- API: `http://localhost:8000/api/v1`, Swagger: `/api/docs`, health: `/api/v1/health`.
+- Testlar: `*.spec.ts` kod yonida (birlik), `apps/api/test/*.int-spec.ts` (integratsiya, haqiqiy baza bilan).
+- `packages/*` `dist` ga yig'iladi; turbo `lint`, `typecheck`, `test`, `dev` dan oldin ularni o'zi yig'adi.
+- Playwright e2e (`pnpm --filter api test:e2e`) hali yo'q: birinchi foydalanuvchi oqimi bilan qo'shiladi.
+- API porti 4000 emas, 8000: Windows'da 3345–4144 oralig'i Hyper-V tomonidan band bo'lishi mumkin.
 
 ## Buzilmaydigan qoidalar
 
