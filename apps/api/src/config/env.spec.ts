@@ -52,6 +52,18 @@ describe('validateEnv', () => {
 
   it('refuses the console SMS driver in production', () => {
     expect(() => validateEnv({ ...valid, NODE_ENV: 'production' })).toThrow(/SMS_DRIVER/);
+    expect(() => validateEnv({ ...valid, NODE_ENV: 'production', APP_ENV: 'production' })).toThrow(
+      /SMS_DRIVER/,
+    );
+    expect(() => validateEnv({ ...valid, APP_ENV: 'production' })).toThrow(/SMS_DRIVER/);
+  });
+
+  it('allows the console SMS driver on staging built for production', () => {
+    expect(validateEnv({ ...valid, NODE_ENV: 'production', APP_ENV: 'staging' })).toMatchObject({
+      NODE_ENV: 'production',
+      APP_ENV: 'staging',
+      SMS_DRIVER: 'console',
+    });
   });
 
   it('rejects an out-of-range port', () => {
