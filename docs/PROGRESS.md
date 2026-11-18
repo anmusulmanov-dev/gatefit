@@ -15,6 +15,32 @@ Har sessiya oxirida yangilanadi: nima qilindi, nima qoldi, ma'lum muammolar.
 | M1c Sozlamalar UI                 | Tayyor (2026-11-17)              |
 | M1d Super-admin UI                | Tayyor (2026-11-17) — M1 yopildi |
 
+## 2026-11-18 — Staging serveri
+
+Branch: `chore/staging-deploy`. Qaror: `docs/ADR/0005-staging.md`. Runbook: `infra/staging/README.md`.
+
+### Qilindi
+
+- **Image'lar** (ildizdagi `Dockerfile`): `api` (migratsiya va seed ham shu image'da), `web` va `member` (Next.js standalone, `NEXT_OUTPUT=standalone` bo'lganda).
+- **`infra/docker-compose.staging.yml`:** postgres, redis, minio, migrate (bir martalik), api, web, member, caddy. Tashqariga faqat Caddy (80, 443).
+- **Caddy** (`infra/caddy/Caddyfile`): `<base>` va `admin.<base>` → web; `<slug>.<base>` → web; `<slug>.my.<base>` → member; `/api/*` → api. Sertifikatlar talab bo'yicha.
+- **API:** `GET /api/v1/tls/allowed?domain=` (Caddy uchun ochiq endpoint: faqat platforma manzillari va mavjud tashkilotlar); `APP_ENV` (staging `NODE_ENV=production` bilan, lekin konsol SMS ruxsat).
+- **Skriptlar:** `init-env.sh` (tasodifiy sirlar bilan `.env`, hech narsani chiqarmaydi), `deploy.sh` (cron, `main` o'zgarsa yig'adi va yangilaydi, muvaffaqiyatsiz commitni qayta urinmaydi), `backup.sh` (kunlik `pg_dump`, 14 tasi saqlanadi).
+- **web01:** Nginx Proxy Manager to'xtatildi (`docker stop`, avtomatik ishga tushishi o'chirilgan; ma'lumotlari `/srv/proxy` da). Repo `/srv/gatefit` da, `.env` serverda yaratildi.
+
+### Tekshirildi
+
+- `pnpm lint`, `pnpm typecheck`, `pnpm test` yashil; yangi testlar: `tls.service.spec.ts`, `test/tls.int-spec.ts`, `env.spec.ts`, ochiq endpointlar ro'yxati.
+- web01 da image'lar yig'ildi, stack ishga tushdi: migratsiyalar va seed o'tdi, API healthy. Ichki tarmoqdan: TLS tekshiruvi (mavjud manzillar 200, notanishlari 404), HTTP→HTTPS yo'naltirish, panel, admin va a'zo ilovasi o'z manzillarida, demo ega bilan kirish (kutilganidek TOTP sozlashni so'radi).
+- **Tekshirilmagan:** tashqaridan kirish va haqiqiy sertifikat. Avval DNS yozuvlari va routerda port yo'naltirish kerak.
+
+### Qoldi
+
+- Anvar: DNS (`staging`, `*.staging`, `*.my.staging` → tashqi IP) va routerda 80/443 ni 10.10.7.5 ga yo'naltirish.
+- PR birlashgach: serverda `main` ga o'tish va cron (deploy har 2 daqiqa, zaxira har kuni).
+- Ixcham production image'i, registry, monitoring, zaxirani serverdan tashqariga ko'chirish — M8.
+- Lokal Docker Desktop'ga 4 GB xotira ajratilgan: to'liq build uchun `--build-arg BUILD_CONCURRENCY=1`.
+
 ## 2026-11-18 — GitHub, CI va Node 24
 
 - Repozitoriy: https://github.com/anmusulmanov-dev/gatefit (ochiq). PR #1 (chore/scaffold) main'ga birlashtirildi.
