@@ -2,7 +2,19 @@
   "common": {
     "appName": "Gatefit",
     "language": "Language",
-    "loading": "Loading…"
+    "loading": "Loading…",
+    "save": "Save",
+    "cancel": "Cancel",
+    "add": "Add",
+    "edit": "Edit",
+    "close": "Close",
+    "loadMore": "Show more",
+    "saved": "Saved.",
+    "retry": "Try again",
+    "loadError": "Could not load the data.",
+    "optional": "optional",
+    "actions": "Actions",
+    "confirm": "Confirm"
   },
   "languages": {
     "uz": "O'zbekcha",
@@ -37,7 +49,12 @@
     "codeSentTo": "We sent a code to {phone}.",
     "smsCode": "SMS code",
     "resendCode": "Send the code again",
-    "changePhone": "Change number"
+    "changePhone": "Change number",
+    "newPasswordTitle": "Set a new password",
+    "newPasswordHint": "The password you were given is temporary. Choose a new one that only you know.",
+    "newPassword": "New password",
+    "confirmPassword": "Repeat the new password",
+    "passwordsMismatch": "The passwords do not match."
   },
   "errors": {
     "generic": "Something went wrong. Please try again.",
@@ -49,7 +66,20 @@
     "OTP_EXPIRED": "The code has expired. Request a new one.",
     "OTP_ATTEMPTS_EXCEEDED": "Too many wrong attempts. Request a new code.",
     "ORGANIZATION_NOT_FOUND": "Organization not found. Check the address.",
-    "ORGANIZATION_BLOCKED": "This organization is blocked."
+    "ORGANIZATION_BLOCKED": "This organization is blocked.",
+    "PERMISSION_DENIED": "You are not allowed to do this.",
+    "NOT_FOUND": "Not found. Refresh the page.",
+    "PASSWORD_UNCHANGED": "The new password must differ from the old one.",
+    "LOCATION_NAME_TAKEN": "A location with this name already exists (archived ones included).",
+    "ROLE_NAME_TAKEN": "A role with this name already exists.",
+    "ROLE_IN_USE": "Staff hold this role. Change their role first.",
+    "SYSTEM_ROLE_IMMUTABLE": "Standard roles cannot be changed.",
+    "STAFF_EXISTS": "A staff member with this phone already exists.",
+    "LAST_OWNER": "The organization must keep at least one active owner.",
+    "CANNOT_MODIFY_SELF": "You cannot do this to yourself.",
+    "PERMISSION_ESCALATION": "You cannot grant permissions you lack or change someone with wider permissions than yours.",
+    "INVALID_REFERENCE": "The selected role or location no longer exists. Refresh the page.",
+    "MODULE_NOT_AVAILABLE": "Your plan does not include this feature."
   },
   "organization": {
     "missingTitle": "Organization not found",
@@ -76,6 +106,195 @@
     "home": {
       "title": "Member app",
       "subtitle": "Your membership and entry code will live here."
+    }
+  },
+  "nav": {
+    "home": "Home",
+    "settings": "Settings"
+  },
+  "settings": {
+    "title": "Settings",
+    "noAccess": "You do not have access to this section.",
+    "nav": {
+      "organization": "Organization",
+      "locations": "Locations",
+      "staff": "Staff",
+      "roles": "Roles",
+      "account": "My account"
+    }
+  },
+  "orgSettings": {
+    "name": "Organization name",
+    "locale": "Organization language",
+    "localeHint": "Text messages and notifications are sent in this language. Everyone picks their own interface language.",
+    "address": "Address",
+    "country": "Country",
+    "currency": "Currency",
+    "status": "Status",
+    "statusValues": {
+      "trial": "Trial",
+      "active": "Active",
+      "blocked": "Blocked"
+    },
+    "trialEndsAt": "Trial ends",
+    "plan": "Plan",
+    "noPlan": "No plan assigned",
+    "memberLimit": "Up to {count} active members per location",
+    "unlimited": "Unlimited active members",
+    "platformHint": "Country, currency and plan are changed by Gatefit.",
+    "readOnly": "You are not allowed to change these details."
+  },
+  "locations": {
+    "add": "Add location",
+    "edit": "Edit location",
+    "name": "Name",
+    "address": "Address",
+    "timezone": "Time zone",
+    "workingHours": "Opening hours",
+    "setHours": "Set opening hours",
+    "clearHours": "Remove opening hours",
+    "noHours": "No opening hours set",
+    "closed": "Closed",
+    "opens": "Opens",
+    "closes": "Closes",
+    "days": {
+      "mon": "Monday",
+      "tue": "Tuesday",
+      "wed": "Wednesday",
+      "thu": "Thursday",
+      "fri": "Friday",
+      "sat": "Saturday",
+      "sun": "Sunday"
+    },
+    "archive": "Archive",
+    "restore": "Restore",
+    "archived": "Archived",
+    "showArchived": "Show archived",
+    "empty": "No locations yet."
+  },
+  "staffSettings": {
+    "add": "Add staff member",
+    "edit": "Edit staff member",
+    "phone": "Phone",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "position": "Position",
+    "role": "Role",
+    "locations": "Locations",
+    "status": "Status",
+    "statusValues": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "allStatuses": "All",
+    "temporaryPassword": "Temporary password",
+    "temporaryPasswordHint": "Give this password to the staff member yourself. They replace it at first sign-in.",
+    "generate": "Generate",
+    "totp": "Two-step sign-in",
+    "totpOn": "On",
+    "totpOff": "Off",
+    "mustChangePassword": "Must change password",
+    "resetPassword": "Reset password",
+    "resetPasswordHint": "All their sessions end, and they set a new password at their next sign-in.",
+    "passwordResetDone": "Password replaced. Give the new temporary password to the staff member.",
+    "resetTotp": "Turn off two-step sign-in",
+    "resetTotpHint": "They set up the authenticator again at their next sign-in; all their sessions end.",
+    "totpResetDone": "Two-step sign-in turned off.",
+    "you": "You",
+    "selfHint": "You cannot change your own role or status.",
+    "strongerHint": "This staff member's role has wider permissions than yours.",
+    "ownerHint": "An owner's password can only be reset by Gatefit support.",
+    "noRolesHint": "You can only assign roles whose permissions you hold yourself.",
+    "empty": "No staff yet."
+  },
+  "rolesSettings": {
+    "add": "Add role",
+    "edit": "Edit role",
+    "view": "Permissions",
+    "name": "Role name",
+    "permissions": "Permissions",
+    "system": "Standard",
+    "staffCount": "{count} staff",
+    "archive": "Archive",
+    "archiveHint": "The role will be removed. If staff hold it, change their role first.",
+    "systemReadOnly": "Standard roles cannot be changed.",
+    "notHeldHint": "You can only grant permissions you hold yourself.",
+    "permissionCount": "{count} permissions"
+  },
+  "account": {
+    "currentPassword": "Current password",
+    "newPassword": "New password",
+    "confirmPassword": "Repeat the new password",
+    "change": "Change password",
+    "changed": "Password changed. Sessions on your other devices were ended.",
+    "passwordHint": "At least 8 characters.",
+    "wrongCurrent": "The current password is wrong."
+  },
+  "permissionAreas": {
+    "organization": "Organization",
+    "locations": "Locations",
+    "staff": "Staff",
+    "roles": "Roles",
+    "members": "Members",
+    "plans": "Plans",
+    "memberships": "Memberships",
+    "access": "Access control",
+    "payments": "Payments",
+    "cash_shifts": "Cash desk",
+    "reports": "Reports",
+    "audit": "Audit"
+  },
+  "permissions": {
+    "organization": {
+      "read": "View organization details",
+      "update": "Edit organization details"
+    },
+    "locations": {
+      "read": "View locations",
+      "manage": "Manage locations"
+    },
+    "staff": {
+      "read": "View staff",
+      "manage": "Manage staff"
+    },
+    "roles": {
+      "read": "View roles",
+      "manage": "Manage roles"
+    },
+    "members": {
+      "read": "View members",
+      "manage": "Add and edit members",
+      "import": "Import members",
+      "export": "Export members"
+    },
+    "plans": {
+      "read": "View plans",
+      "manage": "Manage plans"
+    },
+    "memberships": {
+      "sell": "Sell memberships",
+      "freeze": "Freeze memberships",
+      "cancel": "Cancel memberships"
+    },
+    "access": {
+      "verify": "Check entry",
+      "manual": "Record entry manually",
+      "read": "View entry log"
+    },
+    "payments": {
+      "read": "View payments",
+      "accept": "Accept payments",
+      "refund": "Refund payments"
+    },
+    "cash_shifts": {
+      "manage": "Manage cash shifts"
+    },
+    "reports": {
+      "daily": "Daily report",
+      "financial": "Financial reports"
+    },
+    "audit": {
+      "read": "View audit log"
     }
   }
 }
