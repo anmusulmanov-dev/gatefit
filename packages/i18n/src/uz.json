@@ -1,17 +1,75 @@
 {
   "common": {
     "appName": "Gatefit",
-    "language": "Til"
+    "language": "Til",
+    "loading": "Yuklanmoqda…"
   },
   "languages": {
     "uz": "O'zbekcha",
     "ru": "Русский",
     "en": "English"
   },
+  "roles": {
+    "owner": "Ega",
+    "manager": "Menejer",
+    "receptionist": "Qabulxona xodimi",
+    "trainer": "Murabbiy",
+    "accountant": "Hisobchi"
+  },
+  "auth": {
+    "signIn": "Kirish",
+    "signOut": "Chiqish",
+    "phone": "Telefon raqam",
+    "phonePlaceholder": "+998 90 123 45 67",
+    "password": "Parol",
+    "back": "Orqaga",
+    "totpTitle": "Tasdiqlash kodi",
+    "totpHint": "Autentifikator ilovasidagi 6 xonali kodni kiriting.",
+    "totpCode": "Autentifikator kodi",
+    "confirm": "Tasdiqlash",
+    "totpSetupTitle": "Ikki bosqichli himoyani sozlash",
+    "totpSetupIntro": "Rolingiz uchun autentifikator ilovasi majburiy. Google Authenticator yoki shunga o'xshash ilovaga quyidagi kalitni kiriting, so'ng ilova ko'rsatgan kodni yozing.",
+    "totpSecret": "Kalit",
+    "totpOpenApp": "Shu qurilmadagi autentifikator ilovasida ochish",
+    "memberTitle": "Telefon raqamingiz bilan kiring",
+    "memberIntro": "Raqamingizga SMS orqali bir martalik kod yuboramiz.",
+    "sendCode": "Kod yuborish",
+    "codeSentTo": "Kod {phone} raqamiga yuborildi.",
+    "smsCode": "SMS kod",
+    "resendCode": "Kodni qayta yuborish",
+    "changePhone": "Raqamni o'zgartirish"
+  },
+  "errors": {
+    "generic": "Xatolik yuz berdi. Qaytadan urinib ko'ring.",
+    "VALIDATION_FAILED": "Kiritilgan ma'lumotni tekshiring.",
+    "RATE_LIMITED": "Urinishlar juda ko'p. Birozdan keyin qayta urinib ko'ring.",
+    "INVALID_CREDENTIALS": "Telefon raqam yoki parol noto'g'ri.",
+    "INVALID_TOTP": "Kod noto'g'ri. Ilovadagi yangi kodni kiriting.",
+    "INVALID_OTP": "Kod noto'g'ri.",
+    "OTP_EXPIRED": "Kod muddati tugagan. Yangi kod so'rang.",
+    "OTP_ATTEMPTS_EXCEEDED": "Juda ko'p noto'g'ri urinish. Yangi kod so'rang.",
+    "ORGANIZATION_NOT_FOUND": "Tashkilot topilmadi. Manzilni tekshiring.",
+    "ORGANIZATION_BLOCKED": "Tashkilot bloklangan."
+  },
+  "organization": {
+    "missingTitle": "Tashkilot topilmadi",
+    "missingText": "Bu manzilda tashkilot yo'q. Zalingiz manzilini oching, masalan: demo.gatefit.uz.",
+    "blockedTitle": "Tashkilot bloklangan",
+    "blockedText": "Batafsil ma'lumot uchun Gatefit bilan bog'laning.",
+    "unavailableTitle": "Xizmat vaqtincha ishlamayapti",
+    "unavailableText": "Birozdan keyin sahifani yangilang."
+  },
+  "sms": {
+    "otp": "Gatefit: kirish kodi {code}. Uni hech kimga aytmang."
+  },
   "web": {
     "home": {
       "title": "Boshqaruv paneli",
       "subtitle": "Zalingizni bitta joydan boshqaring."
+    },
+    "header": {
+      "location": "Filial",
+      "noLocations": "Filial biriktirilmagan"
     }
   },
   "member": {

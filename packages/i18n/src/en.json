@@ -1,17 +1,75 @@
 {
   "common": {
     "appName": "Gatefit",
-    "language": "Language"
+    "language": "Language",
+    "loading": "Loading…"
   },
   "languages": {
     "uz": "O'zbekcha",
     "ru": "Русский",
     "en": "English"
   },
+  "roles": {
+    "owner": "Owner",
+    "manager": "Manager",
+    "receptionist": "Receptionist",
+    "trainer": "Trainer",
+    "accountant": "Accountant"
+  },
+  "auth": {
+    "signIn": "Sign in",
+    "signOut": "Sign out",
+    "phone": "Phone number",
+    "phonePlaceholder": "+998 90 123 45 67",
+    "password": "Password",
+    "back": "Back",
+    "totpTitle": "Verification code",
+    "totpHint": "Enter the 6-digit code from your authenticator app.",
+    "totpCode": "Authenticator code",
+    "confirm": "Confirm",
+    "totpSetupTitle": "Set up two-step sign-in",
+    "totpSetupIntro": "Your role requires an authenticator app. Enter the key below into Google Authenticator or a similar app, then type the code it shows.",
+    "totpSecret": "Key",
+    "totpOpenApp": "Open in the authenticator app on this device",
+    "memberTitle": "Sign in with your phone number",
+    "memberIntro": "We will text you a one-time code.",
+    "sendCode": "Send code",
+    "codeSentTo": "We sent a code to {phone}.",
+    "smsCode": "SMS code",
+    "resendCode": "Send the code again",
+    "changePhone": "Change number"
+  },
+  "errors": {
+    "generic": "Something went wrong. Please try again.",
+    "VALIDATION_FAILED": "Check what you entered.",
+    "RATE_LIMITED": "Too many attempts. Try again in a little while.",
+    "INVALID_CREDENTIALS": "Wrong phone number or password.",
+    "INVALID_TOTP": "Wrong code. Enter the new code from the app.",
+    "INVALID_OTP": "Wrong code.",
+    "OTP_EXPIRED": "The code has expired. Request a new one.",
+    "OTP_ATTEMPTS_EXCEEDED": "Too many wrong attempts. Request a new code.",
+    "ORGANIZATION_NOT_FOUND": "Organization not found. Check the address.",
+    "ORGANIZATION_BLOCKED": "This organization is blocked."
+  },
+  "organization": {
+    "missingTitle": "Organization not found",
+    "missingText": "There is no organization at this address. Open your gym's address, for example demo.gatefit.uz.",
+    "blockedTitle": "Organization blocked",
+    "blockedText": "Contact Gatefit for details.",
+    "unavailableTitle": "Service temporarily unavailable",
+    "unavailableText": "Refresh the page in a little while."
+  },
+  "sms": {
+    "otp": "Gatefit: your sign-in code is {code}. Do not share it."
+  },
   "web": {
     "home": {
       "title": "Management panel",
       "subtitle": "Run your gym from one place."
+    },
+    "header": {
+      "location": "Location",
+      "noLocations": "No location assigned"
     }
   },
   "member": {

@@ -10,7 +10,7 @@
     "TEST_DATABASE_ADMIN_URL",
     "REDIS_URL",
     "API_PORT",
-    "NEXT_PUBLIC_API_URL"
+    "API_INTERNAL_URL"
   ],
   "tasks": {
     "build": {

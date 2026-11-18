@@ -3,7 +3,6 @@ import {
   Body,
   Controller,
   Get,
-  type INestApplication,
   Injectable,
   type MiddlewareConsumer,
   Module,
@@ -11,21 +10,23 @@ import {
   type NestModule,
   Post,
 } from '@nestjs/common';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import { Test } from '@nestjs/testing';
 import type { NextFunction, Response } from 'express';
 import request from 'supertest';
-import type { App } from 'supertest/types';
 import { AppModule } from '../src/app.module';
 import { configureApp } from '../src/app.setup';
 import { TenantDb } from '../src/common/tenancy/tenant-db.service';
-import type { TenantRequest } from '../src/common/tenancy/tenant-transaction.interceptor';
+import type { AppRequest } from '../src/common/http/app-request';
+import { Public } from '../src/modules/auth/auth.decorators';
 import type { Organization, PrismaClient } from '../src/generated/prisma/client';
 import { createAdminClient, createOrganization } from './support/db';
 
-// Stand-in for authentication (stage 0.3): takes the organization from a header.
+// Isolates the transaction interceptor from authentication: the organization comes from a
+// header and the routes are public, so AuthGuard and the access check stay out of the way.
 @Injectable()
 class FakeAuthMiddleware implements NestMiddleware {
-  use(req: TenantRequest, _res: Response, next: NextFunction): void {
+  use(req: AppRequest, _res: Response, next: NextFunction): void {
     const header = req.headers['x-test-org'];
     if (typeof header === 'string') {
       req.organizationId = header;
@@ -34,6 +35,7 @@ class FakeAuthMiddleware implements NestMiddleware {
   }
 }
 
+@Public()
 @Controller('probe/locations')
 class ProbeController {
   constructor(private readonly tenantDb: TenantDb) {}
@@ -59,7 +61,7 @@ class ProbeModule implements NestModule {
 }
 
 describe('Tenant request transaction (integration)', () => {
-  let app: INestApplication<App>;
+  let app: NestExpressApplication;
   let admin: PrismaClient;
   let orgA: Organization;
   let orgB: Organization;
@@ -68,7 +70,7 @@ describe('Tenant request transaction (integration)', () => {
     const moduleRef = await Test.createTestingModule({
       imports: [AppModule, ProbeModule],
     }).compile();
-    app = moduleRef.createNestApplication();
+    app = moduleRef.createNestApplication<NestExpressApplication>();
     configureApp(app);
     await app.init();
 

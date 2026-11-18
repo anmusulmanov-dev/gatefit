@@ -5,6 +5,7 @@ import {
   ApiServiceUnavailableResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { Public } from '../auth/auth.decorators';
 import { type DependencyStatus, type HealthReport, HealthService } from './health.service';
 
 class HealthChecksDto {
@@ -30,6 +31,7 @@ export class HealthController {
 
   // Public by design: used by load balancers and uptime monitors.
   @Get()
+  @Public()
   @ApiOkResponse({ type: HealthResponseDto })
   @ApiServiceUnavailableResponse({ description: 'A dependency is down; see details.checks' })
   check(): Promise<HealthReport> {

@@ -3,6 +3,8 @@ import { validateEnv } from './env';
 const valid = {
   DATABASE_URL: 'postgresql://user:pass@localhost:5432/db',
   REDIS_URL: 'redis://localhost:6379',
+  JWT_SECRET: 'x'.repeat(32),
+  DATA_ENCRYPTION_KEY: Buffer.alloc(32, 1).toString('base64'),
   S3_ENDPOINT: 'http://localhost:9000',
   S3_REGION: 'us-east-1',
   S3_ACCESS_KEY: 'key',
@@ -38,6 +40,17 @@ describe('validateEnv', () => {
     expect(() => validateEnv({ ...valid, DATABASE_URL: 'mysql://localhost/db' })).toThrow(
       /DATABASE_URL/,
     );
+  });
+
+  it('rejects a short JWT secret and a malformed encryption key', () => {
+    expect(() => validateEnv({ ...valid, JWT_SECRET: 'short' })).toThrow(/JWT_SECRET/);
+    expect(() => validateEnv({ ...valid, DATA_ENCRYPTION_KEY: 'abc' })).toThrow(
+      /DATA_ENCRYPTION_KEY/,
+    );
+  });
+
+  it('refuses the console SMS driver in production', () => {
+    expect(() => validateEnv({ ...valid, NODE_ENV: 'production' })).toThrow(/SMS_DRIVER/);
   });
 
   it('rejects an out-of-range port', () => {

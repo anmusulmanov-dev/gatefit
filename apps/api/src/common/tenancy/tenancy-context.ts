@@ -1,10 +1,10 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
-import type { Prisma } from '../../generated/prisma/client';
+import type { TenantTransaction } from '../prisma/prisma.service';
 
 export interface TenancyStore {
   organizationId: string;
   /** Transaction in which `app.current_org` is set. All tenant queries must go through it. */
-  tx: Prisma.TransactionClient;
+  tx: TenantTransaction;
 }
 
 const storage = new AsyncLocalStorage<TenancyStore>();

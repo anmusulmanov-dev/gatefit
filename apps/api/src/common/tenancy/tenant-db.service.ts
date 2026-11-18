@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { z } from 'zod';
-import type { Prisma } from '../../generated/prisma/client';
-import { PrismaService } from '../prisma/prisma.service';
+import { PrismaService, type TenantTransaction } from '../prisma/prisma.service';
 import { TenancyContext } from './tenancy-context';
 
 const organizationIdSchema = z.uuid();
@@ -20,10 +19,7 @@ export class TenantDb {
   constructor(private readonly prisma: PrismaService) {}
 
   /** Runs `fn` in a transaction scoped to the organization. Commits on success, rolls back on throw. */
-  async run<T>(
-    organizationId: string,
-    fn: (tx: Prisma.TransactionClient) => Promise<T>,
-  ): Promise<T> {
+  async run<T>(organizationId: string, fn: (tx: TenantTransaction) => Promise<T>): Promise<T> {
     const id = organizationIdSchema.parse(organizationId);
 
     return this.prisma.$transaction(async (tx) => {
@@ -33,7 +29,7 @@ export class TenantDb {
   }
 
   /** The transaction of the surrounding `run()`; throws when called outside of one. */
-  get tx(): Prisma.TransactionClient {
+  get tx(): TenantTransaction {
     return TenancyContext.require().tx;
   }
 }
