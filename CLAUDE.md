@@ -12,7 +12,7 @@ To'liq talablar: `docs/TZ.md`. Bosqichlar va har bosqich uchun promptlar: `docs/
 
 ## Stack (o'zgartirilmaydi, o'zgartirish kerak bo'lsa avval so'ra)
 
-- Monorepo: pnpm workspaces + Turborepo, Node.js 22, TypeScript strict.
+- Monorepo: pnpm workspaces + Turborepo, Node.js 24 (LTS), TypeScript strict.
 - Backend: NestJS (`apps/api`), REST, OpenAPI (Swagger) avtomatik.
 - Baza: PostgreSQL 16, Prisma ORM, migratsiyalar `prisma migrate`. RLS siyosatlari qo'lda yozilgan SQL migratsiyalarda.
 - Kesh va navbat: Redis 7, BullMQ.
