@@ -1,0 +1,41 @@
+# Routes every Gatefit host to the right container and obtains TLS certificates.
+#
+#   {$APP_BASE_DOMAIN}            staff web panel (landing)
+#   admin.{$APP_BASE_DOMAIN}      platform back office (same web app, chosen by host)
+#   <slug>.{$APP_BASE_DOMAIN}     an organization's staff panel
+#   <slug>.my.{$APP_BASE_DOMAIN}  an organization's member app
+#   any host, /api/*              the API (it finds the organization from the host)
+#
+# Organizations appear at run time, so certificates are issued on demand, on the first
+# request to a host. Before each one Caddy asks the API whether the host is real
+# (GET /api/v1/tls/allowed?domain=...), so nobody can make it request certificates for
+# arbitrary names.
+{
+	on_demand_tls {
+		ask http://api:8000/api/v1/tls/allowed
+	}
+}
+
+https:// {
+	tls {
+		on_demand
+	}
+	encode zstd gzip
+
+	handle /api/* {
+		reverse_proxy api:8000
+	}
+
+	@member host *.my.{$APP_BASE_DOMAIN}
+	handle @member {
+		reverse_proxy member:3001
+	}
+
+	handle {
+		reverse_proxy web:3000
+	}
+}
+
+http:// {
+	redir https://{host}{uri} permanent
+}

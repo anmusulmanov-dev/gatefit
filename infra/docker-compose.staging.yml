@@ -1,0 +1,158 @@
+# Staging: the whole platform on one server behind Caddy. Run from the repository root:
+#   docker compose --project-name gatefit-staging --env-file .env -f infra/docker-compose.staging.yml up -d
+# infra/staging/deploy.sh does this on every new commit to main. Runbook: infra/staging/README.md.
+# Only Caddy publishes ports; everything else is reachable on the compose network only.
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: 10m
+    max-file: '5'
+
+x-app-env: &app-env
+  env_file: ../.env
+  restart: unless-stopped
+  logging: *logging
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    logging: *logging
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      DB_APP_PASSWORD: ${DB_APP_PASSWORD}
+      DB_MIGRATOR_PASSWORD: ${DB_MIGRATOR_PASSWORD}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      # Creates the app and migrator roles on first start (empty data directory only).
+      - ./postgres/init.sh:/docker-entrypoint-initdb.d/10-init.sh:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    logging: *logging
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  minio:
+    image: cgr.dev/chainguard/minio:latest
+    restart: unless-stopped
+    logging: *logging
+    command: server /data
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY}
+    volumes:
+      - minio-data:/data
+
+  minio-init:
+    image: cgr.dev/chainguard/minio-client:latest
+    depends_on:
+      - minio
+    restart: on-failure
+    logging: *logging
+    environment:
+      MC_HOST_local: http://${S3_ACCESS_KEY}:${S3_SECRET_KEY}@minio:9000
+    command: mb --ignore-existing local/${S3_BUCKET}
+
+  # One-shot: applies migrations, then the idempotent seed (demo organization, plans,
+  # operator). The API starts only after it succeeds.
+  migrate:
+    build: &api-build
+      context: ..
+      target: api
+    image: gatefit-staging-api
+    env_file: ../.env
+    logging: *logging
+    # The seed compiles itself into apps/api/dist-seed, so it needs write access.
+    user: root
+    command: ['sh', '-c', 'pnpm prisma migrate deploy && pnpm seed']
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: 'no'
+
+  api:
+    <<: *app-env
+    build: *api-build
+    image: gatefit-staging-api
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://localhost:8000/api/v1/health').then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+
+  web:
+    <<: *app-env
+    build:
+      context: ..
+      target: web
+    image: gatefit-staging-web
+    environment:
+      API_INTERNAL_URL: http://api:8000
+    depends_on:
+      - api
+
+  member:
+    <<: *app-env
+    build:
+      context: ..
+      target: member
+    image: gatefit-staging-member
+    environment:
+      API_INTERNAL_URL: http://api:8000
+    depends_on:
+      - api
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    logging: *logging
+    environment:
+      APP_BASE_DOMAIN: ${APP_BASE_DOMAIN}
+    ports:
+      - '80:80'
+      - '443:443'
+      - '443:443/udp'
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      # Certificates and the ACME account: losing them means re-issuing every certificate.
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - api
+      - web
+      - member
+
+volumes:
+  postgres-data:
+  redis-data:
+  minio-data:
+  caddy-data:
+  caddy-config:

@@ -1,0 +1,15 @@
+**/node_modules
+**/.next
+**/.turbo
+**/dist
+**/dist-seed
+**/coverage
+**/*.tsbuildinfo
+**/next-env.d.ts
+apps/api/src/generated
+.git
+.github
+.env
+.env.*
+!.env.example
+**/*.log

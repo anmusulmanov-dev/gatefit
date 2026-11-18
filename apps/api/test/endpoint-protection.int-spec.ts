@@ -98,6 +98,7 @@ describe('Endpoint protection coverage', () => {
     // Adding a public endpoint is a security decision: update this list deliberately.
     expect(publicEndpoints).toEqual([
       'GET HealthController.check',
+      'GET TlsController.allowed',
       'POST AuthController.beginTotpSetup',
       'POST AuthController.confirmTotpSetup',
       'POST AuthController.login',

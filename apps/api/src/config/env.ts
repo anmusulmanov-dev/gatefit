@@ -8,6 +8,10 @@ const DEV_ONLY_SMS_DRIVERS: readonly string[] = ['console'];
 export const envSchema = z
   .object({
     NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+    // Where this deployment runs. Staging builds with NODE_ENV=production (secure cookies,
+    // optimized code) but is not production: it may use development drivers. Unset means
+    // the same as NODE_ENV.
+    APP_ENV: z.enum(['development', 'test', 'staging', 'production']).optional(),
     LOG_LEVEL: z
       .enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'])
       .default('info'),
@@ -53,8 +57,10 @@ export const envSchema = z
     S3_BUCKET: z.string().min(1),
   })
   .superRefine((env, context) => {
-    // The console driver prints sign-in codes: acceptable on a developer machine only.
-    if (env.NODE_ENV === 'production' && DEV_ONLY_SMS_DRIVERS.includes(env.SMS_DRIVER)) {
+    // The console driver prints sign-in codes: acceptable on a developer machine and on
+    // staging (no real users), never in production.
+    const appEnv = env.APP_ENV ?? env.NODE_ENV;
+    if (appEnv === 'production' && DEV_ONLY_SMS_DRIVERS.includes(env.SMS_DRIVER)) {
       context.addIssue({
         code: 'custom',
         path: ['SMS_DRIVER'],

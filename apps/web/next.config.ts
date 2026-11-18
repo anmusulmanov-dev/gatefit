@@ -15,6 +15,11 @@ const apiUrl = process.env.API_INTERNAL_URL;
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  // Container images (Dockerfile) set NEXT_OUTPUT=standalone: a self-contained server with
+  // only the files it needs, traced from the monorepo root.
+  ...(process.env.NEXT_OUTPUT === 'standalone'
+    ? { output: 'standalone' as const, outputFileTracingRoot: resolve(process.cwd(), '../..') }
+    : {}),
   // The browser talks to the API through this origin, so session cookies stay first-party
   // and the API sees the organization's host. In production Caddy does the same routing.
   rewrites: () => Promise.resolve([{ source: '/api/:path*', destination: `${apiUrl}/api/:path*` }]),
