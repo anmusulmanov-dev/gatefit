@@ -16,3 +16,8 @@ apps/api/src/generated
 .DS_Store
 Thumbs.db
 *.log
+
+# Staging deploy state (infra/staging/deploy.sh)
+.deployed
+.deploy-failed
+.deploy.lock
