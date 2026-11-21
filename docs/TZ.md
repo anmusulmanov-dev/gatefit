@@ -181,6 +181,7 @@ Barcha biznes jadvallarida: `id` (UUID v7), `organization_id`, `created_at`, `up
 | staff | first_name, last_name, position, status, password_hash, totp_secret, must_change_password | user, organization, role, locations (M:N) | M |
 | roles, role_permissions | name, permissions | organization | M |
 | members | first_name, last_name, phone, birth_date, gender, photo_key, status, blocked_reason, source, notes, emergency_contact_name, emergency_contact_phone | organization, user?, home_location | M |
+| member_imports | file_key, file_name, status, headers, mapping, total_rows, valid_rows, errors, created_count, skipped_count | organization, home_location?, members | M |
 | plans | name, type, duration, visit_limit, price_minor, currency, restrictions (JSONB), is_active | organization | M |
 | memberships | starts_at, ends_at, visits_left, status, auto_renew | member, plan | M |
 | membership_freezes | starts_on, ends_on, reason | membership | M |
@@ -225,7 +226,7 @@ Qoidalar:
 | Auth | POST /auth/login, /auth/otp/request, /auth/otp/verify, /auth/refresh, /auth/logout, /auth/logout-all, /auth/totp/setup, /auth/totp/confirm, /auth/password/set, /auth/password/change | M |
 | Tashkilot | GET/PATCH /organization, GET/POST/PATCH /locations | M |
 | Xodimlar | GET/POST/PATCH /staff, POST /staff/{id}/reset-password, POST /staff/{id}/reset-totp, GET/POST/PATCH /roles | M |
-| A'zolar | GET/POST /members, GET /members/duplicates, GET/PATCH /members/{id}, POST /members/{id}/block, /unblock, /archive, /restore, POST /members/import, GET /members/export | M |
+| A'zolar | GET/POST /members, GET /members/duplicates, GET/PATCH /members/{id}, POST /members/{id}/block, /unblock, /archive, /restore, PUT/DELETE /members/{id}/photo, POST /members/imports, GET /members/imports/{id}, POST /members/imports/{id}/validate, /commit, GET /members/imports/template, GET /members/export; GET /files/{token} (imzolangan havola) | M |
 | Tariflar | GET/POST /plans, PATCH /plans/{id} | M |
 | Abonementlar | POST /members/{id}/memberships, POST /memberships/{id}/freeze, /unfreeze, /cancel | M |
 | Kirish | GET /me/qr, POST /access/verify, POST /access/manual, GET /check-ins, GET /locations/{id}/occupancy | M |

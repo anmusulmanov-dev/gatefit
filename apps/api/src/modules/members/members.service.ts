@@ -5,26 +5,32 @@ import {
   type MemberDto,
   type MemberDuplicatesDto,
   type MemberDuplicatesQuery,
+  type MemberFilter,
   type MemberListQuery,
   type MemberSource,
   type MemberStatus,
   type MemberSummaryDto,
   type MemberUpdateInput,
+  MEMBER_PHOTO_MAX_BYTES,
   type Page,
 } from '@gatefit/shared';
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { AuditService } from '../../common/audit/audit.service';
 import { Clock } from '../../common/clock/clock';
 import { conflict, forbidden, notFound, unprocessable } from '../../common/errors/domain-errors';
 import { canSeeLocation, type StaffCaller } from '../../common/http/staff-request';
 import { pageArgs, toPage } from '../../common/pagination/paginate';
 import type { TenantTransaction } from '../../common/prisma/prisma.service';
+import { uuidv7 } from '../../common/ids/uuid-v7';
+import { FileLinksService } from '../../common/storage/file-links.service';
+import { FILE_STORAGE, type FileStorage } from '../../common/storage/file-storage';
 import type { Prisma } from '../../generated/prisma/client';
+import { imageType } from './image-type';
 import { searchConditions } from './member-search';
 
-const memberInclude = { homeLocation: { select: { id: true, name: true } } } as const;
+export const memberInclude = { homeLocation: { select: { id: true, name: true } } } as const;
 
-type MemberRow = Prisma.MemberGetPayload<{ include: typeof memberInclude }>;
+export type MemberRow = Prisma.MemberGetPayload<{ include: typeof memberInclude }>;
 
 const MAX_SIMILAR = 5;
 
@@ -56,6 +62,8 @@ export class MembersService {
   constructor(
     private readonly audit: AuditService,
     private readonly clock: Clock,
+    private readonly links: FileLinksService,
+    @Inject(FILE_STORAGE) private readonly storage: FileStorage,
   ) {}
 
   async list(
@@ -63,27 +71,17 @@ export class MembersService {
     caller: StaffCaller,
     query: MemberListQuery,
   ): Promise<Page<MemberDto>> {
-    if (query.locationId && !canSeeLocation(caller, query.locationId)) {
-      return { items: [], nextCursor: null };
-    }
     const page = pageArgs(query, 'desc');
     const rows = await tx.member.findMany({
       ...page,
-      where: {
-        AND: [
-          page.where,
-          this.visibleTo(caller),
-          { deletedAt: null, status: query.status, homeLocationId: query.locationId },
-          ...searchConditions(query.q),
-        ],
-      },
+      where: { AND: [page.where, this.filterWhere(caller, query)] },
       include: memberInclude,
     });
-    return toPage(rows, query, toDto);
+    return toPage(rows, query, (row) => this.toDto(row));
   }
 
   async get(tx: TenantTransaction, caller: StaffCaller, id: string): Promise<MemberDto> {
-    return toDto(await this.findVisible(tx, caller, id));
+    return this.toDto(await this.findVisible(tx, caller, id));
   }
 
   async create(
@@ -118,7 +116,7 @@ export class MembersService {
       entityId: member.id,
       after: { homeLocationId: member.homeLocationId, source: member.source },
     });
-    return toDto(member);
+    return this.toDto(member);
   }
 
   async update(
@@ -155,8 +153,8 @@ export class MembersService {
       include: memberInclude,
     });
 
-    const before = toDto(member);
-    const after = toDto(updated);
+    const before = this.toDto(member);
+    const after = this.toDto(updated);
     const changed = PROFILE_FIELDS.filter((field) =>
       field === 'homeLocationId'
         ? before.homeLocation.id !== after.homeLocation.id
@@ -193,13 +191,13 @@ export class MembersService {
       before: { status: member.status },
       after: { status: 'blocked', reason: input.reason },
     });
-    return toDto(updated);
+    return this.toDto(updated);
   }
 
   async unblock(tx: TenantTransaction, caller: StaffCaller, id: string): Promise<MemberDto> {
     const member = await this.findEditable(tx, caller, id);
     if (member.status !== 'blocked') {
-      return toDto(member);
+      return this.toDto(member);
     }
     // Memberships do not exist yet (stage M3), so an unblocked member has none in force.
     // M3 replaces this with the status their memberships give them.
@@ -216,14 +214,14 @@ export class MembersService {
       before: { status: member.status, reason: member.blockedReason },
       after: { status },
     });
-    return toDto(updated);
+    return this.toDto(updated);
   }
 
   /** Hides the member from lists. The phone stays taken, so a returning member is restored. */
   async archive(tx: TenantTransaction, caller: StaffCaller, id: string): Promise<MemberDto> {
     const member = await this.findVisible(tx, caller, id);
     if (member.deletedAt) {
-      return toDto(member);
+      return this.toDto(member);
     }
     const updated = await tx.member.update({
       where: { id },
@@ -235,13 +233,13 @@ export class MembersService {
       entity: 'member',
       entityId: id,
     });
-    return toDto(updated);
+    return this.toDto(updated);
   }
 
   async restore(tx: TenantTransaction, caller: StaffCaller, id: string): Promise<MemberDto> {
     const member = await this.findVisible(tx, caller, id);
     if (!member.deletedAt) {
-      return toDto(member);
+      return this.toDto(member);
     }
     const updated = await tx.member.update({
       where: { id },
@@ -253,7 +251,7 @@ export class MembersService {
       entity: 'member',
       entityId: id,
     });
-    return toDto(updated);
+    return this.toDto(updated);
   }
 
   /**
@@ -294,6 +292,76 @@ export class MembersService {
     return {
       phoneMatch: phoneMatch && toSummary(phoneMatch),
       similar: similar.map(toSummary),
+    };
+  }
+
+  /**
+   * Replaces the member's photo. The image type is read from the file itself, not trusted
+   * from the upload.
+   */
+  async setPhoto(
+    tx: TenantTransaction,
+    caller: StaffCaller,
+    id: string,
+    file: { buffer: Buffer; size: number } | undefined,
+  ): Promise<MemberDto> {
+    if (!file) {
+      throw unprocessable(ErrorCode.FILE_REQUIRED, 'Attach the photo as "file"');
+    }
+    if (file.size > MEMBER_PHOTO_MAX_BYTES) {
+      throw unprocessable(ErrorCode.FILE_TOO_LARGE, 'The photo is too large');
+    }
+    const type = imageType(file.buffer);
+    if (!type) {
+      throw unprocessable(ErrorCode.UNSUPPORTED_FILE_TYPE, 'Use a JPEG, PNG or WebP image');
+    }
+    const member = await this.findEditable(tx, caller, id);
+
+    const key = `orgs/${caller.organizationId}/members/${id}/photo-${uuidv7(this.clock.now())}.${type.extension}`;
+    await this.storage.put(key, file.buffer, type.contentType);
+    const updated = await tx.member.update({
+      where: { id },
+      data: { photoKey: key },
+      include: memberInclude,
+    });
+    await this.removeFile(member.photoKey);
+    return this.toDto(updated);
+  }
+
+  async removePhoto(tx: TenantTransaction, caller: StaffCaller, id: string): Promise<MemberDto> {
+    const member = await this.findEditable(tx, caller, id);
+    const updated = await tx.member.update({
+      where: { id },
+      data: { photoKey: null },
+      include: memberInclude,
+    });
+    await this.removeFile(member.photoKey);
+    return this.toDto(updated);
+  }
+
+  // Storage is not part of the transaction. Should the transaction fail after this, the
+  // member keeps a key without a file and shows no photo; a person can upload it again.
+  private async removeFile(key: string | null): Promise<void> {
+    if (key) {
+      await this.storage.delete(key);
+    }
+  }
+
+  toDto(row: MemberRow): MemberDto {
+    return {
+      ...toDtoWithoutPhoto(row),
+      photoUrl: row.photoKey ? this.links.link(row.photoKey) : null,
+    };
+  }
+
+  /** Members of the list and the export: not archived, visible to the caller, filtered. */
+  filterWhere(caller: StaffCaller, filter: MemberFilter): Prisma.MemberWhereInput {
+    return {
+      AND: [
+        this.visibleTo(caller),
+        { deletedAt: null, status: filter.status, homeLocationId: filter.locationId },
+        ...searchConditions(filter.q),
+      ],
     };
   }
 
@@ -365,7 +433,7 @@ export class MembersService {
   }
 }
 
-function toSummary(row: MemberRow): MemberSummaryDto {
+export function toSummary(row: MemberRow): MemberSummaryDto {
   return {
     id: row.id,
     firstName: row.firstName,
@@ -378,7 +446,7 @@ function toSummary(row: MemberRow): MemberSummaryDto {
   };
 }
 
-function toDto(row: MemberRow): MemberDto {
+function toDtoWithoutPhoto(row: MemberRow): Omit<MemberDto, 'photoUrl'> {
   return {
     ...toSummary(row),
     gender: row.gender,
@@ -387,7 +455,6 @@ function toDto(row: MemberRow): MemberDto {
     emergencyContactName: row.emergencyContactName,
     emergencyContactPhone: row.emergencyContactPhone,
     blockedReason: row.blockedReason,
-    hasPhoto: row.photoKey !== null,
     createdAt: row.createdAt.toISOString(),
   };
 }

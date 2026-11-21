@@ -394,5 +394,42 @@
     "turnstile": "Turnstile",
     "network_membership": "Network membership",
     "api_webhooks": "API and webhooks"
+  },
+  "memberFile": {
+    "columns": {
+      "fullName": "Full name",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "phone": "Phone",
+      "birthDate": "Birth date",
+      "gender": "Gender",
+      "status": "Status",
+      "homeLocation": "Location",
+      "source": "Source",
+      "notes": "Notes",
+      "emergencyContactName": "Emergency contact",
+      "emergencyContactPhone": "Emergency phone",
+      "createdAt": "Added"
+    },
+    "gender": {
+      "male": "Male",
+      "female": "Female"
+    },
+    "status": {
+      "inactive": "No membership",
+      "active": "Active",
+      "frozen": "Frozen",
+      "expired": "Expired",
+      "debtor": "Debtor",
+      "blocked": "Blocked"
+    },
+    "source": {
+      "walk_in": "Walk-in",
+      "referral": "Referral",
+      "social": "Social media",
+      "website": "Website",
+      "import": "Import",
+      "other": "Other"
+    }
   }
 }

@@ -13,7 +13,9 @@ import request, { type Response } from 'supertest';
 import { AppModule } from '../../src/app.module';
 import { configureApp } from '../../src/app.setup';
 import { Clock } from '../../src/common/clock/clock';
+import { QUEUE_PREFIX } from '../../src/common/queue/queue.service';
 import { SMS_PROVIDER, type SmsProvider } from '../../src/common/sms/sms.provider';
+import { FILE_STORAGE, MemoryFileStorage } from '../../src/common/storage/file-storage';
 import { TenantDb } from '../../src/common/tenancy/tenant-db.service';
 import { SessionService } from '../../src/modules/auth/session.service';
 import { PlatformSessionService } from '../../src/modules/platform/platform-session.service';
@@ -62,6 +64,7 @@ export interface TestApp {
   app: NestExpressApplication;
   clock: TestClock;
   sms: FakeSms;
+  storage: MemoryFileStorage;
 }
 
 /** The real application, configured like production, with time and SMS under test control. */
@@ -70,18 +73,24 @@ export async function createTestApp(
 ): Promise<TestApp> {
   const clock = new TestClock();
   const sms = new FakeSms();
+  const storage = new MemoryFileStorage();
 
   const moduleRef = await Test.createTestingModule({ imports: [AppModule, ...extraImports] })
     .overrideProvider(Clock)
     .useValue(clock)
     .overrideProvider(SMS_PROVIDER)
     .useValue(sms)
+    .overrideProvider(FILE_STORAGE)
+    .useValue(storage)
+    // Test files run in parallel; each app's workers must see only its own jobs.
+    .overrideProvider(QUEUE_PREFIX)
+    .useValue(`gatefit-test-${randomUUID()}`)
     .compile();
 
   const app = moduleRef.createNestApplication<NestExpressApplication>();
   configureApp(app);
   await app.init();
-  return { app, clock, sms };
+  return { app, clock, sms, storage };
 }
 
 /** The Host header that addresses an organization. */
@@ -199,7 +208,7 @@ export async function cookiesFor(
 
 /** Requests to the API at an organization's address as the holder of the given cookies. */
 export function apiAs(t: TestApp, organization: Organization, cookies: string[]) {
-  const send = (method: 'get' | 'post' | 'patch', path: string) =>
+  const send = (method: 'get' | 'post' | 'patch' | 'put' | 'delete', path: string) =>
     request(t.app.getHttpServer())
       [method](`/api/v1${path}`)
       .set('Host', hostOf(organization))
@@ -208,6 +217,11 @@ export function apiAs(t: TestApp, organization: Organization, cookies: string[])
     get: (path: string) => send('get', path),
     post: (path: string, body?: object) => send('post', path).send(body),
     patch: (path: string, body: object) => send('patch', path).send(body),
+    put: (path: string, body: object) => send('put', path).send(body),
+    delete: (path: string) => send('delete', path),
+    /** A multipart upload of one file in the field "file". */
+    upload: (method: 'post' | 'put', path: string, content: Buffer, fileName: string) =>
+      send(method, path).attach('file', content, fileName),
   };
 }
 

@@ -394,5 +394,42 @@
     "turnstile": "Турникет",
     "network_membership": "Сетевой абонемент",
     "api_webhooks": "API и вебхуки"
+  },
+  "memberFile": {
+    "columns": {
+      "fullName": "ФИО",
+      "firstName": "Имя",
+      "lastName": "Фамилия",
+      "phone": "Телефон",
+      "birthDate": "Дата рождения",
+      "gender": "Пол",
+      "status": "Статус",
+      "homeLocation": "Филиал",
+      "source": "Источник",
+      "notes": "Примечание",
+      "emergencyContactName": "Экстренный контакт",
+      "emergencyContactPhone": "Экстренный телефон",
+      "createdAt": "Добавлен"
+    },
+    "gender": {
+      "male": "Мужской",
+      "female": "Женский"
+    },
+    "status": {
+      "inactive": "Без абонемента",
+      "active": "Активен",
+      "frozen": "Заморожен",
+      "expired": "Истёк",
+      "debtor": "Должник",
+      "blocked": "Заблокирован"
+    },
+    "source": {
+      "walk_in": "Пришёл сам",
+      "referral": "Рекомендация",
+      "social": "Соцсети",
+      "website": "Сайт",
+      "import": "Импорт",
+      "other": "Другое"
+    }
   }
 }

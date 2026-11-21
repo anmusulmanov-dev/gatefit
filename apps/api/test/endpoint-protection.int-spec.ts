@@ -68,6 +68,7 @@ describe('Endpoint protection coverage', () => {
     const names = endpoints.map((endpoint) => endpoint.name);
     expect(names).toEqual(
       expect.arrayContaining([
+        'GET FilesController.get',
         'GET HealthController.check',
         'POST AuthController.login',
         'GET MeController.me',
@@ -97,6 +98,7 @@ describe('Endpoint protection coverage', () => {
       .sort();
     // Adding a public endpoint is a security decision: update this list deliberately.
     expect(publicEndpoints).toEqual([
+      'GET FilesController.get',
       'GET HealthController.check',
       'GET TlsController.allowed',
       'POST AuthController.beginTotpSetup',

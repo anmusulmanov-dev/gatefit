@@ -67,3 +67,8 @@ export async function memberPhone(
   }
   return phone;
 }
+
+/** A unique phone that is also a real Uzbek mobile number, for code that validates numbers. */
+export function uniqueMobile(): string {
+  return `+99890${uniquePhone().slice(-7)}`;
+}

@@ -7,11 +7,14 @@ import { AllExceptionsFilter } from './common/errors/all-exceptions.filter';
 import { OriginCheckMiddleware } from './common/http/origin-check.middleware';
 import { LoggingModule } from './common/logging/logging.module';
 import { PrismaModule } from './common/prisma/prisma.module';
+import { QueueModule } from './common/queue/queue.service';
 import { RateLimitGuard } from './common/rate-limit/rate-limit.guard';
 import { RateLimitModule } from './common/rate-limit/rate-limiter.service';
 import { RedisModule } from './common/redis/redis.module';
 import { SecurityModule } from './common/security/security.module';
 import { SmsModule } from './common/sms/sms.provider';
+import { FileLinksModule } from './common/storage/file-links.service';
+import { FileStorageModule } from './common/storage/file-storage';
 import { TenancyModule } from './common/tenancy/tenancy.module';
 import { TenantResolutionMiddleware } from './common/tenancy/tenant-resolution.middleware';
 import { TenantTransactionInterceptor } from './common/tenancy/tenant-transaction.interceptor';
@@ -20,6 +23,7 @@ import { AccessInterceptor } from './modules/auth/access.interceptor';
 import { AuthGuard } from './modules/auth/auth.guard';
 import { AuthModule } from './modules/auth/auth.module';
 import { EntitlementsModule } from './modules/entitlements/entitlements.service';
+import { FilesModule } from './modules/files/files.module';
 import { HealthModule } from './modules/health/health.module';
 import { MembersModule } from './modules/members/members.module';
 import { PlatformModule } from './modules/platform/platform.module';
@@ -34,8 +38,11 @@ import { OrganizationModule } from './modules/tenancy/organization.module';
     CryptoModule,
     PrismaModule,
     RedisModule,
+    QueueModule,
     RateLimitModule,
     SmsModule,
+    FileStorageModule,
+    FileLinksModule,
     SecurityModule,
     AuditModule,
     TenancyModule,
@@ -45,6 +52,7 @@ import { OrganizationModule } from './modules/tenancy/organization.module';
     MembersModule,
     PlatformModule,
     OrganizationModule,
+    FilesModule,
     HealthModule,
   ],
   providers: [

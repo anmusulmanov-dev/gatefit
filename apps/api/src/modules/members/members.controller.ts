@@ -10,12 +10,16 @@ import {
   type MemberListQuery,
   memberListQuerySchema,
   type MemberUpdateInput,
+  type MemberExportQuery,
+  memberExportQuerySchema,
+  MEMBER_PHOTO_MAX_BYTES,
   memberUpdateSchema,
   type Page,
 } from '@gatefit/shared';
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -23,16 +27,25 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Put,
   Query,
   Req,
+  Res,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
-import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiBody, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
+import type { Response } from 'express';
 import type { AppRequest } from '../../common/http/app-request';
+import type { UploadedFileData } from '../../common/http/uploaded-file';
 import { staffCaller } from '../../common/http/staff-request';
 import { TenantDb } from '../../common/tenancy/tenant-db.service';
 import { ZodPipe, zodBody } from '../../common/validation/zod';
 import { RequirePermission } from '../auth/auth.decorators';
 import { RequireModule } from '../entitlements/entitlements.service';
+import { downloadTo } from './import/download';
+import { MemberExportService } from './import/member-export.service';
 import { MembersService } from './members.service';
 
 @ApiTags('members')
@@ -41,6 +54,7 @@ import { MembersService } from './members.service';
 export class MembersController {
   constructor(
     private readonly members: MembersService,
+    private readonly exports: MemberExportService,
     private readonly tenantDb: TenantDb,
   ) {}
 
@@ -52,6 +66,17 @@ export class MembersController {
     @Req() req: AppRequest,
   ): Promise<Page<MemberDto>> {
     return this.members.list(this.tenantDb.tx, staffCaller(req), query);
+  }
+
+  @Get('export')
+  @RequirePermission('members.export')
+  @ApiOperation({ summary: 'Download members as XLSX or CSV, with the list filters' })
+  async export(
+    @Query(new ZodPipe(memberExportQuerySchema)) query: MemberExportQuery,
+    @Req() req: AppRequest,
+    @Res() res: Response,
+  ): Promise<void> {
+    await this.exports.export(this.tenantDb.tx, staffCaller(req), query, downloadTo(res));
   }
 
   @Get('duplicates')
@@ -113,6 +138,31 @@ export class MembersController {
   @ApiOperation({ summary: 'Lift a block' })
   unblock(@Param('id', ParseUUIDPipe) id: string, @Req() req: AppRequest): Promise<MemberDto> {
     return this.members.unblock(this.tenantDb.tx, staffCaller(req), id);
+  }
+
+  @Put(':id/photo')
+  @RequirePermission('members.manage')
+  @UseInterceptors(
+    FileInterceptor('file', { limits: { fileSize: MEMBER_PHOTO_MAX_BYTES + 1, files: 1 } }),
+  )
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: { type: 'object', properties: { file: { type: 'string', format: 'binary' } } },
+  })
+  @ApiOperation({ summary: "Replace the member's photo (JPEG, PNG or WebP)" })
+  setPhoto(
+    @Param('id', ParseUUIDPipe) id: string,
+    @UploadedFile() file: UploadedFileData | undefined,
+    @Req() req: AppRequest,
+  ): Promise<MemberDto> {
+    return this.members.setPhoto(this.tenantDb.tx, staffCaller(req), id, file);
+  }
+
+  @Delete(':id/photo')
+  @RequirePermission('members.manage')
+  @ApiOperation({ summary: "Remove the member's photo" })
+  removePhoto(@Param('id', ParseUUIDPipe) id: string, @Req() req: AppRequest): Promise<MemberDto> {
+    return this.members.removePhoto(this.tenantDb.tx, staffCaller(req), id);
   }
 
   @Post(':id/archive')

@@ -394,5 +394,42 @@
     "turnstile": "Turniket",
     "network_membership": "Tarmoq abonementi",
     "api_webhooks": "API va vebhuklar"
+  },
+  "memberFile": {
+    "columns": {
+      "fullName": "F.I.Sh.",
+      "firstName": "Ism",
+      "lastName": "Familiya",
+      "phone": "Telefon",
+      "birthDate": "Tug'ilgan sana",
+      "gender": "Jins",
+      "status": "Holat",
+      "homeLocation": "Filial",
+      "source": "Manba",
+      "notes": "Izoh",
+      "emergencyContactName": "Favqulodda aloqa",
+      "emergencyContactPhone": "Favqulodda telefon",
+      "createdAt": "Qo'shilgan"
+    },
+    "gender": {
+      "male": "Erkak",
+      "female": "Ayol"
+    },
+    "status": {
+      "inactive": "Abonementsiz",
+      "active": "Faol",
+      "frozen": "Muzlatilgan",
+      "expired": "Muddati tugagan",
+      "debtor": "Qarzdor",
+      "blocked": "Bloklangan"
+    },
+    "source": {
+      "walk_in": "O'zi kelgan",
+      "referral": "Tavsiya",
+      "social": "Ijtimoiy tarmoq",
+      "website": "Sayt",
+      "import": "Import",
+      "other": "Boshqa"
+    }
   }
 }
