@@ -45,6 +45,11 @@ export const ErrorCode = {
   SLUG_TAKEN: 'SLUG_TAKEN',
   PLAN_KEY_TAKEN: 'PLAN_KEY_TAKEN',
   PLAN_INACTIVE: 'PLAN_INACTIVE',
+
+  // Members
+  MEMBER_PHONE_TAKEN: 'MEMBER_PHONE_TAKEN',
+  MEMBER_ARCHIVED: 'MEMBER_ARCHIVED',
+  LOCATION_NOT_ASSIGNED: 'LOCATION_NOT_ASSIGNED',
 } as const;
 
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];

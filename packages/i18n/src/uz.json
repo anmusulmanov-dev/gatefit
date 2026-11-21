@@ -269,7 +269,8 @@
       "read": "A'zolarni ko'rish",
       "manage": "A'zolarni qo'shish va tahrirlash",
       "import": "A'zolarni import qilish",
-      "export": "A'zolarni eksport qilish"
+      "export": "A'zolarni eksport qilish",
+      "archive": "A'zolarni arxivlash va tiklash"
     },
     "plans": {
       "read": "Tariflarni ko'rish",

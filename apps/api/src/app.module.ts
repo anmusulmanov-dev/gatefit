@@ -21,6 +21,7 @@ import { AuthGuard } from './modules/auth/auth.guard';
 import { AuthModule } from './modules/auth/auth.module';
 import { EntitlementsModule } from './modules/entitlements/entitlements.service';
 import { HealthModule } from './modules/health/health.module';
+import { MembersModule } from './modules/members/members.module';
 import { PlatformModule } from './modules/platform/platform.module';
 import { StaffModule } from './modules/staff/staff.module';
 import { OrganizationModule } from './modules/tenancy/organization.module';
@@ -41,6 +42,7 @@ import { OrganizationModule } from './modules/tenancy/organization.module';
     EntitlementsModule,
     AuthModule,
     StaffModule,
+    MembersModule,
     PlatformModule,
     OrganizationModule,
     HealthModule,

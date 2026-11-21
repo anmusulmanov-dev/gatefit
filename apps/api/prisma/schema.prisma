@@ -34,6 +34,26 @@ enum StaffStatus {
   @@map("staff_status")
 }
 
+// docs/TZ.md F-1.3. "inactive": no membership yet. active, frozen and expired follow the
+// member's memberships (stage M3), debtor their invoices (M4); blocked is set by staff.
+enum MemberStatus {
+  inactive
+  active
+  frozen
+  expired
+  debtor
+  blocked
+
+  @@map("member_status")
+}
+
+enum Gender {
+  male
+  female
+
+  @@map("gender")
+}
+
 model Organization {
   id          String             @id @default(uuid(7)) @db.Uuid
   name        String
@@ -60,6 +80,7 @@ model Organization {
   otpCodes        OtpCode[]
   saasPlan        SaasPlan?          @relation(fields: [saasPlanId], references: [id])
   subscriptions   SaasSubscription[]
+  members         Member[]
 
   @@map("organizations")
 }
@@ -78,6 +99,7 @@ model Location {
 
   organization   Organization    @relation(fields: [organizationId], references: [id])
   staffLocations StaffLocation[]
+  members        Member[]
 
   @@unique([organizationId, id])
   @@unique([organizationId, name])
@@ -97,6 +119,7 @@ model User {
   deletedAt DateTime? @map("deleted_at") @db.Timestamptz(3)
 
   staff    Staff[]
+  members  Member[]
   consents Consent[]
   sessions Session[]
 
@@ -181,6 +204,49 @@ model StaffLocation {
   @@map("staff_locations")
 }
 
+// A club member (docs/TZ.md F-1.1). The phone identifies them within the organization; an
+// archived member keeps it, so a returning member is restored rather than duplicated.
+model Member {
+  id                    String       @id @default(uuid(7)) @db.Uuid
+  organizationId        String       @map("organization_id") @db.Uuid
+  // Linked at the member's first sign-in to the member app.
+  userId                String?      @map("user_id") @db.Uuid
+  homeLocationId        String       @map("home_location_id") @db.Uuid
+  firstName             String       @map("first_name")
+  lastName              String       @map("last_name")
+  // E.164
+  phone                 String
+  birthDate             DateTime?    @map("birth_date") @db.Date
+  gender                Gender?
+  // Object key in file storage; served through short-lived signed links only.
+  photoKey              String?      @map("photo_key")
+  status                MemberStatus @default(inactive)
+  blockedReason         String?      @map("blocked_reason")
+  // walk_in, referral, social, website, import, other (packages/shared/src/members.ts)
+  source                String?
+  notes                 String?
+  emergencyContactName  String?      @map("emergency_contact_name")
+  emergencyContactPhone String?      @map("emergency_contact_phone")
+  createdAt             DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt             DateTime     @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt             DateTime?    @map("deleted_at") @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  user         User?        @relation(fields: [userId], references: [id])
+  homeLocation Location     @relation(fields: [organizationId, homeLocationId], references: [organizationId, id])
+  consents     Consent[]
+
+  @@unique([organizationId, id])
+  @@unique([organizationId, phone])
+  @@unique([organizationId, userId])
+  @@index([organizationId, homeLocationId, status])
+  // Search by any part of a name or phone (pg_trgm).
+  @@index([firstName(ops: raw("gin_trgm_ops"))], type: Gin, map: "members_first_name_trgm_idx")
+  @@index([lastName(ops: raw("gin_trgm_ops"))], type: Gin, map: "members_last_name_trgm_idx")
+  @@index([phone(ops: raw("gin_trgm_ops"))], type: Gin, map: "members_phone_trgm_idx")
+  @@map("members")
+}
+
 // Append-only and partitioned by month on "at" (the partition key must be part of the
 // primary key). The API role may only INSERT and SELECT.
 model AuditLog {
@@ -253,11 +319,12 @@ model OtpCode {
   @@map("otp_codes")
 }
 
-// Append-only record of an accepted agreement. member_id is added with the members table.
+// Append-only record of an accepted agreement, by a user or about a member.
 model Consent {
   id             String   @id @default(uuid(7)) @db.Uuid
   organizationId String   @map("organization_id") @db.Uuid
   userId         String?  @map("user_id") @db.Uuid
+  memberId       String?  @map("member_id") @db.Uuid
   type           String
   version        String
   ip             String?  @db.Inet
@@ -265,8 +332,10 @@ model Consent {
 
   organization Organization @relation(fields: [organizationId], references: [id])
   user         User?        @relation(fields: [userId], references: [id])
+  member       Member?      @relation(fields: [organizationId, memberId], references: [organizationId, id])
 
   @@index([organizationId, type])
+  @@index([organizationId, memberId])
   @@map("consents")
 }
 
