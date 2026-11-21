@@ -16,6 +16,37 @@ Har sessiya oxirida yangilanadi: nima qilindi, nima qoldi, ma'lum muammolar.
 | M1d Super-admin UI                | Tayyor (2026-11-17) — M1 yopildi |
 | M2a A'zolar API                   | Tayyor (2026-11-21)              |
 | M2b Foto, import, eksport         | Tayyor (2026-11-21)              |
+| M2c A'zolar UI                    | Tayyor (2026-11-21) — M2 yopildi |
+
+## 2026-11-21 — M2c: a'zolar UI
+
+Branch: `feat/m2-members-ui` (`feat/m2-members-files` ustidan).
+
+### Qilindi
+
+- **Menyu:** "A'zolar" (`members.read` bo'lsa).
+- **`/members`:** qidiruv (yozish to'xtagach), holat va filial filtri, foto yoki bosh harflar, holat belgisi, "Yana ko'rsatish"; tugmalar ruxsatga qarab: qo'shish, import, eksport (XLSX, CSV — joriy filtrlar bilan).
+- **`/members/new` va tahrirlash:** barcha F-1.1 maydonlari; filial standart qiymati — sarlavhada tanlangan filial; yozish davomida takror tekshiruvi: band telefon egasi (ochish yoki arxivdagini tiklash) va bir xil ismli a'zolar ro'yxati.
+- **`/members/{id}`:** karta, foto yuklash/almashtirish/o'chirish, bloklash (sabab bilan) va blokdan chiqarish, arxivlash (tasdiq bilan) va tiklash.
+- **`/members/import`:** 4 qadamli usta — fayl (namuna yuklab olish), ustunlarni moslash (avtomatik taklif, misollar, filial), tekshiruv natijasi (qator, maydon, sabab), fon importi va natija.
+- **API klienti** (`packages/shared`): `put`, `delete`, `upload` (multipart), `download` (fayl va nomi).
+- **Tarjimalar:** `members.*`, `nav.members`, yangi xato kodlari — uz, ru, en.
+- **Seed tuzatildi:** demo a'zolar telefonida bitta raqam kam edi (`+99890001028`); endi `+998900001000`–`+998900001029`. Mavjud dev bazada `UPDATE` bilan tuzatildi.
+
+### Tekshirildi
+
+- `pnpm lint`, `pnpm typecheck`, `pnpm test` — yashil (API 375, shared 33, i18n 11). `pnpm format:check` loyiha fayllarida toza (lokal `.claude/worktrees/` dagi boshqa sessiya fayllari hisobga olinmaydi).
+- **Brauzerda** (`demo.localhost:3000`, menejer roli, dev MinIO va Redis bilan): ro'yxat va qidiruv (`karim 1028`), band telefon ogohlantirishi va bir xil ismlilar ro'yxati, a'zo qo'shish, foto yuklash (MinIO → imzolangan havola orqali ko'rindi), bloklash, import (ruscha sarlavhali CSV avtomatik moslandi, 3 ta xato qator ko'rsatildi, 2 ta a'zo fon vazifasida qo'shildi), CSV eksport. 375 px kenglikda gorizontal skroll yo'q. Konsolda xato yo'q.
+
+### Rejadan chetlanishlar
+
+- **Playwright e2e bu PR da yo'q:** e2e infratuzilmasini parallel sessiya (`feat/e2e-playwright`) qilyapti. U birlashgach a'zolar oqimi (kirish → qo'shish → qidiruv) uchun e2e test qo'shiladi.
+
+### Qoldi
+
+- A'zolar uchun Playwright testi (yuqorida).
+- Qo'lda qo'shishda telefon faqat format bo'yicha tekshiriladi (importda esa raqam haqiqiyligi) — M2b dagi eslatma.
+- Ro'yxatda faol abonement va qolgan kunlar — M3.
 
 ## 2026-11-21 — M2b: foto, import, eksport
 
