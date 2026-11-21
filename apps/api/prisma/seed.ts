@@ -1,15 +1,27 @@
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import {
+  addDays,
   DEFAULT_PLAN_MODULES,
   type DefaultPlanKey,
+  localDate,
+  NO_RESTRICTIONS,
   phoneSchema,
+  type PlanRestrictions,
+  startOfLocalDay,
   SYSTEM_ROLE_PERMISSIONS,
   SYSTEM_ROLES,
+  termEndDate,
 } from '@gatefit/shared';
 import { PrismaPg } from '@prisma/adapter-pg';
-import { PrismaClient } from '../src/generated/prisma/client';
+import { type Plan, PrismaClient } from '../src/generated/prisma/client';
 import { PasswordService } from '../src/common/security/password.service';
+import { memberStatusFrom } from '../src/modules/members/member-status';
+import {
+  type MembershipTerms,
+  nextStatusChange,
+  statusOn,
+} from '../src/modules/plans/membership-rules';
 
 // Development and demo data. Safe to run repeatedly: every row is upserted by a natural key.
 // Run from apps/api: pnpm --filter api seed
@@ -40,6 +52,98 @@ const PLANS: Record<
   standard: { name: 'Standard', activeMembersPerLocation: 1000, priceMinor: 60_000_000n },
   pro: { name: 'Pro', activeMembersPerLocation: null, priceMinor: 120_000_000n },
 };
+
+// The demo club's own tariffs (docs/TZ.md F-2.1). Found again by name when reseeding.
+interface ClubPlan {
+  name: string;
+  type: Plan['type'];
+  durationValue: number;
+  durationUnit: Plan['durationUnit'];
+  visitLimit: number | null;
+  priceMinor: bigint;
+  restrictions: PlanRestrictions;
+  freeze: { maxDays: number; maxTimes: number; minDays: number; feeMinor: bigint };
+}
+
+const NO_FREEZE = { maxDays: 0, maxTimes: 0, minDays: 1, feeMinor: 0n };
+
+const CLUB_PLANS: ClubPlan[] = [
+  {
+    name: 'Oylik',
+    type: 'duration',
+    durationValue: 1,
+    durationUnit: 'month',
+    visitLimit: null,
+    priceMinor: 45_000_000n,
+    restrictions: NO_RESTRICTIONS,
+    freeze: { maxDays: 14, maxTimes: 2, minDays: 3, feeMinor: 0n },
+  },
+  {
+    name: 'Ertalabki oylik',
+    type: 'duration',
+    durationValue: 1,
+    durationUnit: 'month',
+    visitLimit: null,
+    priceMinor: 30_000_000n,
+    restrictions: {
+      ...NO_RESTRICTIONS,
+      timeWindows: [{ from: '07:00', to: '12:00' }],
+      weekdays: [1, 2, 3, 4, 5],
+    },
+    freeze: NO_FREEZE,
+  },
+  {
+    name: '12 tashrif',
+    type: 'visits',
+    durationValue: 2,
+    durationUnit: 'month',
+    visitLimit: 12,
+    priceMinor: 35_000_000n,
+    restrictions: { ...NO_RESTRICTIONS, dailyVisitLimit: 1 },
+    freeze: NO_FREEZE,
+  },
+  {
+    name: 'Yillik',
+    type: 'duration',
+    durationValue: 1,
+    durationUnit: 'year',
+    visitLimit: null,
+    priceMinor: 400_000_000n,
+    restrictions: NO_RESTRICTIONS,
+    freeze: { maxDays: 60, maxTimes: 4, minDays: 7, feeMinor: 5_000_000n },
+  },
+  {
+    name: 'Bir martalik',
+    type: 'single',
+    durationValue: 1,
+    durationUnit: 'day',
+    visitLimit: 1,
+    priceMinor: 5_000_000n,
+    restrictions: NO_RESTRICTIONS,
+    freeze: NO_FREEZE,
+  },
+  {
+    name: 'Sinov',
+    type: 'trial',
+    durationValue: 3,
+    durationUnit: 'day',
+    visitLimit: 1,
+    priceMinor: 0n,
+    restrictions: NO_RESTRICTIONS,
+    freeze: NO_FREEZE,
+  },
+];
+
+/** Demo memberships, cycled over the members: plan name, days since start, frozen. */
+const DEMO_MEMBERSHIPS = [
+  { plan: 'Oylik', startedDaysAgo: 5, frozenDays: 0 },
+  { plan: 'Oylik', startedDaysAgo: 45, frozenDays: 0 },
+  { plan: 'Yillik', startedDaysAgo: 100, frozenDays: 7 },
+  { plan: '12 tashrif', startedDaysAgo: 10, frozenDays: 0 },
+  { plan: 'Ertalabki oylik', startedDaysAgo: 27, frozenDays: 0 },
+] as const;
+/** Members beyond this many have no membership yet. */
+const DEMO_MEMBERS_WITH_MEMBERSHIPS = 20;
 
 function requireEnv(name: string): string {
   const value = process.env[name];
@@ -193,6 +297,124 @@ async function seed(prisma: PrismaClient): Promise<void> {
     });
   }
 
+  // The club's tariffs. Existing ones keep later edits.
+  const clubPlans = new Map<string, Plan>();
+  for (const plan of CLUB_PLANS) {
+    const existing = await prisma.plan.findFirst({ where: { organizationId, name: plan.name } });
+    clubPlans.set(
+      plan.name,
+      existing ??
+        (await prisma.plan.create({
+          data: {
+            organizationId,
+            name: plan.name,
+            type: plan.type,
+            durationValue: plan.durationValue,
+            durationUnit: plan.durationUnit,
+            visitLimit: plan.visitLimit,
+            priceMinor: plan.priceMinor,
+            currency: organization.currency,
+            restrictions: plan.restrictions,
+            freezeMaxDays: plan.freeze.maxDays,
+            freezeMaxTimes: plan.freeze.maxTimes,
+            freezeMinDays: plan.freeze.minDays,
+            freezeFeeMinor: plan.freeze.feeMinor,
+          },
+        })),
+    );
+  }
+
+  // Demo memberships, dated from today, for members who have none: in force, expired,
+  // frozen. Statuses are computed by the same rules the API uses.
+  const now = new Date();
+  const demoMembers = await prisma.member.findMany({
+    where: { organizationId, phone: { startsWith: '+99890000' } },
+    orderBy: { phone: 'asc' },
+    take: DEMO_MEMBERS_WITH_MEMBERSHIPS,
+    include: { homeLocation: true, memberships: { select: { id: true } } },
+  });
+  for (const [index, member] of demoMembers.entries()) {
+    const spec = DEMO_MEMBERSHIPS[index % DEMO_MEMBERSHIPS.length];
+    const plan = spec && clubPlans.get(spec.plan);
+    if (!spec || !plan || member.memberships.length > 0) {
+      continue;
+    }
+    const timeZone = member.homeLocation.timezone;
+    const today = localDate(now, timeZone);
+    const startsOn = addDays(today, -spec.startedDaysAgo);
+    const freezeStartsOn = addDays(today, -2);
+    const freezeEndsOn = addDays(freezeStartsOn, spec.frozenDays - 1);
+    const terms: MembershipTerms = {
+      startsOn,
+      endsOn: addDays(
+        termEndDate(startsOn, plan.durationValue, plan.durationUnit),
+        spec.frozenDays,
+      ),
+      visitsLeft: plan.visitLimit === null ? null : plan.visitLimit - (index % 5),
+      cancelled: false,
+      freezes:
+        spec.frozenDays > 0
+          ? [
+              {
+                startsOn: freezeStartsOn,
+                endsOn: freezeEndsOn,
+                days: spec.frozenDays,
+                cancelled: false,
+              },
+            ]
+          : [],
+    };
+    const status = statusOn(terms, today);
+    const membership = await prisma.membership.create({
+      data: {
+        organizationId,
+        memberId: member.id,
+        planId: plan.id,
+        locationId: member.homeLocationId,
+        planName: plan.name,
+        planType: plan.type,
+        visitLimit: plan.visitLimit,
+        priceMinor: plan.priceMinor,
+        currency: plan.currency,
+        restrictions: plan.restrictions ?? {},
+        freezeMaxDays: plan.freezeMaxDays,
+        freezeMaxTimes: plan.freezeMaxTimes,
+        freezeMinDays: plan.freezeMinDays,
+        freezeFeeMinor: plan.freezeFeeMinor,
+        startsOn: new Date(`${terms.startsOn}T00:00:00Z`),
+        endsOn: new Date(`${terms.endsOn}T00:00:00Z`),
+        startsAt: startOfLocalDay(terms.startsOn, timeZone),
+        endsAt: startOfLocalDay(addDays(terms.endsOn, 1), timeZone),
+        visitsLeft: terms.visitsLeft,
+        status,
+        statusChangesAt: nextStatusChange(terms, now, timeZone),
+        soldBy: owner.id,
+      },
+    });
+    if (spec.frozenDays > 0) {
+      await prisma.membershipFreeze.create({
+        data: {
+          organizationId,
+          membershipId: membership.id,
+          startsOn: new Date(`${freezeStartsOn}T00:00:00Z`),
+          endsOn: new Date(`${freezeEndsOn}T00:00:00Z`),
+          startsAt: startOfLocalDay(freezeStartsOn, timeZone),
+          endsAt: startOfLocalDay(addDays(freezeEndsOn, 1), timeZone),
+          days: spec.frozenDays,
+          reason: 'Safar',
+          source: 'member_request',
+          feeMinor: plan.freezeFeeMinor,
+          currency: plan.currency,
+          createdBy: owner.id,
+        },
+      });
+    }
+    await prisma.member.update({
+      where: { id: member.id },
+      data: { status: memberStatusFrom(member.status, [status]) },
+    });
+  }
+
   // The platform operator. An existing one keeps their password and authenticator.
   const operatorPhone = phoneSchema.parse(requireEnv('SEED_PLATFORM_ADMIN_PHONE'));
   await prisma.platformAdmin.upsert({
@@ -206,7 +428,7 @@ async function seed(prisma: PrismaClient): Promise<void> {
   });
 
   console.log(
-    `Seeded organization "${organization.slug}": ${locations.length} locations, ${SYSTEM_ROLES.length} roles, 1 owner, ${DEMO_MEMBER_COUNT} members, 3 plans, 1 platform operator (credentials: SEED_* in .env).`,
+    `Seeded organization "${organization.slug}": ${locations.length} locations, ${SYSTEM_ROLES.length} roles, 1 owner, ${DEMO_MEMBER_COUNT} members, ${CLUB_PLANS.length} club plans, demo memberships, 3 SaaS plans, 1 platform operator (credentials: SEED_* in .env).`,
   );
 }
 

@@ -17,6 +17,46 @@ Har sessiya oxirida yangilanadi: nima qilindi, nima qoldi, ma'lum muammolar.
 | M2a A'zolar API                   | Tayyor (2026-11-21)              |
 | M2b Foto, import, eksport         | Tayyor (2026-11-21)              |
 | M2c A'zolar UI                    | Tayyor (2026-11-21) — M2 yopildi |
+| M3a Tariflar va abonementlar API  | Tayyor (2026-11-22)              |
+
+## 2026-11-22 — M3a: tariflar, abonementlar, muzlatish (API)
+
+Branch: `feat/m3-memberships-api`. Qaror: `docs/ADR/0008-memberships.md`. Anvar tasdiqlagan reja: M3a (API), M3b (web UI). Savollarga javoblar (taklif qilinganicha qabul qilindi): sotish M3 da to'lovsiz, abonement darhol amalda; muzlatish limiti va narxi tarifda, narx faqat yoziladi (M4 da undiriladi); "a'zo so'rovi bilan" muzlatishni xodim `source=member_request` bilan kiritadi (a'zoning o'zi — M6); sinov tarifi bir a'zoga bir marta; boshlanish sanasi sotishda tanlanadi.
+
+### Qilindi
+
+- **Jadvallar** (RLS, `DELETE` grant yo'q, kompozit FK, CHECK: summa manfiy emas, sanalar oldinga):
+  - `plans`: tur (`duration`, `visits`, `single`, `trial`), muddat (`day`, `month`, `year`), tashriflar soni, `price_minor` + `currency` (tashkilot valyutasi), `restrictions` JSONB (vaqt oralig'i, hafta kunlari, kunlik limit, filiallar; zod sxema), muzlatish limitlari va narxi, `is_active`.
+  - `memberships`: tarif shartlari nusxasi, sotilgan filial, `starts_on`/`ends_on` (filial kalendari) va `starts_at`/`ends_at`, `visits_left`, holat (`scheduled`, `active`, `frozen`, `expired`, `cancelled`), `status_changes_at`, `auto_renew` (v1), bekor qilish ma'lumoti.
+  - `membership_freezes`: sanalar va lahzalar, kunlar, sabab, manba, narx, erta tugash va bekor qilish.
+- **Sana funksiyalari** (`packages/shared/src/dates.ts`, yangi paket yo'q): kun/oy qo'shish (oy oxiriga qisish), filial vaqt mintaqasida sana va yarim tun (DST va yarim tun o'tkazib yuborilgan zonalar bilan), muddat oxiri.
+- **Endpointlar** (`@RequireModule('memberships')`): `GET/POST /plans`, `GET/PATCH /plans/{id}` (`plans.read`, `plans.manage`); `GET /members/{id}/memberships` (`members.read`), `POST /members/{id}/memberships` (`memberships.sell`); `GET /memberships/{id}`; `POST /memberships/{id}/freeze`, `/unfreeze` (`memberships.freeze`); `POST /memberships/{id}/cancel` (`memberships.cancel`, sabab majburiy). Abonementni a'zosini ko'ra oladigan xodim ko'radi (ADR 0006); sotish faqat xodim ishlaydigan va tarif ruxsat bergan filialda.
+- **Muzlatish:** tugash sanasini suradi; erta tugatish faqat ishlatilgan kunlarni qoldiradi; boshlanmagani bekor qilinadi; ustma-ust tushmaydi; limitlar shartnoma nusxasidan.
+- **Soatlik vazifa** (`MembershipStatusJob`, BullMQ, `0 * * * *` UTC): `status_changes_at` kelgan abonementlar holatini yangilaydi, a'zo holatini qayta hisoblaydi, `membership.status` auditi (tizim). Idempotent va parallel xavfsiz.
+- **A'zo holati** abonementlardan (`memberStatusFrom`); `unblock` endi abonementlardan hisoblaydi. `GET /members` har qatorda amaldagi abonement xulosasi (`membership`: tugash sanasi, qolgan kun va tashrif) — M2 dan qolgan ish.
+- **Audit:** `plan.create`, `plan.update`, `membership.sell`, `membership.freeze`, `membership.unfreeze`, `membership.cancel`, `membership.status`. `AuditService.record` tizim vazifasi uchun `actor = null` qabul qiladi.
+- **Seed:** demo klubga 6 tarif (oylik, ertalabki, 12 tashrif, yillik, bir martalik, sinov) va 20 a'zoga abonement (amaldagi, tugagan, muzlatilgan). Idempotent.
+- Xato kodlari va tarjimalari (uz, ru, en); TZ 6 va 7-bo'limlar yangilandi.
+
+### Tekshirildi
+
+- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` — yashil. API: 427 test, shared: 53, i18n: 11.
+- Birlik: oy oxiri, kabisa yili, Toshkent/Nyu-York/Berlin (DST)/Santyago (yarim tun yo'q kun), muddat oxiri, holat, keyingi o'zgarish lahzasi, muzlatish limitlari, ustma-ust tushish, erta tugatish.
+- `test/memberships.int-spec.ts`: qabul mezoni 6 (Toshkent yarim tunida 18:59:59.999Z da faol, 19:00Z da tugagan, a'zo ham; Nyu-York filiali o'z yarim tunida; qayta ishga tushish auditni takrorlamaydi; soatlik vazifa barcha tashkilotlarni topadi), mezon 7 (10 kun muzlatish tugashni 10 kunga suradi, muzlatilgan kunlarda a'zo `frozen`, erta tugatish 7 kunni qaytaradi), ruxsatlar, filial cheklovi, modul, audit, "A tashkilot B ni ko'rmaydi" (HTTP va RLS, yozish ham).
+- Brauzerda tekshirilmagan (UI M3b da).
+
+### Rejadan chetlanishlar
+
+- **Sotish sanasi oralig'i:** 31 kun orqaga (qog'ozdagi abonementlarni kiritish uchun) va 90 kun oldinga. TZ da yo'q, mening tanlovim.
+- **Har tarif turida muddat bor:** `visits` (masalan 12 tashrif 2 oy ichida), `single` (1 kun, 1 tashrif), `trial` ham muddatli.
+- **`/unfreeze`** joriy muzlatishni tugatadi, bo'lmasa navbatdagi rejalashtirilganini bekor qiladi (alohida endpoint qo'shilmadi).
+- **`OrganizationService` eksport qilindi** (`currency`, `findLocation`, `existingLocationIds`): plans moduli tashkilot jadvallariga to'g'ridan-to'g'ri murojaat qilmaydi.
+
+### Qoldi
+
+- M3b: web — tariflar ro'yxati va formasi, a'zo kartasida abonementlar, sotish, muzlatish va bekor qilish dialoglari, ro'yxatda qolgan kunlar. Playwright — `feat/e2e-playwright` birlashgach.
+- M4: sotish va to'lov bitta tranzaksiyada, muzlatish narxini undirish, `debtor`.
+- M5: kirishda cheklovlar (vaqt, kun, kunlik limit, filial) va tashrif ayirish; tashriflar tugasa `expired`.
 
 ## 2026-11-21 — M2c: a'zolar UI
 
