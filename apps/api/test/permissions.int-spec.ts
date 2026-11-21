@@ -11,7 +11,7 @@ import {
   type StaffFixture,
   type TestApp,
 } from './support/app';
-import { createAdminClient, createOrganization, uniquePhone } from './support/db';
+import { createAdminClient, createOrganization, memberPhone } from './support/db';
 
 // No business endpoint exists yet, so the rules are exercised on stand-ins.
 @Controller('probe')
@@ -157,7 +157,7 @@ describe('Permissions (integration)', () => {
   });
 
   it('never grants staff permissions to a member session', async () => {
-    const phone = uniquePhone();
+    const phone = await memberPhone(admin, org);
     await http().post('/api/v1/auth/otp/request').set('Host', hostOf(org)).send({ phone });
     const cookies = cookiesFrom(
       await http()

@@ -1,7 +1,7 @@
 import request from 'supertest';
 import type { Organization, PrismaClient } from '../src/generated/prisma/client';
 import { cookiesFrom, createTestApp, hostOf, type TestApp } from './support/app';
-import { createAdminClient, createOrganization, uniquePhone } from './support/db';
+import { createAdminClient, createOrganization, memberPhone, uniquePhone } from './support/db';
 
 const MEMBER_CLIENT = { 'x-gatefit-client': 'member' };
 
@@ -36,7 +36,7 @@ describe('Member sign-in by SMS code (integration)', () => {
   });
 
   it('sends a six-digit code in the language of the organization', async () => {
-    const phone = uniquePhone();
+    const phone = await memberPhone(admin, orgA, orgB);
     await requestCode(orgA, phone).expect(204);
     await requestCode(orgB, phone).expect(204);
 
@@ -46,7 +46,7 @@ describe('Member sign-in by SMS code (integration)', () => {
   });
 
   it('stores only a keyed hash of the code', async () => {
-    const phone = uniquePhone();
+    const phone = await memberPhone(admin, orgA, orgB);
     await requestCode(orgA, phone).expect(204);
 
     const stored = await admin.otpCode.findFirstOrThrow({ where: { phone } });
@@ -55,7 +55,7 @@ describe('Member sign-in by SMS code (integration)', () => {
   });
 
   it('signs the member in with the right code and sets member cookies', async () => {
-    const phone = uniquePhone();
+    const phone = await memberPhone(admin, orgA, orgB);
     await requestCode(orgA, phone).expect(204);
 
     const response = await verify(orgA, phone, t.sms.lastCode(phone)).expect(204);
@@ -80,7 +80,7 @@ describe('Member sign-in by SMS code (integration)', () => {
   });
 
   it('keeps one identity per phone across sign-ins', async () => {
-    const phone = uniquePhone();
+    const phone = await memberPhone(admin, orgA, orgB);
     for (let round = 0; round < 2; round += 1) {
       await requestCode(orgA, phone).expect(204);
       await verify(orgA, phone, t.sms.lastCode(phone)).expect(204);
@@ -89,7 +89,7 @@ describe('Member sign-in by SMS code (integration)', () => {
   });
 
   it('rejects a wrong code', async () => {
-    const phone = uniquePhone();
+    const phone = await memberPhone(admin, orgA, orgB);
     await requestCode(orgA, phone).expect(204);
 
     const response = await verify(orgA, phone, wrongCodeFor(t.sms.lastCode(phone))).expect(401);
@@ -98,7 +98,7 @@ describe('Member sign-in by SMS code (integration)', () => {
   });
 
   it('locks the code after five wrong guesses, even for the right one', async () => {
-    const phone = uniquePhone();
+    const phone = await memberPhone(admin, orgA, orgB);
     await requestCode(orgA, phone).expect(204);
     const code = t.sms.lastCode(phone);
 
@@ -110,7 +110,7 @@ describe('Member sign-in by SMS code (integration)', () => {
   });
 
   it('expires the code after five minutes', async () => {
-    const phone = uniquePhone();
+    const phone = await memberPhone(admin, orgA, orgB);
     await requestCode(orgA, phone).expect(204);
 
     t.clock.advance(5 * 60 + 1);
@@ -119,7 +119,7 @@ describe('Member sign-in by SMS code (integration)', () => {
   });
 
   it('accepts a code only once', async () => {
-    const phone = uniquePhone();
+    const phone = await memberPhone(admin, orgA, orgB);
     await requestCode(orgA, phone).expect(204);
     const code = t.sms.lastCode(phone);
 
@@ -129,7 +129,7 @@ describe('Member sign-in by SMS code (integration)', () => {
   });
 
   it('invalidates the previous code when a new one is requested', async () => {
-    const phone = uniquePhone();
+    const phone = await memberPhone(admin, orgA, orgB);
     await requestCode(orgA, phone).expect(204);
     const first = t.sms.lastCode(phone);
     await requestCode(orgA, phone).expect(204);
@@ -142,7 +142,7 @@ describe('Member sign-in by SMS code (integration)', () => {
   });
 
   it("does not accept one organization's code at another organization", async () => {
-    const phone = uniquePhone();
+    const phone = await memberPhone(admin, orgA, orgB);
     await requestCode(orgA, phone).expect(204);
 
     const response = await verify(orgB, phone, t.sms.lastCode(phone)).expect(401);
@@ -150,13 +150,54 @@ describe('Member sign-in by SMS code (integration)', () => {
   });
 
   it('limits how many codes one phone can request', async () => {
-    const phone = uniquePhone();
+    const phone = await memberPhone(admin, orgA, orgB);
     for (let attempt = 0; attempt < 3; attempt += 1) {
       await requestCode(orgA, phone).expect(204);
     }
     const response = await requestCode(orgA, phone).expect(429);
     expect(response.body).toMatchObject({ code: 'RATE_LIMITED' });
     expect(t.sms.sent.filter((sms) => sms.to === phone)).toHaveLength(3);
+  });
+
+  it('sends nothing to a phone that is not a member, and says the same', async () => {
+    const stranger = uniquePhone();
+    await requestCode(orgA, stranger).expect(204);
+    expect(t.sms.sent.filter((sms) => sms.to === stranger)).toEqual([]);
+    await verify(orgA, stranger, '123456').expect(401);
+  });
+
+  it('only lets a member sign in where they are a member', async () => {
+    const phone = await memberPhone(admin, orgA);
+    await requestCode(orgB, phone).expect(204);
+    expect(t.sms.sent.filter((sms) => sms.to === phone)).toEqual([]);
+  });
+
+  it('links the member to their identity at first sign-in', async () => {
+    const phone = await memberPhone(admin, orgA);
+    await requestCode(orgA, phone).expect(204);
+    await verify(orgA, phone, t.sms.lastCode(phone)).expect(204);
+
+    const user = await admin.user.findUniqueOrThrow({ where: { phone } });
+    const member = await admin.member.findFirstOrThrow({
+      where: { organizationId: orgA.id, phone },
+    });
+    expect(member.userId).toBe(user.id);
+  });
+
+  it('refuses an archived member, even with a code sent before archiving', async () => {
+    const phone = await memberPhone(admin, orgA);
+    await requestCode(orgA, phone).expect(204);
+    const code = t.sms.lastCode(phone);
+    await admin.member.updateMany({
+      where: { organizationId: orgA.id, phone },
+      data: { deletedAt: new Date() },
+    });
+
+    const response = await verify(orgA, phone, code).expect(401);
+    expect(response.body).toMatchObject({ code: 'INVALID_OTP' });
+    const sent = t.sms.sent.filter((sms) => sms.to === phone).length;
+    await requestCode(orgA, phone).expect(204);
+    expect(t.sms.sent.filter((sms) => sms.to === phone)).toHaveLength(sent);
   });
 
   it('rejects a malformed phone or code', async () => {

@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
+import { MembersModule } from '../members/members.module';
 import { StaffModule } from '../staff/staff.module';
 import { AccessInterceptor } from './access.interceptor';
 import { AccessService } from './access.service';
@@ -16,7 +17,7 @@ import { TotpService } from './totp.service';
 
 @Module({
   // The secret and lifetimes are passed per call by TokenService.
-  imports: [JwtModule.register({}), StaffModule],
+  imports: [JwtModule.register({}), StaffModule, MembersModule],
   controllers: [AuthController, MeController, StaffSecurityController],
   providers: [
     AccessInterceptor,
