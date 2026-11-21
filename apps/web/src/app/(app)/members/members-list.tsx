@@ -1,6 +1,11 @@
 'use client';
 
-import { MEMBER_STATUSES, type MemberDto, type MemberStatus, type Page } from '@gatefit/shared';
+import {
+  MEMBER_STATUSES,
+  type MemberListItemDto,
+  type MemberStatus,
+  type Page,
+} from '@gatefit/shared';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
@@ -28,7 +33,7 @@ const SEARCH_DELAY_MS = 300;
 /** Pages after the first, remembered together with the list they continue. */
 interface MorePages {
   listKey: string;
-  items: MemberDto[];
+  items: MemberListItemDto[];
   nextCursor: string | null;
 }
 
@@ -63,7 +68,7 @@ export function MembersList({ scope }: { scope: MemberScope }) {
   if (locationId) filters.set('locationId', locationId);
   const filterString = filters.toString();
   const listPath = `/members?limit=50${filterString ? `&${filterString}` : ''}`;
-  const firstPage = useApiGet<Page<MemberDto>>(listPath);
+  const firstPage = useApiGet<Page<MemberListItemDto>>(listPath);
 
   const listKey = `${listPath}:${JSON.stringify(firstPage.data?.items.map((item) => item.id))}`;
   const extra = more?.listKey === listKey ? more : null;
@@ -74,7 +79,7 @@ export function MembersList({ scope }: { scope: MemberScope }) {
   async function loadMore() {
     if (!nextCursor) return;
     setLoadingMore(true);
-    const result = await api.get<Page<MemberDto>>(`${listPath}&cursor=${nextCursor}`);
+    const result = await api.get<Page<MemberListItemDto>>(`${listPath}&cursor=${nextCursor}`);
     setLoadingMore(false);
     if (result.ok) {
       setMore({
@@ -202,6 +207,23 @@ export function MembersList({ scope }: { scope: MemberScope }) {
                     <span className="truncate text-sm text-muted-foreground">
                       {member.phone} · {member.homeLocation.name}
                     </span>
+                    {member.membership && (
+                      <span className="truncate text-sm text-muted-foreground">
+                        {[
+                          member.membership.planName,
+                          member.membership.status === 'scheduled'
+                            ? t('memberships.summary.startsLater')
+                            : member.membership.daysLeft !== null &&
+                              t('memberships.daysLeft', { count: member.membership.daysLeft }),
+                          member.membership.visitsLeft !== null &&
+                            t('memberships.summary.visits', {
+                              count: member.membership.visitsLeft,
+                            }),
+                        ]
+                          .filter(Boolean)
+                          .join(' · ')}
+                      </span>
+                    )}
                   </div>
                   <MemberStatusBadge status={member.status} />
                 </Link>

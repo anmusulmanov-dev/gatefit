@@ -10,12 +10,13 @@ import { cn } from '@/lib/utils';
 
 const items: {
   href: string;
-  key: 'home' | 'members' | 'settings';
+  key: 'home' | 'members' | 'plans' | 'settings';
   exact: boolean;
   permission?: Permission;
 }[] = [
   { href: '/', key: 'home', exact: true },
   { href: '/members', key: 'members', exact: false, permission: 'members.read' },
+  { href: '/plans', key: 'plans', exact: false, permission: 'plans.read' },
   { href: '/settings', key: 'settings', exact: false },
 ];
 

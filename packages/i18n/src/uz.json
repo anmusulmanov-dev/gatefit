@@ -134,7 +134,8 @@
   "nav": {
     "home": "Bosh sahifa",
     "settings": "Sozlamalar",
-    "members": "A'zolar"
+    "members": "A'zolar",
+    "plans": "Tariflar"
   },
   "settings": {
     "title": "Sozlamalar",
@@ -557,6 +558,142 @@
         "SOURCE_INVALID": "Manba tanilmadi",
         "TOO_LONG": "Matn juda uzun"
       }
+    }
+  },
+  "plans": {
+    "title": "Tariflar",
+    "add": "Tarif qo'shish",
+    "edit": "Tarifni o'zgartirish",
+    "changeWarning": "O'zgarishlar yangi sotuvlarga tegishli. Sotilgan abonementlar o'z shartlarini saqlaydi.",
+    "empty": "Hozircha tariflar yo'q.",
+    "show": "Ko'rsatish",
+    "onSale": "Sotuvda",
+    "withdrawn": "Sotuvdan olinganlar",
+    "all": "Hammasi",
+    "inactive": "Sotuvdan olingan",
+    "invalidPrice": "Summani kiriting, verguldan keyin ko'pi bilan {digits} ta raqam.",
+    "types": {
+      "duration": "Muddatli",
+      "visits": "Tashriflar bo'yicha",
+      "single": "Bir martalik",
+      "trial": "Sinov"
+    },
+    "units": {
+      "day": "{count} kun",
+      "month": "{count} oy",
+      "year": "{count} yil"
+    },
+    "unitNames": {
+      "day": "kun",
+      "month": "oy",
+      "year": "yil"
+    },
+    "weekdays": {
+      "1": "Du",
+      "2": "Se",
+      "3": "Ch",
+      "4": "Pa",
+      "5": "Ju",
+      "6": "Sh",
+      "7": "Ya"
+    },
+    "summary": {
+      "visits": "{count} tashrif",
+      "unlimitedVisits": "cheksiz tashrif",
+      "perDay": "kuniga {count} tagacha",
+      "noFreeze": "muzlatib bo'lmaydi",
+      "freeze": "muzlatish {days} kungacha, {times} marta, narxi {fee}"
+    },
+    "fields": {
+      "name": "Nomi",
+      "description": "Tavsif",
+      "type": "Turi",
+      "duration": "Amal qilish muddati",
+      "durationUnit": "Birlik",
+      "visitLimit": "Tashriflar soni",
+      "price": "Narxi",
+      "priceHint": "{currency} da, masalan 450000",
+      "restrictions": "Cheklovlar",
+      "timeWindows": "Kirish soatlari",
+      "anyTime": "Istalgan vaqtda",
+      "from": "Dan",
+      "to": "Gacha",
+      "addWindow": "Soat qo'shish",
+      "removeWindow": "O'chirish",
+      "weekdays": "Hafta kunlari",
+      "noneMeansAll": "hech biri belgilanmasa — hammasi",
+      "dailyVisitLimit": "Kuniga tashriflar",
+      "locations": "Filiallar",
+      "freeze": "Muzlatish",
+      "freezeAllowed": "Abonementni muzlatish mumkin",
+      "freezeMaxDays": "Jami kun",
+      "freezeMaxTimes": "Necha marta",
+      "freezeMinDays": "Eng kamida, kun",
+      "freezeFee": "Muzlatish narxi",
+      "freezeFeeHint": "{currency} da; 0 — bepul",
+      "active": "Sotuvda",
+      "activeHint": "Sotuvdan olingan tarif boshqa sotilmaydi; sotilgan abonementlar o'zgarmaydi."
+    }
+  },
+  "memberships": {
+    "title": "Abonementlar",
+    "empty": "Hozircha abonementlar yo'q.",
+    "status": {
+      "scheduled": "Keyinroq boshlanadi",
+      "active": "Faol",
+      "frozen": "Muzlatilgan",
+      "expired": "Muddati tugagan",
+      "cancelled": "Bekor qilingan"
+    },
+    "period": "{from} – {to}",
+    "daysLeft": "{count} kun qoldi",
+    "visitsLeft": "{total} tadan {left} tashrif qoldi",
+    "summary": {
+      "startsLater": "keyinroq boshlanadi",
+      "visits": "{count} tashrif"
+    },
+    "sell": {
+      "action": "Abonement sotish",
+      "title": "Abonement sotish",
+      "location": "Filial",
+      "plan": "Tarif",
+      "startsOn": "Birinchi kun",
+      "endsOn": "Oxirgi kun: {date}",
+      "noPlans": "Bu filialda sotuvdagi tarif yo'q. \"Tariflar\" bo'limida qo'shing.",
+      "confirm": "Sotish"
+    },
+    "freeze": {
+      "action": "Muzlatish",
+      "title": "Abonementni muzlatish",
+      "limits": "Qoldi: {days} kun, {times} marta. Bir martada kamida {min} kun.",
+      "startsOn": "Muzlatishning birinchi kuni",
+      "days": "Kunlar",
+      "reason": "Sabab",
+      "source": "Kimning tashabbusi",
+      "sources": {
+        "staff": "Xodim qarori",
+        "member_request": "A'zo so'rovi"
+      },
+      "newEnd": "{until} gacha muzlatiladi; abonement {date} gacha amal qiladi.",
+      "fee": "Narxi: {amount} (to'lovlar bilan olinadi).",
+      "confirm": "Muzlatish",
+      "row": "Muzlatilgan {from} – {to} ({days} kun): {reason}",
+      "endedEarly": "muddatidan oldin tugatilgan"
+    },
+    "unfreeze": {
+      "action": "Muzlatishni tugatish",
+      "title": "Muzlatishni tugatish",
+      "endCurrent": "{from} dan boshlangan muzlatish bugun tugaydi; ishlatilmagan {days} kun muddatdan ayriladi.",
+      "dropPlanned": "{from} dan rejalashtirilgan muzlatish bekor qilinadi; {days} kun muddatdan ayriladi.",
+      "confirm": "Muzlatishni tugatish"
+    },
+    "cancel": {
+      "action": "Bekor qilish",
+      "title": "Abonementni bekor qilish",
+      "description": "\"{plan}\" hozir tugaydi. Pulni qaytarish to'lovlar bo'limida.",
+      "reason": "Sabab",
+      "confirm": "Abonementni bekor qilish",
+      "reasonShown": "Bekor qilingan: {reason}"
     }
   }
 }
