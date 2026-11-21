@@ -15,6 +15,45 @@ Har sessiya oxirida yangilanadi: nima qilindi, nima qoldi, ma'lum muammolar.
 | M1c Sozlamalar UI                 | Tayyor (2026-11-17)              |
 | M1d Super-admin UI                | Tayyor (2026-11-17) — M1 yopildi |
 | M2a A'zolar API                   | Tayyor (2026-11-21)              |
+| M2b Foto, import, eksport         | Tayyor (2026-11-21)              |
+
+## 2026-11-21 — M2b: foto, import, eksport
+
+Branch: `feat/m2-members-files` (`feat/m2-members-api` ustidan). Qaror: `docs/ADR/0007-files-and-jobs.md`.
+
+### Qilindi
+
+- **Yangi paketlar** (Anvar tasdiqlagan): `bullmq` (fon vazifalari), `exceljs` (XLSX o'qish va yozish), `@aws-sdk/client-s3` (fayl saqlash), `libphonenumber-js` (importda telefonni mamlakat bo'yicha E.164 ga keltirish). `msgpackr-extract` ning native build'i o'chirilgan (JS varianti yetadi).
+- **Fayl saqlash porti** `FileStorage`: `s3` va `memory` drayverlari, `STORAGE_DRIVER` (productionda `memory` taqiqlangan). **Imzolangan havolalar** `GET /files/{token}` (`@Public`, HMAC va muddat).
+- **Foto:** `PUT /members/{id}/photo` (multipart, 5 MB, JPEG/PNG/WebP baytlardan aniqlanadi), `DELETE /members/{id}/photo`; eski fayl o'chiriladi. `MemberDto.hasPhoto` o'rniga `photoUrl`.
+- **Import** (`member_imports` jadvali, RLS; `members.import_id`):
+  - `POST /members/imports` CSV (`,` `;` tab, BOM) yoki XLSX qabul qiladi; sarlavhalardan ustunlar uz/ru/en da avtomatik moslanadi; 5 ta namuna qator. 10 000 qatorgacha.
+  - `POST /members/imports/{id}/validate` moslash va filial bilan har qatorni tekshiradi: ism, telefon (mamlakat bo'yicha, `998901234567` ham), fayl ichida takror, bazada bor, sana (`YYYY-MM-DD`, `DD.MM.YYYY`), jins, manba, uzunlik. Xatolar qator raqami bilan (birinchi 1000 tasi).
+  - `POST /members/imports/{id}/commit` BullMQ vazifasi; qayta bosilsa hech narsa o'zgarmaydi; tekshiruvdan keyin band bo'lgan telefon o'tkazib yuboriladi va sanaladi. `member.import` auditi.
+  - `GET /members/imports/template` — uz/ru/en sarlavhali bo'sh XLSX.
+- **Eksport:** `GET /members/export?format=xlsx|csv` + ro'yxat filtrlari, tashkilot tilida, importga qaytib tushadi. CSV: BOM, formula injeksiyasidan himoya. Faqat ko'rinadigan a'zolar. `member.export` auditi.
+- **Ruxsatlar:** foto — `members.manage`, import — `members.import`, eksport — `members.export`. Filial cheklovi importga ham tegishli.
+- **Test infratuzilmasi:** `createTestApp` xotira storage va har ilovaga alohida navbat prefiksi beradi; `apiAs` ga `put`, `delete`, `upload`.
+
+### Tekshirildi
+
+- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` — yashil. API: 375 test, shared: 33, i18n: 11.
+- **Qabul mezoni 1 (import qismi):** 500 a'zoli XLSX (telefonlar Excel raqami sifatida) xatosiz yuklanadi, fon vazifasi 500 tasini yozadi, qayta `commit` takror yozmaydi (`test/member-files.int-spec.ts`).
+- Foto: imzolangan havola, soxta, o'zgartirilgan va muddati o'tgan havola 404; SVG `.jpg` nomi bilan rad etiladi; 5 MB dan katta rad.
+- Ajratish: B tashkilot A ning importini ko'rmaydi va boshlay olmaydi; eksportda boshqa tashkilot a'zolari yo'q; filial xodimi boshqa filialga import qila olmaydi.
+- S3 drayveri dev MinIO bilan qo'lda tekshirildi (yozish, o'qish, o'chirish). CI da MinIO yo'q, testlar `memory` drayverida.
+
+### Rejadan chetlanishlar
+
+- **Import yo'li `/members/imports/...`** (TZ da `POST /members/import`): bir nechta qadam (yuklash, tekshirish, boshlash, holat) alohida resursni talab qiladi. TZ 7-bo'lim yangilandi.
+- **Imzolangan havola S3 ning o'zi emas, API orqali** (ADR 0007).
+- **Telefon qat'iyligi farqli:** importda `libphonenumber-js` raqam haqiqiyligini tekshiradi, qo'lda qo'shishda esa hozircha faqat E.164 formati (`phoneSchema`). Bir xil qilish uchun shared ga paket qo'shish kerak — M2c da forma bilan birga ko'rib chiqiladi.
+
+### Qoldi
+
+- M2c: web UI (ro'yxat, karta, forma, import ustasi, eksport), Playwright.
+- Rasm o'lchamini kichraytirish (paket kerak) — hozir 5 MB gacha asl holida.
+- Juda katta eksport fon vazifasiga (ADR 0007).
 
 ## 2026-11-21 — M2a: a'zolar API
 
