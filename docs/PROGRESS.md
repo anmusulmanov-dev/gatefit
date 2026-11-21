@@ -15,6 +15,28 @@ Har sessiya oxirida yangilanadi: nima qilindi, nima qoldi, ma'lum muammolar.
 | M1c Sozlamalar UI                 | Tayyor (2026-11-17)              |
 | M1d Super-admin UI                | Tayyor (2026-11-17) — M1 yopildi |
 
+## 2026-11-21 — Staging yopiq, Tailscale orqali
+
+Branch: `chore/staging-tailscale`. Qaror: `docs/ADR/0005-staging.md` (qo'shimcha).
+
+### Topildi
+
+- **Ofis liniyasi CGNAT ortida:** routerning WAN manzili `100.100.95.183` (provayderning umumiy NAT'i), tashqi IP o'zgarib turadi (`213.230.87.55` → `84.54.73.159`). Routerda 80/443 yo'naltirildi, lekin tashqaridan baribir javob yo'q. Statik IP'siz staging'ni internetga ochib bo'lmaydi.
+- **ahost DNS:** domen boshqa nom serverlariga ulangan edi, yozuvlar ishlamagan; Anvar "DNS menejerini ishlatish" ni tanladi. `.uz` reyestri o'zgarishni hali e'lon qilmagan. Panel wildcard (`*`) yozuvini qabul qilmaydi.
+
+### Qilindi
+
+- **web01 Tailscale'da** (`100.103.7.74`); `ssh web01` endi istalgan joydan ishlaydi.
+- **Caddy:** sertifikat manbasi `CADDY_TLS_ISSUER` bilan (`acme` standart, staging'da `internal`).
+- **`deploy.sh`:** har deploy'dan keyin Caddy sozlamasi qayta yuklanadi (Caddyfile bind mount, o'zgarishi konteynerni qayta yaratmaydi).
+- **Runbook:** qurilmada staging'ni ochish (Tailscale va Caddy ildiz sertifikati), DNS yozuvlari qo'lda.
+
+### Qoldi
+
+- Anvar: ahost'da to'rt yozuvni `100.103.7.74` ga o'zgartirish; routerdagi ikkala port qoidasini o'chirish; qurilmalarga ildiz sertifikatini o'rnatish.
+- `.uz` delegatsiyasi yetib kelgach manzillarni tekshirish.
+- Production: statik IP yoki O'zbekistondagi VPS va wildcard'ni qo'llaydigan DNS.
+
 ## 2026-11-18 — Staging serveri
 
 Branch: `chore/staging-deploy`. Qaror: `docs/ADR/0005-staging.md`. Runbook: `infra/staging/README.md`.
@@ -36,8 +58,8 @@ Branch: `chore/staging-deploy`. Qaror: `docs/ADR/0005-staging.md`. Runbook: `inf
 
 ### Qoldi
 
-- Anvar: DNS (`staging`, `*.staging`, `*.my.staging` → tashqi IP) va routerda 80/443 ni 10.10.7.5 ga yo'naltirish.
-- PR birlashgach: serverda `main` ga o'tish va cron (deploy har 2 daqiqa, zaxira har kuni).
+- ~~Anvar: DNS va routerda 80/443~~ — CGNAT sabab bekor qilindi, 2026-11-21 bo'limiga qarang.
+- ~~PR birlashgach: serverda `main` ga o'tish va cron~~ — 2026-11-18 da qilindi, birinchi deploy va zaxira ishladi.
 - Ixcham production image'i, registry, monitoring, zaxirani serverdan tashqariga ko'chirish — M8.
 - Lokal Docker Desktop'ga 4 GB xotira ajratilgan: to'liq build uchun `--build-arg BUILD_CONCURRENCY=1`.
 
