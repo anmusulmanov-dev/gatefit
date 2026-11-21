@@ -85,3 +85,82 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm build
+
+  # Playwright against the built API and web app (apps/e2e). Same services and variables as
+  # `ci`; the suite creates and resets its own gatefit_e2e database.
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: gatefit
+          POSTGRES_PASSWORD: gatefit
+          POSTGRES_DB: gatefit
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U gatefit -d gatefit"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+
+    env:
+      TURBO_TELEMETRY_DISABLED: 1
+      DATABASE_URL: postgresql://gatefit_app:gatefit_app@localhost:5432/gatefit
+      DATABASE_ADMIN_URL: postgresql://gatefit_migrator:gatefit_migrator@localhost:5432/gatefit
+      REDIS_URL: redis://localhost:6379
+      # Throwaway values for the CI database only.
+      JWT_SECRET: ci-only-jwt-secret-0123456789abcdef0123456789
+      DATA_ENCRYPTION_KEY: Y2ktb25seS1kYXRhLWVuY3J5cHRpb24ta2V5LTMyYnk=
+      S3_ENDPOINT: http://localhost:9000
+      S3_REGION: us-east-1
+      S3_ACCESS_KEY: ci
+      S3_SECRET_KEY: ci-secret
+      S3_BUCKET: gatefit-ci
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Create database roles
+        run: bash infra/postgres/init.sh
+        env:
+          PGHOST: localhost
+          PGPASSWORD: gatefit
+          POSTGRES_USER: gatefit
+          POSTGRES_DB: gatefit
+          DB_APP_PASSWORD: gatefit_app
+          DB_MIGRATOR_PASSWORD: gatefit_migrator
+
+      - name: Install Chromium
+        run: pnpm --filter e2e exec playwright install --with-deps chromium
+
+      - run: pnpm test:e2e
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v5
+        with:
+          name: playwright-report
+          path: apps/e2e/playwright-report
+          retention-days: 7
