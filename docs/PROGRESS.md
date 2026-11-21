@@ -4,20 +4,48 @@ Har sessiya oxirida yangilanadi: nima qilindi, nima qoldi, ma'lum muammolar.
 
 ## Holat
 
-| Bosqich                           | Holat                            |
-| --------------------------------- | -------------------------------- |
-| 0.1 Loyiha karkasi                | Tayyor (2026-11-11)              |
-| 0.2 Ko'p mijozlilik va RLS        | Tayyor (2026-11-11)              |
-| 0.3 Autentifikatsiya va ruxsatlar | Tayyor (2026-11-17)              |
-| MVP (M1–M8)                       | Boshlanmagan                     |
-| M1a Tashkilot ichki API           | Tayyor (2026-11-17)              |
-| M1b Platforma API                 | Tayyor (2026-11-17)              |
-| M1c Sozlamalar UI                 | Tayyor (2026-11-17)              |
-| M1d Super-admin UI                | Tayyor (2026-11-17) — M1 yopildi |
-| M2a A'zolar API                   | Tayyor (2026-11-21)              |
-| M2b Foto, import, eksport         | Tayyor (2026-11-21)              |
-| M2c A'zolar UI                    | Tayyor (2026-11-21) — M2 yopildi |
-| M3a Tariflar va abonementlar API  | Tayyor (2026-11-22)              |
+| Bosqich                           | Holat                                             |
+| --------------------------------- | ------------------------------------------------- |
+| 0.1 Loyiha karkasi                | Tayyor (2026-11-11)                               |
+| 0.2 Ko'p mijozlilik va RLS        | Tayyor (2026-11-11)                               |
+| 0.3 Autentifikatsiya va ruxsatlar | Tayyor (2026-11-17)                               |
+| MVP (M1–M8)                       | Boshlanmagan                                      |
+| M1a Tashkilot ichki API           | Tayyor (2026-11-17)                               |
+| M1b Platforma API                 | Tayyor (2026-11-17)                               |
+| M1c Sozlamalar UI                 | Tayyor (2026-11-17)                               |
+| M1d Super-admin UI                | Tayyor (2026-11-17) — M1 yopildi                  |
+| M2a A'zolar API                   | Tayyor (2026-11-21)                               |
+| M2b Foto, import, eksport         | Tayyor (2026-11-21)                               |
+| M2c A'zolar UI                    | Tayyor (2026-11-21) — M2 yopildi                  |
+| M3a Tariflar va abonementlar API  | Tayyor (2026-11-22)                               |
+| M3b Tariflar va abonementlar UI   | Kod tayyor (2026-11-22), brauzerda tekshirilmagan |
+
+## 2026-11-22 — M3b: tariflar va abonementlar UI
+
+Branch: `feat/m3-memberships-ui` (`feat/m3-memberships-api` ustidan).
+
+### Qilindi
+
+- **Menyu:** "Tariflar" (`plans.read`).
+- **`/plans`:** sotuvdagi / sotuvdan olingan / hammasi filtri. Har qatorda tur, narx, muddat, tashriflar, cheklovlar, muzlatish shartlari. `plans.manage` bo'lsa qo'shish va tahrirlash dialogi: tur, muddat, tashriflar soni, narx (tashkilot valyutasida, `decimalToMinor`), kirish soatlari (4 tagacha oraliq), hafta kunlari, kunlik limit, filiallar, muzlatish (jami kun, marta, eng kam kun, narx), sotuvdan olish.
+- **A'zo kartasi → "Abonementlar":** ro'yxat (holat, sanalar, qolgan kun va tashrif, narx, filial, muzlatishlar, bekor qilish sababi). Dialoglar:
+  - sotish: filial, shu filialda amal qiladigan tarif, boshlanish sanasi, oxirgi kun oldindan ko'rinadi;
+  - muzlatish: sana, kunlar, sabab, kimning tashabbusi, yangi tugash sanasi, qolgan limit, narx;
+  - muzlatishni tugatish: qaytadigan kunlar;
+  - bekor qilish: sabab.
+    Tugmalar ruxsatga qarab, arxivdagi a'zoda yo'q. O'zgarishdan keyin a'zo holati ham yangilanadi.
+- **A'zolar ro'yxati:** har qatorda amaldagi abonement: tarif, qolgan kun yoki "keyinroq boshlanadi", qolgan tashriflar.
+- Tarjimalar `plans.*`, `memberships.*`, `nav.plans` — uz, ru, en.
+
+### Tekshirildi
+
+- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm --filter web build` — yashil.
+- **Brauzerda tekshirilmagan.** Dev bazadagi xodimlarning parolini bilmayman (owner TOTP ham talab qiladi), test xodimini bazaga to'g'ridan-to'g'ri yozishga ruxsat berilmadi. Sotish → muzlatish → tugatish → bekor qilish oqimini va 375 px ni brauzerda ko'rish kerak.
+
+### Qoldi
+
+- Brauzerda tekshiruv (yuqorida) va Playwright — `feat/e2e-playwright` birlashgach.
+- Kirish soatlarida `24:00` ni UI orqali kiritib bo'lmaydi (`type="time"`); `23:59` yetadi.
 
 ## 2026-11-22 — M3a: tariflar, abonementlar, muzlatish (API)
 
