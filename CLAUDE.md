@@ -57,6 +57,7 @@ pnpm --filter api dev        # bitta ilova: api | web | member
 pnpm lint && pnpm typecheck
 pnpm test                    # birlik va integratsiya (postgres va redis ishlab turishi kerak)
 pnpm --filter api test       # bitta paket; bitta fayl: pnpm --filter api test -- health
+pnpm test:e2e                # Playwright (apps/e2e): build + gatefit_e2e bazasi + testlar; postgres va redis kerak
 pnpm build
 pnpm format                  # prettier --write; tekshirish: pnpm format:check
 pnpm --filter api prisma migrate dev --name <nom>   # yangi migratsiya
@@ -84,7 +85,7 @@ pnpm --filter api seed                              # demo tashkilot, filiallar,
 - Web panel: ma'lumotni `useApiGet`, o'zgartirishni `useApiAction` (`apps/web/src/lib/use-api.ts`) orqali; ruxsatga qarab ko'rsatish `useCan` (`components/staff-session.tsx`). Sozlamalar bo'limlari va ularning ruxsatlari: `apps/web/src/app/(app)/settings/sections.ts`.
 - Pulni ko'rsatish va kiritish: `formatMinor`, `decimalToMinor`, `minorToDecimal` (`packages/shared/src/money.ts`). `number` ga aylantirma.
 - Super-admin paneli: `apps/web/src/app/platform`, faqat `admin.*` manzilda (`lib/host.ts`). Klient: `platformApi` (`lib/platform-api.ts`), so'rov: `useApiGet(path, platformApi)`.
-- Playwright e2e (`pnpm --filter api test:e2e`) hali yo'q: birinchi foydalanuvchi oqimi bilan qo'shiladi.
+- E2e: `apps/e2e` (Playwright, chromium). Birinchi marta: `pnpm --filter e2e exec playwright install chromium`. API :7100 va web :3100 da (`pnpm dev` bilan to'qnashmaydi), web `.next-e2e` ga yig'iladi, baza `gatefit_e2e` har ishga tushishda qayta quriladi va seed qilinadi. Qayta yig'ishsiz: `E2E_SKIP_BUILD=1`. Elementni `getByLabel(t('...'))` / `getByRole` bilan top (`support/i18n.ts`, uz.json matni), TOTP kodi `support/totp.ts` (`otplib`). Yangi oqim: `tests/*.spec.ts`, kirgan owner sessiyasi kerak bo'lsa `tests/owner/` ichida (`owner` loyihasi, `staff-auth` dan keyin ishlaydi).
 - API porti 4000 emas, 8000: Windows'da 3345–4144 oralig'i Hyper-V tomonidan band bo'lishi mumkin.
 
 ## Buzilmaydigan qoidalar

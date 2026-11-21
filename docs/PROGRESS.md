@@ -15,6 +15,29 @@ Har sessiya oxirida yangilanadi: nima qilindi, nima qoldi, ma'lum muammolar.
 | M1c Sozlamalar UI                 | Tayyor (2026-11-17)              |
 | M1d Super-admin UI                | Tayyor (2026-11-17) — M1 yopildi |
 
+## 2026-11-21 — Playwright e2e
+
+Branch: `feat/e2e-playwright`.
+
+### Qilindi
+
+- **`apps/e2e` paketi** (Playwright, faqat chromium; `otplib` TOTP kodi uchun). Ishga tushirish: `pnpm test:e2e`. `pnpm test` ga kirmaydi.
+- **`scripts/prepare.ts`:** API'ni build qiladi (turbo), web'ni `.next-e2e` ga build qiladi (`NEXT_DIST_DIR`). Sababi: web'dagi `/api` rewrite manzili build paytida qotadi. Keyin `gatefit_e2e` bazasini qayta quradi (integratsiya testlaridagi kabi `DROP SCHEMA public` va `migrate deploy`) va seed qiladi. Seed'ga o'zining `SEED_*` qiymatlari beriladi (`support/env.ts`). `E2E_SKIP_BUILD=1` bilan build o'tkazib yuboriladi.
+- **Serverlar:** Playwright `webServer` API'ni :7100 da, web'ni :3100 da ko'taradi. Redis'ning 1-bazasi ishlatiladi, rate limit o'chirilgan. `pnpm dev` bilan to'qnashmaydi.
+- **Oqimlar (4 test):** owner'ning birinchi kirishi (parol, TOTP sozlash, chiqish, TOTP kodi bilan qayta kirish); noto'g'ri parol; filial qo'shish (`tests/owner/`, saqlangan owner sessiyasi bilan); super-admin kirishi `admin.localhost` da (TOTP sozlash, tashkilotlar ro'yxati).
+- **Matnlar:** elementlar `uz.json` matni orqali topiladi (`support/i18n.ts`), testda matn qattiq yozilmaydi.
+- **CI:** `ci.yml` da alohida `e2e` job bor: o'sha servislar, `playwright install --with-deps chromium`, `pnpm test:e2e`. Xato bo'lsa hisobot artifact sifatida yuklanadi.
+
+### Topildi
+
+- `prisma migrate reset` Claude Code ostida ishlamaydi: Prisma AI agentni aniqlab, foydalanuvchi roziligini talab qiladi. Shuning uchun reset qo'lda qilinadi.
+- Windows'da 8051–8150 portlari Hyper-V tomonidan band bo'lishi mumkin, shuning uchun e2e API porti 7100.
+- Root `.env` dagi `NODE_ENV=development` `next build` ni buzadi (`/_global-error` prerender), shuning uchun web'ga `NODE_ENV=production` beriladi.
+
+### Qoldi
+
+- A'zo ilovasi (`apps/member`) oqimlari: M2 tugagach.
+
 ## 2026-11-21 — Staging yopiq, Tailscale orqali
 
 Branch: `chore/staging-tailscale`. Qaror: `docs/ADR/0005-staging.md` (qo'shimcha).
