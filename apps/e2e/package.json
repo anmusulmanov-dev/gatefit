@@ -1,0 +1,17 @@
+{
+  "name": "e2e",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:e2e": "node scripts/prepare.ts && playwright test",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.65.1",
+    "@types/node": "^22.0.0",
+    "otplib": "^13.6.0",
+    "typescript": "~6.0.2"
+  }
+}

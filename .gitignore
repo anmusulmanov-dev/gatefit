@@ -21,3 +21,9 @@ Thumbs.db
 .deployed
 .deploy-failed
 .deploy.lock
+
+# Playwright (apps/e2e)
+.next-e2e
+.auth
+test-results
+playwright-report
