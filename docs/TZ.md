@@ -182,9 +182,9 @@ Barcha biznes jadvallarida: `id` (UUID v7), `organization_id`, `created_at`, `up
 | roles, role_permissions | name, permissions | organization | M |
 | members | first_name, last_name, phone, birth_date, gender, photo_key, status, blocked_reason, source, notes, emergency_contact_name, emergency_contact_phone | organization, user?, home_location | M |
 | member_imports | file_key, file_name, status, headers, mapping, total_rows, valid_rows, errors, created_count, skipped_count | organization, home_location?, members | M |
-| plans | name, type, duration, visit_limit, price_minor, currency, restrictions (JSONB), is_active | organization | M |
-| memberships | starts_at, ends_at, visits_left, status, auto_renew | member, plan | M |
-| membership_freezes | starts_on, ends_on, reason | membership | M |
+| plans | name, description, type (duration, visits, single, trial), duration_value, duration_unit (day, month, year), visit_limit, price_minor, currency, restrictions (JSONB: time_windows, weekdays, daily_visit_limit, location_ids), freeze_max_days, freeze_max_times, freeze_min_days, freeze_fee_minor, is_active | organization | M |
+| memberships | tarif shartlari nusxasi (plan_name, plan_type, visit_limit, price_minor, currency, restrictions, freeze_*), starts_on, ends_on, starts_at, ends_at, visits_left, status (scheduled, active, frozen, expired, cancelled), status_changes_at, auto_renew, sold_by, cancelled_at, cancel_reason | member, plan, location (sotilgan filial) | M |
+| membership_freezes | starts_on, ends_on, starts_at, ends_at, days, reason, source (staff, member_request), fee_minor, currency, ended_early_at, cancelled_at | membership | M |
 | check_ins | at, direction, method, result, deny_reason | member, location, device?, staff? | M |
 | invoices, invoice_items | number, total_minor, tax_minor, status, due_at | member | M |
 | payments | amount_minor, currency, method, provider, external_id, status, idempotency_key | invoice, cash_shift | M |
@@ -205,6 +205,7 @@ Barcha biznes jadvallarida: `id` (UUID v7), `organization_id`, `created_at`, `up
 
 Qoidalar:
 - Bitta a'zoda bir nechta faol abonement bo'lishi mumkin; kirishda ustuvorlik: avval muddati ertaroq tugaydigani.
+- Abonement sanalari sotilgan filialning vaqt mintaqasida; tarif shartlari sotilganda nusxalanadi, tarif keyin o'zgarsa sotilgan abonement o'zgarmaydi. Muzlatish tugash sanasini suradi (`docs/ADR/0008-memberships.md`).
 - `check_ins` va `audit_logs` faqat qo'shiladi; oy bo'yicha partition.
 - Telefon tashkilot ichida yagona (arxivlangan a'zo ham telefonini saqlaydi: qaytgan a'zo tiklanadi). A'zo holati `inactive` (abonement yo'q) bilan boshlanadi.
 - Filialga bog'langan rol faqat o'z filiallari a'zolarini ko'radi; owner va accountant butun tashkilotni (`docs/ADR/0006-member-visibility.md`).
@@ -227,8 +228,8 @@ Qoidalar:
 | Tashkilot | GET/PATCH /organization, GET/POST/PATCH /locations | M |
 | Xodimlar | GET/POST/PATCH /staff, POST /staff/{id}/reset-password, POST /staff/{id}/reset-totp, GET/POST/PATCH /roles | M |
 | A'zolar | GET/POST /members, GET /members/duplicates, GET/PATCH /members/{id}, POST /members/{id}/block, /unblock, /archive, /restore, PUT/DELETE /members/{id}/photo, POST /members/imports, GET /members/imports/{id}, POST /members/imports/{id}/validate, /commit, GET /members/imports/template, GET /members/export; GET /files/{token} (imzolangan havola) | M |
-| Tariflar | GET/POST /plans, PATCH /plans/{id} | M |
-| Abonementlar | POST /members/{id}/memberships, POST /memberships/{id}/freeze, /unfreeze, /cancel | M |
+| Tariflar | GET/POST /plans, GET/PATCH /plans/{id} | M |
+| Abonementlar | GET/POST /members/{id}/memberships, GET /memberships/{id}, POST /memberships/{id}/freeze, /unfreeze, /cancel | M |
 | Kirish | GET /me/qr, POST /access/verify, POST /access/manual, GET /check-ins, GET /locations/{id}/occupancy | M |
 | To'lovlar | POST /invoices, POST /invoices/{id}/payments, POST /payments/{id}/refund, GET /payments | M |
 | Kassa | POST /cash-shifts/open, POST /cash-shifts/{id}/close, GET /cash-shifts/current | M |

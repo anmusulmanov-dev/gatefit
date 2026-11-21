@@ -6,15 +6,18 @@ import {
   type MemberDuplicatesDto,
   type MemberDuplicatesQuery,
   type MemberFilter,
+  type MemberListItemDto,
   type MemberListQuery,
   type MemberSource,
   type MemberStatus,
+  type MembershipStatus,
   type MemberSummaryDto,
   type MemberUpdateInput,
   MEMBER_PHOTO_MAX_BYTES,
   type Page,
 } from '@gatefit/shared';
 import { Inject, Injectable } from '@nestjs/common';
+import { ModuleRef } from '@nestjs/core';
 import { AuditService } from '../../common/audit/audit.service';
 import { Clock } from '../../common/clock/clock';
 import { conflict, forbidden, notFound, unprocessable } from '../../common/errors/domain-errors';
@@ -26,6 +29,7 @@ import { FileLinksService } from '../../common/storage/file-links.service';
 import { FILE_STORAGE, type FileStorage } from '../../common/storage/file-storage';
 import type { Prisma } from '../../generated/prisma/client';
 import { imageType } from './image-type';
+import { MEMBERSHIP_FACTS, type MembershipFacts, memberStatusFrom } from './member-status';
 import { searchConditions } from './member-search';
 
 export const memberInclude = { homeLocation: { select: { id: true, name: true } } } as const;
@@ -64,20 +68,33 @@ export class MembersService {
     private readonly clock: Clock,
     private readonly links: FileLinksService,
     @Inject(FILE_STORAGE) private readonly storage: FileStorage,
+    private readonly moduleRef: ModuleRef,
   ) {}
+
+  /** Looked up on use: the plans module that provides it depends on this one. */
+  private get memberships(): MembershipFacts {
+    return this.moduleRef.get<MembershipFacts>(MEMBERSHIP_FACTS, { strict: false });
+  }
 
   async list(
     tx: TenantTransaction,
     caller: StaffCaller,
     query: MemberListQuery,
-  ): Promise<Page<MemberDto>> {
+  ): Promise<Page<MemberListItemDto>> {
     const page = pageArgs(query, 'desc');
     const rows = await tx.member.findMany({
       ...page,
       where: { AND: [page.where, this.filterWhere(caller, query)] },
       include: memberInclude,
     });
-    return toPage(rows, query, (row) => this.toDto(row));
+    const summaries = await this.memberships.summariesOf(
+      tx,
+      rows.slice(0, query.limit).map((row) => row.id),
+    );
+    return toPage(rows, query, (row) => ({
+      ...this.toDto(row),
+      membership: summaries.get(row.id) ?? null,
+    }));
   }
 
   async get(tx: TenantTransaction, caller: StaffCaller, id: string): Promise<MemberDto> {
@@ -199,9 +216,10 @@ export class MembersService {
     if (member.status !== 'blocked') {
       return this.toDto(member);
     }
-    // Memberships do not exist yet (stage M3), so an unblocked member has none in force.
-    // M3 replaces this with the status their memberships give them.
-    const status: MemberStatus = 'inactive';
+    const status: MemberStatus = memberStatusFrom(
+      'inactive',
+      await this.memberships.statusesOf(tx, id),
+    );
     const updated = await tx.member.update({
       where: { id },
       data: { status, blockedReason: null },
@@ -215,6 +233,21 @@ export class MembersService {
       after: { status },
     });
     return this.toDto(updated);
+  }
+
+  /**
+   * Brings the member's status in line with their memberships' statuses. Called by the
+   * plans module whenever a membership of the member changes.
+   */
+  async refreshStatus(tx: TenantTransaction, memberId: string, statuses: MembershipStatus[]) {
+    const member = await tx.member.findUniqueOrThrow({
+      where: { id: memberId },
+      select: { status: true },
+    });
+    const status = memberStatusFrom(member.status, statuses);
+    if (status !== member.status) {
+      await tx.member.update({ where: { id: memberId }, data: { status } });
+    }
   }
 
   /** Hides the member from lists. The phone stays taken, so a returning member is restored. */
@@ -370,11 +403,7 @@ export class MembersService {
     return caller.locationIds === null ? {} : { homeLocationId: { in: [...caller.locationIds] } };
   }
 
-  private async findVisible(
-    tx: TenantTransaction,
-    caller: StaffCaller,
-    id: string,
-  ): Promise<MemberRow> {
+  async findVisible(tx: TenantTransaction, caller: StaffCaller, id: string): Promise<MemberRow> {
     const member = await tx.member.findFirst({
       where: { AND: [{ id }, this.visibleTo(caller)] },
       include: memberInclude,
@@ -385,11 +414,8 @@ export class MembersService {
     return member;
   }
 
-  private async findEditable(
-    tx: TenantTransaction,
-    caller: StaffCaller,
-    id: string,
-  ): Promise<MemberRow> {
+  /** A visible member who is not archived. */
+  async findEditable(tx: TenantTransaction, caller: StaffCaller, id: string): Promise<MemberRow> {
     const member = await this.findVisible(tx, caller, id);
     if (member.deletedAt) {
       throw conflict(ErrorCode.MEMBER_ARCHIVED, 'Restore the member before changing them');

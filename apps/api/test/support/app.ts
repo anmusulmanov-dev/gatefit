@@ -35,6 +35,11 @@ export class TestClock extends Clock {
     this.offsetMs += seconds * 1000;
   }
 
+  /** Makes it `instant` now; time keeps running from there. */
+  set(instant: Date | string): void {
+    this.offsetMs = new Date(instant).getTime() - Date.now();
+  }
+
   reset(): void {
     this.offsetMs = 0;
   }
