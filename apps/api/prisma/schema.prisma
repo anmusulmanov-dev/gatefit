@@ -54,6 +54,17 @@ enum Gender {
   @@map("gender")
 }
 
+enum ImportStatus {
+  uploaded
+  validated
+  queued
+  running
+  done
+  failed
+
+  @@map("import_status")
+}
+
 model Organization {
   id          String             @id @default(uuid(7)) @db.Uuid
   name        String
@@ -81,6 +92,7 @@ model Organization {
   saasPlan        SaasPlan?          @relation(fields: [saasPlanId], references: [id])
   subscriptions   SaasSubscription[]
   members         Member[]
+  memberImports   MemberImport[]
 
   @@map("organizations")
 }
@@ -100,6 +112,7 @@ model Location {
   organization   Organization    @relation(fields: [organizationId], references: [id])
   staffLocations StaffLocation[]
   members        Member[]
+  memberImports  MemberImport[]
 
   @@unique([organizationId, id])
   @@unique([organizationId, name])
@@ -227,24 +240,64 @@ model Member {
   notes                 String?
   emergencyContactName  String?      @map("emergency_contact_name")
   emergencyContactPhone String?      @map("emergency_contact_phone")
+  // The import that created the member, if any.
+  importId              String?      @map("import_id") @db.Uuid
   createdAt             DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt             DateTime     @updatedAt @map("updated_at") @db.Timestamptz(3)
   deletedAt             DateTime?    @map("deleted_at") @db.Timestamptz(3)
 
-  organization Organization @relation(fields: [organizationId], references: [id])
-  user         User?        @relation(fields: [userId], references: [id])
-  homeLocation Location     @relation(fields: [organizationId, homeLocationId], references: [organizationId, id])
+  organization Organization  @relation(fields: [organizationId], references: [id])
+  user         User?         @relation(fields: [userId], references: [id])
+  homeLocation Location      @relation(fields: [organizationId, homeLocationId], references: [organizationId, id])
+  import       MemberImport? @relation(fields: [organizationId, importId], references: [organizationId, id])
   consents     Consent[]
 
   @@unique([organizationId, id])
   @@unique([organizationId, phone])
   @@unique([organizationId, userId])
   @@index([organizationId, homeLocationId, status])
+  @@index([organizationId, importId])
   // Search by any part of a name or phone (pg_trgm).
   @@index([firstName(ops: raw("gin_trgm_ops"))], type: Gin, map: "members_first_name_trgm_idx")
   @@index([lastName(ops: raw("gin_trgm_ops"))], type: Gin, map: "members_last_name_trgm_idx")
   @@index([phone(ops: raw("gin_trgm_ops"))], type: Gin, map: "members_phone_trgm_idx")
   @@map("members")
+}
+
+// A member file being imported (docs/TZ.md F-1.4): uploaded, checked, then written by a
+// background job. The file itself is in file storage.
+model MemberImport {
+  id             String       @id @default(uuid(7)) @db.Uuid
+  organizationId String       @map("organization_id") @db.Uuid
+  // users.id of who uploaded it.
+  createdBy      String       @map("created_by") @db.Uuid
+  homeLocationId String?      @map("home_location_id") @db.Uuid
+  status         ImportStatus @default(uploaded)
+  fileKey        String       @map("file_key")
+  fileName       String       @map("file_name")
+  headers        Json
+  // { field: columnIndex }
+  mapping        Json
+  sampleRows     Json         @map("sample_rows")
+  totalRows      Int          @map("total_rows")
+  validRows      Int?         @map("valid_rows")
+  errorCount     Int          @default(0) @map("error_count")
+  // [{ row, field, code }], the first 1000
+  errors         Json         @default("[]")
+  createdCount   Int?         @map("created_count")
+  skippedCount   Int?         @map("skipped_count")
+  finishedAt     DateTime?    @map("finished_at") @db.Timestamptz(3)
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime     @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt      DateTime?    @map("deleted_at") @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  homeLocation Location?    @relation(fields: [organizationId, homeLocationId], references: [organizationId, id])
+  members      Member[]
+
+  @@unique([organizationId, id])
+  @@index([organizationId, createdAt])
+  @@map("member_imports")
 }
 
 // Append-only and partitioned by month on "at" (the partition key must be part of the

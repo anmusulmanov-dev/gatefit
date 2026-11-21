@@ -78,12 +78,16 @@ export type MemberUpdateInput = z.infer<typeof memberUpdateSchema>;
 export const memberBlockSchema = z.object({ reason: z.string().trim().min(1).max(500) });
 export type MemberBlockInput = z.infer<typeof memberBlockSchema>;
 
-export const memberListQuerySchema = pageQuerySchema.extend({
+/** Filters shared by the member list and the export. */
+export const memberFilterSchema = z.object({
   /** Any part of a first name, last name or phone; several words must all match. */
   q: z.string().trim().min(1).max(100).optional(),
   status: z.enum(MEMBER_STATUSES).optional(),
   locationId: z.uuid().optional(),
 });
+export type MemberFilter = z.infer<typeof memberFilterSchema>;
+
+export const memberListQuerySchema = pageQuerySchema.extend(memberFilterSchema.shape);
 export type MemberListQuery = z.infer<typeof memberListQuerySchema>;
 
 /** Possible duplicates of a member being entered (docs/TZ.md F-1.2). */
@@ -117,7 +121,8 @@ export interface MemberDto extends MemberSummaryDto {
   emergencyContactName: string | null;
   emergencyContactPhone: string | null;
   blockedReason: string | null;
-  hasPhoto: boolean;
+  /** Short-lived signed link to the photo; null without one. */
+  photoUrl: string | null;
   createdAt: string;
 }
 

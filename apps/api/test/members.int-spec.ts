@@ -104,7 +104,7 @@ describe('Members (integration)', () => {
         status: 'inactive',
         blockedReason: null,
         homeLocation: { id: one.id, name: 'One' },
-        hasPhoto: false,
+        photoUrl: null,
         archived: false,
         createdAt: expect.any(String) as string,
       });
