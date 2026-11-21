@@ -602,7 +602,8 @@
       "unlimitedVisits": "cheksiz tashrif",
       "perDay": "kuniga {count} tagacha",
       "noFreeze": "muzlatib bo'lmaydi",
-      "freeze": "muzlatish {days} kungacha, {times} marta, narxi {fee}"
+      "freeze": "muzlatish {days} kungacha, {times} marta, narxi {fee}",
+      "freezeFree": "muzlatish {days} kungacha, {times} marta, bepul"
     },
     "fields": {
       "name": "Nomi",

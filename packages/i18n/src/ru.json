@@ -602,7 +602,8 @@
       "unlimitedVisits": "безлимитные посещения",
       "perDay": "до {count} в день",
       "noFreeze": "без заморозки",
-      "freeze": "заморозка до {days} дн., {times} раз(а), плата {fee}"
+      "freeze": "заморозка до {days} дн., {times} раз(а), плата {fee}",
+      "freezeFree": "заморозка до {days} дн., {times} раз(а), бесплатно"
     },
     "fields": {
       "name": "Название",

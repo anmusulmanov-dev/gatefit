@@ -602,7 +602,8 @@
       "unlimitedVisits": "unlimited visits",
       "perDay": "up to {count} a day",
       "noFreeze": "cannot be frozen",
-      "freeze": "freeze up to {days} days, {times} times, fee {fee}"
+      "freeze": "freeze up to {days} days, {times} times, fee {fee}",
+      "freezeFree": "freeze up to {days} days, {times} times, free"
     },
     "fields": {
       "name": "Name",

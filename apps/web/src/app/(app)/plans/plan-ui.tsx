@@ -73,11 +73,13 @@ export function useFreezeText() {
   return (freeze: PlanFreeze, currency: string) =>
     freeze.maxDays === 0 || freeze.maxTimes === 0
       ? t('noFreeze')
-      : t('freeze', {
-          days: freeze.maxDays,
-          times: freeze.maxTimes,
-          fee: money(freeze.feeMinor, currency),
-        });
+      : freeze.feeMinor === '0'
+        ? t('freezeFree', { days: freeze.maxDays, times: freeze.maxTimes })
+        : t('freeze', {
+            days: freeze.maxDays,
+            times: freeze.maxTimes,
+            fee: money(freeze.feeMinor, currency),
+          });
 }
 
 /** The parts of a plan a list row shows, joined with " · ". */
