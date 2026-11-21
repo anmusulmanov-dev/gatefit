@@ -15,6 +15,19 @@ Har sessiya oxirida yangilanadi: nima qilindi, nima qoldi, ma'lum muammolar.
 | M1c Sozlamalar UI                 | Tayyor (2026-11-17)              |
 | M1d Super-admin UI                | Tayyor (2026-11-17) — M1 yopildi |
 
+## 2026-11-21 — CI: bog'liqliklar auditi
+
+Branch: `chore/ci-dependency-audit`.
+
+### Qilindi
+
+- **CI `audit` jobi** (TZ 9-bo'lim): `pnpm audit` (pnpm o'zida bor, yangi action yo'q), faqat lockfile'ni o'qiydi. Yiqiladi: production bog'liqliklarda `high` va undan yuqori, dev bilan birga hammasida `critical`. Har dushanba 05:00 UTC jadval bo'yicha ham ishlaydi (asosiy `ci` jobi jadvalda ishlamaydi).
+- **`minimumReleaseAgeExclude` olib tashlandi:** next-intl 4.15.0 va qarindoshlari 2026-11-11 da chiqqan, cheklovdan o'tadi; `pnpm install --frozen-lockfile` o'tdi.
+
+### Ma'lum muammolar
+
+- Dev'da 1 high (`effect` ReDoS, GHSA-7589-6fvf-x4pw, `prisma` CLI orqali) va 2 moderate. Production'ga kirmaydi; Prisma yangilanganda ketadi.
+
 ## 2026-11-21 — Staging yopiq, Tailscale orqali
 
 Branch: `chore/staging-tailscale`. Qaror: `docs/ADR/0005-staging.md` (qo'shimcha).
