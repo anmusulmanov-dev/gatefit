@@ -19,6 +19,11 @@
 https:// {
 	tls {
 		on_demand
+		# acme: public certificates from Let's Encrypt (the host must be reachable from the
+		# internet). internal: Caddy's own CA, for a server reachable only over a private
+		# network (staging over Tailscale); devices trust it once by installing its root
+		# certificate. Runbook: infra/staging/README.md.
+		issuer {$CADDY_TLS_ISSUER:acme}
 	}
 	encode zstd gzip
 

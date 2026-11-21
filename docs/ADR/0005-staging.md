@@ -12,6 +12,14 @@ Sana: 2026-11-18. Holat: qabul qilingan.
 6. **`APP_ENV`:** staging `NODE_ENV=production` bilan ishlaydi (secure cookie, optimallashgan build), lekin `APP_ENV=staging` dev drayverlarga (konsol SMS) ruxsat beradi. Kodlar `docker compose logs api` da ko'rinadi. `APP_ENV=production` da taqiqlangan.
 7. **Zaxira:** har kuni `pg_dump`, oxirgi 14 tasi `/srv/backups/gatefit` da. `.env` (`DATA_ENCRYPTION_KEY`) nusxasi alohida saqlanadi.
 
+## Qo'shimcha (2026-11-21): staging yopiq, Tailscale orqali
+
+- **Sabab:** ofis liniyasi (Uzonline, PPPoE) provayderning CGNAT'i ortida: routerning WAN manzili `100.100.95.183`, tashqi IP o'zgarib turadi. Port yo'naltirish ishlay olmaydi.
+- **Qaror (Anvar tasdiqlagan):** staging internetga ochilmaydi. Server Tailscale'da (`100.103.7.74`); DNS yozuvlari shu manzilga qaraydi, ya'ni manzillar faqat Tailscale'ga ulangan qurilmalarda ochiladi.
+- **Sertifikatlar:** Let's Encrypt yopiq serverga kira olmaydi, ahost DNS'ida API yo'q. Caddy o'z ichki CA'si bilan beradi (`CADDY_TLS_ISSUER=internal`), har qurilma uning ildiz sertifikatini bir marta o'rnatadi. Production'da `acme` (standart) qoladi.
+- **DNS:** ahost paneli wildcard (`*`) yozuvini qabul qilmaydi: har tashkilotning ikkita manzili qo'lda qo'shiladi. Production uchun wildcard'ni qo'llaydigan DNS (masalan, Cloudflare) kerak.
+- **Production:** statik IP yoki O'zbekistondagi VPS, alohida qaror.
+
 ## Oqibatlar
 
 - API image'i to'liq workspace bilan (dev bog'liqliklar ham): migratsiya va seed shu image'da. Ixcham production image'i va image registry M8 da.

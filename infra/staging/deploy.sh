@@ -35,6 +35,13 @@ main() {
     log "FAILED ${target:0:7}; see: docker compose -p gatefit-staging logs migrate api"
     return 1
   fi
+  # The Caddyfile is a bind mount: an edit does not recreate the container, so reload it.
+  # A broken Caddyfile fails here and Caddy keeps serving the previous configuration.
+  if ! compose exec -T caddy caddy reload --config /etc/caddy/Caddyfile; then
+    echo "$target" > .deploy-failed
+    log "FAILED ${target:0:7}: Caddy rejected the Caddyfile; see: docker compose -p gatefit-staging logs caddy"
+    return 1
+  fi
   echo "$target" > .deployed
   rm -f .deploy-failed
   docker image prune --force > /dev/null

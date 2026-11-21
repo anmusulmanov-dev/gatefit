@@ -14,6 +14,11 @@ Staging runs the whole platform on one server (`web01`, Ubuntu, Docker) from
 Caddy obtains a certificate for each host on its first request, after asking the API
 whether the host exists (`/api/v1/tls/allowed`).
 
+**Staging is private.** The office line sits behind the provider's CGNAT (no public IP of
+its own), so nothing on it can be reached from the internet. Staging is reached over
+Tailscale only: the DNS records point at the server's Tailscale address, and Caddy issues
+certificates from its own CA (`CADDY_TLS_ISSUER=internal`), which each device trusts once.
+
 ## How a change reaches staging
 
 1. A pull request is merged into `main` (CI green).
@@ -25,15 +30,17 @@ whether the host exists (`/api/v1/tls/allowed`).
 
 ## One-time setup
 
-DNS (domain registrar), both pointing at the office's public IP:
+Tailscale on the server (`sudo tailscale up`; its address: `tailscale ip -4`).
+
+DNS (ahost DNS manager), each pointing at the server's Tailscale address. The ahost panel
+does not accept wildcard names, so every organization's two hosts are added by hand:
 
 ```
-staging.gatefit.uz       A  <public IP>
-*.staging.gatefit.uz     A  <public IP>
-*.my.staging.gatefit.uz  A  <public IP>
+staging.gatefit.uz          A  <tailscale IP>
+admin.staging.gatefit.uz    A  <tailscale IP>
+demo.staging.gatefit.uz     A  <tailscale IP>
+demo.my.staging.gatefit.uz  A  <tailscale IP>
 ```
-
-Router: forward TCP 80 and 443 (and UDP 443 for HTTP/3) to the server.
 
 Server, as the deploy user (member of the `docker` group, no sudo needed):
 
@@ -52,6 +59,28 @@ crontab -e
 
 Keep a copy of `/srv/gatefit/.env` somewhere safe: `DATA_ENCRYPTION_KEY` is required to
 read TOTP secrets, including those in a restored backup.
+
+## Opening staging on a device
+
+1. Install Tailscale and sign in to the team's tailnet.
+2. Trust Caddy's root certificate, once per device. Get it from the server:
+
+   ```bash
+   ssh web01 "docker compose -p gatefit-staging --env-file /srv/gatefit/.env -f /srv/gatefit/infra/docker-compose.staging.yml exec -T caddy cat /data/caddy/pki/authorities/local/root.crt" > gatefit-staging-root.crt
+   ```
+
+   - Windows: open the file → Install Certificate → Current User → "Trusted Root
+     Certification Authorities". Restart the browser.
+   - macOS: open it in Keychain Access, then set "Always Trust".
+   - Android: Settings → Security → Encryption & credentials → Install a certificate → CA
+     certificate.
+   - iPhone: open the file, install the profile, then Settings → General → About →
+     Certificate Trust Settings → enable it.
+
+   The certificate is valid for ten years and only for names Caddy signs on this server.
+   It stays the same as long as the `caddy-data` volume is kept.
+
+3. Open `https://demo.staging.gatefit.uz`.
 
 ## Everyday commands
 
