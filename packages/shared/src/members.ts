@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { phoneSchema } from './auth';
 import { pageQuerySchema } from './pagination';
+import type { MembershipSummaryDto } from './plans';
 
 /**
  * docs/TZ.md F-1.3. `inactive`: no membership yet. `active`, `frozen` and `expired` follow
@@ -124,6 +125,11 @@ export interface MemberDto extends MemberSummaryDto {
   /** Short-lived signed link to the photo; null without one. */
   photoUrl: string | null;
   createdAt: string;
+}
+
+/** A row of the member list: the member and the membership that ends first. */
+export interface MemberListItemDto extends MemberDto {
+  membership: MembershipSummaryDto | null;
 }
 
 export interface MemberDuplicatesDto {
