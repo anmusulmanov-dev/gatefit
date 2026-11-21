@@ -134,7 +134,8 @@
   "nav": {
     "home": "Home",
     "settings": "Settings",
-    "members": "Members"
+    "members": "Members",
+    "plans": "Plans"
   },
   "settings": {
     "title": "Settings",
@@ -557,6 +558,143 @@
         "SOURCE_INVALID": "Source is not recognised",
         "TOO_LONG": "Text is too long"
       }
+    }
+  },
+  "plans": {
+    "title": "Plans",
+    "add": "Add plan",
+    "edit": "Edit plan",
+    "changeWarning": "Changes apply to new sales. Memberships already sold keep their terms.",
+    "empty": "No plans here yet.",
+    "show": "Show",
+    "onSale": "On sale",
+    "withdrawn": "Withdrawn",
+    "all": "All",
+    "inactive": "Withdrawn",
+    "invalidPrice": "Enter an amount with at most {digits} decimals.",
+    "types": {
+      "duration": "Duration",
+      "visits": "Visits",
+      "single": "Single visit",
+      "trial": "Trial"
+    },
+    "units": {
+      "day": "{count, plural, one {# day} other {# days}}",
+      "month": "{count, plural, one {# month} other {# months}}",
+      "year": "{count, plural, one {# year} other {# years}}"
+    },
+    "unitNames": {
+      "day": "days",
+      "month": "months",
+      "year": "years"
+    },
+    "weekdays": {
+      "1": "Mon",
+      "2": "Tue",
+      "3": "Wed",
+      "4": "Thu",
+      "5": "Fri",
+      "6": "Sat",
+      "7": "Sun"
+    },
+    "summary": {
+      "visits": "{count, plural, one {# visit} other {# visits}}",
+      "unlimitedVisits": "unlimited visits",
+      "perDay": "up to {count} a day",
+      "noFreeze": "cannot be frozen",
+      "freeze": "freeze up to {days} days, {times} times, fee {fee}",
+      "freezeFree": "freeze up to {days} days, {times} times, free"
+    },
+    "fields": {
+      "name": "Name",
+      "description": "Description",
+      "type": "Type",
+      "duration": "Valid for",
+      "durationUnit": "Unit",
+      "visitLimit": "Number of visits",
+      "price": "Price",
+      "priceHint": "In {currency}, e.g. 450000",
+      "restrictions": "Restrictions",
+      "timeWindows": "Entry hours",
+      "anyTime": "Any time",
+      "from": "From",
+      "to": "To",
+      "addWindow": "Add hours",
+      "removeWindow": "Remove",
+      "weekdays": "Days of the week",
+      "noneMeansAll": "none ticked: every one",
+      "dailyVisitLimit": "Visits per day",
+      "locations": "Locations",
+      "freeze": "Freezing",
+      "freezeAllowed": "Memberships can be frozen",
+      "freezeMaxDays": "Days in total",
+      "freezeMaxTimes": "Times",
+      "freezeMinDays": "Shortest freeze, days",
+      "freezeFee": "Fee per freeze",
+      "freezeFeeHint": "In {currency}; 0 for free",
+      "active": "On sale",
+      "activeHint": "A withdrawn plan is no longer sold; memberships already sold are not affected."
+    }
+  },
+  "memberships": {
+    "title": "Memberships",
+    "empty": "No memberships yet.",
+    "status": {
+      "scheduled": "Starts later",
+      "active": "Active",
+      "frozen": "Frozen",
+      "expired": "Expired",
+      "cancelled": "Cancelled"
+    },
+    "period": "{from} – {to}",
+    "daysLeft": "{count, plural, one {# day left} other {# days left}}",
+    "visitsLeft": "{left} of {total} visits left",
+    "summary": {
+      "startsLater": "starts later",
+      "visits": "{count, plural, one {# visit} other {# visits}}"
+    },
+    "sell": {
+      "action": "Sell membership",
+      "title": "Sell a membership",
+      "location": "Location",
+      "plan": "Plan",
+      "startsOn": "First day",
+      "endsOn": "Last day: {date}",
+      "noPlans": "No plans on sale at this location. Add one under Plans.",
+      "confirm": "Sell"
+    },
+    "freeze": {
+      "action": "Freeze",
+      "title": "Freeze the membership",
+      "limits": "Left: {days} days, {times} freezes. At least {min} days at a time.",
+      "startsOn": "First frozen day",
+      "days": "Days",
+      "reason": "Reason",
+      "source": "Who asked",
+      "sources": {
+        "staff": "Staff decision",
+        "member_request": "Member request"
+      },
+      "newEnd": "Frozen until {until}; the membership then runs to {date}.",
+      "fee": "Fee: {amount} (taken with payments).",
+      "confirm": "Freeze",
+      "row": "Frozen {from} – {to} ({days} d): {reason}",
+      "endedEarly": "ended early"
+    },
+    "unfreeze": {
+      "action": "End freeze",
+      "title": "End the freeze",
+      "endCurrent": "The freeze from {from} ends today; {days} unused days come off the end date.",
+      "dropPlanned": "The freeze planned from {from} is dropped; {days} days come off the end date.",
+      "confirm": "End freeze"
+    },
+    "cancel": {
+      "action": "Cancel",
+      "title": "Cancel the membership",
+      "description": "“{plan}” ends now. Refunds are handled with payments.",
+      "reason": "Reason",
+      "confirm": "Cancel membership",
+      "reasonShown": "Cancelled: {reason}"
     }
   }
 }

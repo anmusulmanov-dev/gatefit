@@ -18,6 +18,7 @@ import { useApiAction, useApiGet } from '@/lib/use-api';
 import { MemberForm } from '../member-form';
 import type { MemberScope } from '../member-scope';
 import { fullName, MemberAvatar, MemberStatusBadge } from '../member-ui';
+import { MembershipsSection } from './memberships-section';
 
 export function MemberCard({ id, scope }: { id: string; scope: MemberScope }) {
   const t = useTranslations();
@@ -214,6 +215,13 @@ export function MemberCard({ id, scope }: { id: string; scope: MemberScope }) {
               </div>
             </div>
           </div>
+          <MembershipsSection
+            memberId={id}
+            homeLocationId={data.homeLocation.id}
+            archived={data.archived}
+            scope={scope}
+            onChanged={member.reload}
+          />
         </>
       )}
 
