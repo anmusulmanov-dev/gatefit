@@ -66,6 +66,19 @@ describe('validateEnv', () => {
     });
   });
 
+  it('refuses the memory storage driver in production', () => {
+    expect(validateEnv(valid).STORAGE_DRIVER).toBe('s3');
+    expect(() =>
+      validateEnv({
+        ...valid,
+        APP_ENV: 'production',
+        SMS_DRIVER: 'console',
+        STORAGE_DRIVER: 'memory',
+      }),
+    ).toThrow(/STORAGE_DRIVER/);
+    expect(validateEnv({ ...valid, STORAGE_DRIVER: 'memory' }).STORAGE_DRIVER).toBe('memory');
+  });
+
   it('rejects an out-of-range port', () => {
     expect(() => validateEnv({ ...valid, API_PORT: '70000' })).toThrow(/API_PORT/);
   });
