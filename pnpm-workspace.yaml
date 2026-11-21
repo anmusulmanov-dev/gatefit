@@ -1,11 +1,6 @@
 packages:
   - apps/*
   - packages/*
-minimumReleaseAgeExclude:
-  - icu-minify@4.15.0
-  - next-intl-swc-plugin-extractor@4.15.0
-  - next-intl@4.15.0
-  - use-intl@4.15.0
 allowBuilds:
   '@parcel/watcher': true
   '@prisma/engines': true
