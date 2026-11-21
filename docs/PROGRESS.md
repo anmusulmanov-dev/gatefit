@@ -14,6 +14,47 @@ Har sessiya oxirida yangilanadi: nima qilindi, nima qoldi, ma'lum muammolar.
 | M1b Platforma API                 | Tayyor (2026-11-17)              |
 | M1c Sozlamalar UI                 | Tayyor (2026-11-17)              |
 | M1d Super-admin UI                | Tayyor (2026-11-17) — M1 yopildi |
+| M2a A'zolar API                   | Tayyor (2026-11-21)              |
+
+## 2026-11-21 — M2a: a'zolar API
+
+Branch: `feat/m2-members-api`. Qaror: `docs/ADR/0006-member-visibility.md`. Anvar tasdiqlagan reja: M2a (API), M2b (foto, import, eksport), M2c (web UI, Playwright).
+
+### Qilindi
+
+- **Jadval `members`** (RLS, `DELETE` grant yo'q): F-1.1 maydonlari, favqulodda aloqa, `blocked_reason`, `home_location_id` (majburiy), `user_id` (a'zo ilovasi). Telefon tashkilot ichida yagona. Qidiruv uchun `pg_trgm` indekslari (ism, familiya, telefon). `consents.member_id` qo'shildi.
+- **Holat `inactive`** (abonement yo'q) qo'shildi; `blocked` qo'lda, qolganlari M3/M4 da avtomatik.
+- **Endpointlar** (`@RequireModule('members')`):
+  - `GET /members`: yangilari birinchi, kursor, `q` (har so'z ism, familiya yoki telefonda), `status`, `locationId`;
+  - `GET /members/duplicates`: telefon egasi va bir xil ism (+ tug'ilgan sana);
+  - `GET/PATCH /members/{id}`, `POST /members`: band telefon `409 MEMBER_PHONE_TAKEN` va `details.member`;
+  - `POST /members/{id}/block` (sabab bilan), `/unblock`, `/archive`, `/restore`.
+- **Yangi ruxsat `members.archive`** (owner, manager); mavjud tashkilotlarga migratsiya bilan qo'shildi.
+- **Filial cheklovi:** owner va accountant hammani, qolganlar o'z filiallari a'zolarini ko'radi (ADR 0006).
+- **Audit:** `member.create`, `member.update` (faqat o'zgargan maydon nomlari, qiymatlar emas), `member.block/unblock/archive/restore`.
+- **A'zo kirishi** endi faqat `members` da bor (arxivlanmagan) telefon uchun: notanish telefonga SMS yuborilmaydi, javob o'zgarmaydi. Birinchi kirishda `members.user_id` bog'lanadi; telefon o'zgarsa bog'lanish uziladi.
+- **Seed:** demo tashkilotga 30 a'zo (`+998900001000`–`+998900001029`).
+- **TZ yangilandi:** 6-bo'lim (`members` ustunlari, qoidalar), 7-bo'lim (endpointlar).
+
+### Tekshirildi
+
+- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` — yashil. API: 333 test, shared: 33, i18n: 11.
+- `test/members.int-spec.ts`: har endpoint, validatsiya, telefon takrori, filial cheklovi, ruxsatlar, modul yo'q tashkilot (403), audit, "A tashkilot B ni ko'rmaydi" (HTTP va RLS darajasida, bir telefon ikki tashkilotda — ikki alohida a'zo).
+- `test/auth-otp.int-spec.ts`: a'zo bo'lmagan telefon, boshqa tashkilot a'zosi, arxivlangan a'zo, `user_id` bog'lanishi.
+- `rls-coverage` qo'riqchi testi yangi jadvalni qamradi.
+- Brauzerda tekshirilmagan (UI M2c da).
+
+### Rejadan chetlanishlar
+
+- **Ro'yxat filtri `?status=&locationId=&q=`**, TZ dagi `filter[...]` emas — `/staff` bilan bir xil.
+- **Bloklash alohida endpoint** (`/block`, `/unblock`), `PATCH` emas: sabab majburiy va auditga yoziladi.
+- **Faol a'zolar hisoblagichi M3 ga qoldirildi** (Anvar tasdiqlagan): "faol" abonementga bog'liq.
+
+### Qoldi
+
+- M2b: foto (S3), import (BullMQ, CSV/XLSX, 500 a'zo testi), eksport. M2c: web UI, Playwright.
+- `unblock` hozir holatni `inactive` ga qaytaradi; M3 da abonementlardan hisoblanadi.
+- A'zo sessiyasi (`AccessContext`) hali a'zo yozuvini yuklamaydi — M6 (PWA) da.
 
 ## 2026-11-21 — Staging yopiq, Tailscale orqali
 

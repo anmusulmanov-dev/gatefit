@@ -180,7 +180,7 @@ Barcha biznes jadvallarida: `id` (UUID v7), `organization_id`, `created_at`, `up
 | users | phone (E.164), email | — | M |
 | staff | first_name, last_name, position, status, password_hash, totp_secret, must_change_password | user, organization, role, locations (M:N) | M |
 | roles, role_permissions | name, permissions | organization | M |
-| members | first_name, last_name, phone, birth_date, gender, photo_key, status, source, notes | organization, user?, home_location | M |
+| members | first_name, last_name, phone, birth_date, gender, photo_key, status, blocked_reason, source, notes, emergency_contact_name, emergency_contact_phone | organization, user?, home_location | M |
 | plans | name, type, duration, visit_limit, price_minor, currency, restrictions (JSONB), is_active | organization | M |
 | memberships | starts_at, ends_at, visits_left, status, auto_renew | member, plan | M |
 | membership_freezes | starts_on, ends_on, reason | membership | M |
@@ -205,7 +205,8 @@ Barcha biznes jadvallarida: `id` (UUID v7), `organization_id`, `created_at`, `up
 Qoidalar:
 - Bitta a'zoda bir nechta faol abonement bo'lishi mumkin; kirishda ustuvorlik: avval muddati ertaroq tugaydigani.
 - `check_ins` va `audit_logs` faqat qo'shiladi; oy bo'yicha partition.
-- Telefon tashkilot ichida yagona.
+- Telefon tashkilot ichida yagona (arxivlangan a'zo ham telefonini saqlaydi: qaytgan a'zo tiklanadi). A'zo holati `inactive` (abonement yo'q) bilan boshlanadi.
+- Filialga bog'langan rol faqat o'z filiallari a'zolarini ko'radi; owner va accountant butun tashkilotni (`docs/ADR/0006-member-visibility.md`).
 - Xodimning paroli va TOTP si `staff` da, ya'ni har tashkilot uchun alohida (`docs/ADR/0003-staff-credentials.md`).
 - To'lov yozuvlari o'chirilmaydi.
 
@@ -224,7 +225,7 @@ Qoidalar:
 | Auth | POST /auth/login, /auth/otp/request, /auth/otp/verify, /auth/refresh, /auth/logout, /auth/logout-all, /auth/totp/setup, /auth/totp/confirm, /auth/password/set, /auth/password/change | M |
 | Tashkilot | GET/PATCH /organization, GET/POST/PATCH /locations | M |
 | Xodimlar | GET/POST/PATCH /staff, POST /staff/{id}/reset-password, POST /staff/{id}/reset-totp, GET/POST/PATCH /roles | M |
-| A'zolar | GET/POST /members, GET/PATCH /members/{id}, POST /members/import, GET /members/export | M |
+| A'zolar | GET/POST /members, GET /members/duplicates, GET/PATCH /members/{id}, POST /members/{id}/block, /unblock, /archive, /restore, POST /members/import, GET /members/export | M |
 | Tariflar | GET/POST /plans, PATCH /plans/{id} | M |
 | Abonementlar | POST /members/{id}/memberships, POST /memberships/{id}/freeze, /unfreeze, /cancel | M |
 | Kirish | GET /me/qr, POST /access/verify, POST /access/manual, GET /check-ins, GET /locations/{id}/occupancy | M |
