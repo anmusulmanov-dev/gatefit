@@ -175,7 +175,7 @@ async function seed(prisma: PrismaClient): Promise<void> {
     if (!location) {
       throw new Error('No demo location');
     }
-    const memberPhone = `+9989000${1000 + index}`;
+    const memberPhone = `+99890000${1000 + index}`;
     await prisma.member.upsert({
       where: { organizationId_phone: { organizationId, phone: memberPhone } },
       update: {},
