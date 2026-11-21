@@ -5,8 +5,8 @@ import { AppException } from './app.exception';
 export const notFound = (what: string) =>
   new AppException(ErrorCode.NOT_FOUND, `${what} not found`, HttpStatus.NOT_FOUND);
 
-export const conflict = (code: ErrorCode, message: string) =>
-  new AppException(code, message, HttpStatus.CONFLICT);
+export const conflict = (code: ErrorCode, message: string, details: unknown = null) =>
+  new AppException(code, message, HttpStatus.CONFLICT, details);
 
 export const forbidden = (code: ErrorCode, message: string) =>
   new AppException(code, message, HttpStatus.FORBIDDEN);

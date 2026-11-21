@@ -8,7 +8,7 @@ import {
   type StaffFixture,
   type TestApp,
 } from './support/app';
-import { createAdminClient, createOrganization, uniquePhone } from './support/db';
+import { createAdminClient, createOrganization, memberPhone } from './support/db';
 
 const ACCESS_TTL = 15 * 60;
 
@@ -230,7 +230,7 @@ describe('Sessions and tokens (integration)', () => {
 
   it('keeps staff and member sessions of one browser apart', async () => {
     const staffCookies = await signIn();
-    const phone = uniquePhone();
+    const phone = await memberPhone(admin, orgA);
     await http().post('/api/v1/auth/otp/request').set('Host', hostOf(orgA)).send({ phone });
     const memberCookies = cookiesFrom(
       await http()

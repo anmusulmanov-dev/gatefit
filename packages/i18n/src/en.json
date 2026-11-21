@@ -269,7 +269,8 @@
       "read": "View members",
       "manage": "Add and edit members",
       "import": "Import members",
-      "export": "Export members"
+      "export": "Export members",
+      "archive": "Archive and restore members"
     },
     "plans": {
       "read": "View plans",

@@ -37,3 +37,33 @@ export function uniquePhone(): string {
     .slice(0, 9);
   return `+998${digits}`;
 }
+
+/** A location of the organization for test members, created on first use. */
+export function defaultLocation(admin: PrismaClient, organization: Pick<Organization, 'id'>) {
+  return admin.location.upsert({
+    where: { organizationId_name: { organizationId: organization.id, name: 'Main' } },
+    update: {},
+    create: { organizationId: organization.id, name: 'Main', timezone: 'Asia/Tashkent' },
+  });
+}
+
+/** A unique phone registered as a member of each given organization. */
+export async function memberPhone(
+  admin: PrismaClient,
+  ...organizations: Pick<Organization, 'id'>[]
+): Promise<string> {
+  const phone = uniquePhone();
+  for (const organization of organizations) {
+    const location = await defaultLocation(admin, organization);
+    await admin.member.create({
+      data: {
+        organizationId: organization.id,
+        homeLocationId: location.id,
+        firstName: 'Test',
+        lastName: 'Member',
+        phone,
+      },
+    });
+  }
+  return phone;
+}

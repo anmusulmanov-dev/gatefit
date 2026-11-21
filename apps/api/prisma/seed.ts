@@ -21,6 +21,15 @@ const DEMO_LOCATIONS = [
   { name: 'Yunusobod', address: 'Toshkent, Yunusobod tumani' },
 ];
 
+// Demo members: deterministic, so reseeding finds the same people by phone.
+const DEMO_MEMBER_COUNT = 30;
+const FIRST_NAMES = {
+  male: ['Aziz', 'Bekzod', 'Jasur', 'Otabek', 'Sardor', 'Timur', 'Ulugbek', 'Javohir'],
+  female: ['Dilnoza', 'Gulnora', 'Madina', 'Nilufar', 'Sevara', 'Zarina', 'Kamola', 'Malika'],
+} as const;
+const LAST_NAMES = ['Karimov', 'Rahimov', 'Toshmatov', 'Yusupov', 'Aliyev', 'Nazarov', 'Saidov'];
+const SOURCES = ['walk_in', 'referral', 'social', 'website'] as const;
+
 // The three tariffs of docs/TZ.md section 12. Prices are placeholders until confirmed
 // (UZS per location per month, in tiyin); real ones are set in the platform panel.
 const PLANS: Record<
@@ -157,6 +166,33 @@ async function seed(prisma: PrismaClient): Promise<void> {
     skipDuplicates: true,
   });
 
+  // Demo members, spread over both locations. Existing ones are left as they are.
+  for (let index = 0; index < DEMO_MEMBER_COUNT; index += 1) {
+    const gender = index % 2 === 0 ? 'male' : 'female';
+    const firstNames = FIRST_NAMES[gender];
+    const lastName = LAST_NAMES[index % LAST_NAMES.length] ?? 'Karimov';
+    const location = locations[index % locations.length];
+    if (!location) {
+      throw new Error('No demo location');
+    }
+    const memberPhone = `+9989000${1000 + index}`;
+    await prisma.member.upsert({
+      where: { organizationId_phone: { organizationId, phone: memberPhone } },
+      update: {},
+      create: {
+        organizationId,
+        homeLocationId: location.id,
+        firstName: firstNames[index % firstNames.length] ?? 'Aziz',
+        // Uzbek surnames take -a for women: Karimov, Karimova.
+        lastName: gender === 'female' ? `${lastName}a` : lastName,
+        phone: memberPhone,
+        birthDate: new Date(Date.UTC(1975 + (index % 30), index % 12, 1 + (index % 28))),
+        gender,
+        source: SOURCES[index % SOURCES.length] ?? null,
+      },
+    });
+  }
+
   // The platform operator. An existing one keeps their password and authenticator.
   const operatorPhone = phoneSchema.parse(requireEnv('SEED_PLATFORM_ADMIN_PHONE'));
   await prisma.platformAdmin.upsert({
@@ -170,7 +206,7 @@ async function seed(prisma: PrismaClient): Promise<void> {
   });
 
   console.log(
-    `Seeded organization "${organization.slug}": ${locations.length} locations, ${SYSTEM_ROLES.length} roles, 1 owner, 3 plans, 1 platform operator (credentials: SEED_* in .env).`,
+    `Seeded organization "${organization.slug}": ${locations.length} locations, ${SYSTEM_ROLES.length} roles, 1 owner, ${DEMO_MEMBER_COUNT} members, 3 plans, 1 platform operator (credentials: SEED_* in .env).`,
   );
 }
 
