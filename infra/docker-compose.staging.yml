@@ -136,6 +136,7 @@ services:
     logging: *logging
     environment:
       APP_BASE_DOMAIN: ${APP_BASE_DOMAIN}
+      CADDY_TLS_ISSUER: ${CADDY_TLS_ISSUER:-acme}
     ports:
       - '80:80'
       - '443:443'
