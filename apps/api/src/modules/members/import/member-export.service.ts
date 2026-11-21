@@ -7,6 +7,7 @@ import { AuditService } from '../../../common/audit/audit.service';
 import { Clock } from '../../../common/clock/clock';
 import type { StaffCaller } from '../../../common/http/staff-request';
 import type { TenantTransaction } from '../../../common/prisma/prisma.service';
+import { TenantDb } from '../../../common/tenancy/tenant-db.service';
 import { memberInclude, type MemberRow, MembersService } from '../members.service';
 
 /** Rows read per query while exporting. */
@@ -27,6 +28,7 @@ export class MemberExportService {
     private readonly members: MembersService,
     private readonly audit: AuditService,
     private readonly clock: Clock,
+    private readonly tenantDb: TenantDb,
   ) {}
 
   async export(
@@ -58,7 +60,18 @@ export class MemberExportService {
 
     const date = this.clock.now().toISOString().slice(0, 10);
     const where = this.members.filterWhere(caller, query);
-    let count = 0;
+    // Recorded before the first byte, in a transaction of its own: the response ends before
+    // the request's transaction commits, and an export is not a change that could roll back.
+    const { format, ...filter } = query;
+    const count = await tx.member.count({ where });
+    await this.tenantDb.run(caller.organizationId, (auditTx) =>
+      this.audit.record(auditTx, caller.organizationId, caller.actor, {
+        action: 'member.export',
+        entity: 'member',
+        after: { format, count, filter },
+      }),
+    );
+
     const eachBatch = async (write: (values: string[]) => void) => {
       let cursor: string | undefined;
       for (;;) {
@@ -72,7 +85,6 @@ export class MemberExportService {
           const values = cells(row);
           write(EXPORT_FIELDS.map((field) => values[field]));
         }
-        count += rows.length;
         cursor = rows.at(-1)?.id;
         if (rows.length < BATCH_SIZE) {
           return;
@@ -103,13 +115,6 @@ export class MemberExportService {
       sheet.commit();
       await workbook.commit();
     }
-
-    const { format, ...filter } = query;
-    await this.audit.record(tx, caller.organizationId, caller.actor, {
-      action: 'member.export',
-      entity: 'member',
-      after: { format, count, filter },
-    });
   }
 
   /** An empty file with the import columns, in the organization's language. */
