@@ -83,7 +83,17 @@
     "SLUG_TAKEN": "This address is taken.",
     "PLAN_KEY_TAKEN": "A plan with this key already exists.",
     "PLAN_INACTIVE": "This plan is no longer on sale.",
-    "TOTP_SETUP_REQUIRED": "Set up two-step sign-in first."
+    "TOTP_SETUP_REQUIRED": "Set up two-step sign-in first.",
+    "MEMBER_PHONE_TAKEN": "A member with this phone already exists.",
+    "MEMBER_ARCHIVED": "This member is archived. Restore them first.",
+    "LOCATION_NOT_ASSIGNED": "You do not work at this location.",
+    "FILE_REQUIRED": "Choose a file.",
+    "FILE_TOO_LARGE": "The file is too large (up to 5 MB).",
+    "UNSUPPORTED_FILE_TYPE": "Use a JPEG, PNG or WebP image.",
+    "FILE_UNREADABLE": "The file cannot be read. Save it as XLSX or CSV (UTF-8).",
+    "IMPORT_TOO_MANY_ROWS": "Too many rows: up to 10,000 members per file.",
+    "IMPORT_NOT_VALIDATED": "Check the rows first.",
+    "IMPORT_ALREADY_STARTED": "This import has already been started."
   },
   "organization": {
     "missingTitle": "Organization not found",
@@ -114,7 +124,8 @@
   },
   "nav": {
     "home": "Home",
-    "settings": "Settings"
+    "settings": "Settings",
+    "members": "Members"
   },
   "settings": {
     "title": "Settings",
@@ -430,6 +441,113 @@
       "website": "Website",
       "import": "Import",
       "other": "Other"
+    }
+  },
+  "members": {
+    "title": "Members",
+    "add": "Add member",
+    "import": "Import",
+    "export": "Export",
+    "exportCsv": "Export CSV",
+    "search": "Search by name or phone",
+    "status": "Status",
+    "allStatuses": "All statuses",
+    "location": "Location",
+    "allLocations": "All locations",
+    "empty": "No members yet.",
+    "notFound": "Nobody matches the search.",
+    "back": "Back to members",
+    "fields": {
+      "firstName": "First name",
+      "lastName": "Last name",
+      "phone": "Phone",
+      "birthDate": "Birth date",
+      "gender": "Gender",
+      "source": "How they found us",
+      "notes": "Notes",
+      "emergencyContactName": "Emergency contact",
+      "emergencyContactPhone": "Emergency contact phone",
+      "homeLocation": "Location",
+      "createdAt": "Added"
+    },
+    "notSpecified": "Not specified",
+    "new": "New member",
+    "editTitle": "Edit member",
+    "created": "Member added.",
+    "duplicates": {
+      "phoneTaken": "This phone belongs to {name}.",
+      "phoneTakenArchived": "This phone belongs to {name}, who is archived.",
+      "open": "Open",
+      "restore": "Restore",
+      "similar": "Members with the same name already exist. Make sure this is a different person:"
+    },
+    "photo": {
+      "title": "Photo",
+      "upload": "Upload photo",
+      "replace": "Replace photo",
+      "remove": "Remove photo",
+      "hint": "JPEG, PNG or WebP, up to 5 MB.",
+      "alt": "Photo of {name}"
+    },
+    "block": {
+      "action": "Block",
+      "title": "Block member",
+      "description": "A blocked member cannot enter until unblocked.",
+      "reason": "Reason",
+      "confirm": "Block",
+      "unblock": "Unblock",
+      "reasonShown": "Blocked: {reason}"
+    },
+    "archive": {
+      "action": "Archive",
+      "confirmText": "Archive {name}? The member disappears from lists; their phone stays reserved and they can be restored.",
+      "restore": "Restore",
+      "archived": "Archived"
+    },
+    "importWizard": {
+      "title": "Import members",
+      "steps": {
+        "upload": "File",
+        "mapping": "Columns",
+        "check": "Check",
+        "done": "Done"
+      },
+      "uploadHint": "XLSX or CSV, up to 5 MB and 10,000 rows. The first row must hold column names.",
+      "chooseFile": "File",
+      "template": "Download template",
+      "upload": "Upload",
+      "mappingHint": "Say which column holds what. Phone and either the full name or the first and last name are required.",
+      "column": "Column",
+      "field": "Meaning",
+      "skip": "Do not import",
+      "sample": "Example",
+      "location": "Add members to location",
+      "validate": "Check rows",
+      "rowsTotal": "Rows in file: {count}",
+      "valid": "Ready to import: {count}",
+      "invalid": "Problems: {count}",
+      "errorsShown": "Showing the first {count} problems.",
+      "row": "Row",
+      "problem": "Problem",
+      "start": "Import {count} members",
+      "running": "Importing… This may take a minute.",
+      "finished": "Done: {created} members added.",
+      "skipped": "{count} rows skipped: their phone was taken meanwhile.",
+      "failed": "The import failed. Nothing more was added; try again.",
+      "again": "Import another file",
+      "toList": "Go to members",
+      "mappingInvalid": "Choose a column for the phone, and for the full name or the first and last name. One column per meaning.",
+      "rowErrors": {
+        "NAME_REQUIRED": "Name is missing",
+        "PHONE_REQUIRED": "Phone is missing",
+        "PHONE_INVALID": "Phone is not a valid number",
+        "PHONE_REPEATED": "Phone repeats an earlier row",
+        "PHONE_EXISTS": "A member with this phone already exists",
+        "BIRTH_DATE_INVALID": "Birth date is not valid (use 17.05.1990)",
+        "GENDER_INVALID": "Gender is not recognised",
+        "SOURCE_INVALID": "Source is not recognised",
+        "TOO_LONG": "Text is too long"
+      }
     }
   }
 }

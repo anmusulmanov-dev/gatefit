@@ -44,25 +44,31 @@ export function createApiClient(
     return refreshing;
   }
 
-  async function send<T>(method: Method, path: string, body?: unknown): Promise<ApiResult<T>> {
+  async function send<T>(
+    method: Method,
+    path: string,
+    body?: unknown,
+    read: Reader = readJson,
+  ): Promise<ApiResult<T>> {
     let response: Response;
     try {
+      // A FormData body sets its own multipart content type.
+      const isForm = typeof FormData !== 'undefined' && body instanceof FormData;
       response = await fetch(`${prefix}${path}`, {
         method,
         credentials: 'same-origin',
         headers: {
           [CLIENT_HEADER]: audience,
-          ...(body === undefined ? {} : { 'content-type': 'application/json' }),
+          ...(body === undefined || isForm ? {} : { 'content-type': 'application/json' }),
         },
-        body: body === undefined ? undefined : JSON.stringify(body),
+        body: body === undefined ? undefined : isForm ? body : JSON.stringify(body),
       });
     } catch {
       return { ok: false, status: 0, error: unexpected };
     }
 
     if (response.ok) {
-      const data = response.status === 204 ? undefined : ((await response.json()) as unknown);
-      return { ok: true, data: data as T };
+      return { ok: true, data: (await read(response)) as T };
     }
 
     const parsed = apiErrorSchema.safeParse(await response.json().catch(() => null));
@@ -73,8 +79,9 @@ export function createApiClient(
     method: Method,
     path: string,
     body?: unknown,
+    read?: Reader,
   ): Promise<ApiResult<T>> {
-    const result = await send<T>(method, path, body);
+    const result = await send<T>(method, path, body, read);
 
     const sessionExpired =
       refreshOnExpiry &&
@@ -85,14 +92,40 @@ export function createApiClient(
       return result;
     }
 
-    return (await refreshSession()) ? send<T>(method, path, body) : result;
+    return (await refreshSession()) ? send<T>(method, path, body, read) : result;
   }
 
   return {
     get: <T>(path: string) => request<T>('GET', path),
     post: <T = void>(path: string, body?: unknown) => request<T>('POST', path, body),
     patch: <T>(path: string, body: unknown) => request<T>('PATCH', path, body),
+    put: <T>(path: string, body: unknown) => request<T>('PUT', path, body),
+    delete: <T = void>(path: string) => request<T>('DELETE', path),
+    /** Sends one file as multipart form data, in the field `file`. */
+    upload: <T>(method: 'POST' | 'PUT', path: string, file: Blob, fileName: string) => {
+      const form = new FormData();
+      form.append('file', file, fileName);
+      return request<T>(method, path, form);
+    },
+    /** Fetches a file the API generates, with the name it suggests. */
+    download: (path: string) => request<DownloadedFile>('GET', path, undefined, readFile),
   };
 }
+
+export interface DownloadedFile {
+  blob: Blob;
+  fileName: string | null;
+}
+
+type Reader = (response: Response) => Promise<unknown>;
+
+const readJson: Reader = async (response) =>
+  response.status === 204 ? undefined : ((await response.json()) as unknown);
+
+const readFile: Reader = async (response): Promise<DownloadedFile> => ({
+  blob: await response.blob(),
+  fileName:
+    /filename="([^"]+)"/.exec(response.headers.get('content-disposition') ?? '')?.[1] ?? null,
+});
 
 export type ApiClient = ReturnType<typeof createApiClient>;

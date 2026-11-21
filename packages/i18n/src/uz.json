@@ -83,7 +83,17 @@
     "SLUG_TAKEN": "Bu manzil band.",
     "PLAN_KEY_TAKEN": "Bu kalitli tarif allaqachon bor.",
     "PLAN_INACTIVE": "Bu tarif sotuvda emas.",
-    "TOTP_SETUP_REQUIRED": "Avval ikki bosqichli himoyani sozlang."
+    "TOTP_SETUP_REQUIRED": "Avval ikki bosqichli himoyani sozlang.",
+    "MEMBER_PHONE_TAKEN": "Bu telefon bilan a'zo allaqachon bor.",
+    "MEMBER_ARCHIVED": "A'zo arxivda. Avval uni tiklang.",
+    "LOCATION_NOT_ASSIGNED": "Siz bu filialda ishlamaysiz.",
+    "FILE_REQUIRED": "Faylni tanlang.",
+    "FILE_TOO_LARGE": "Fayl juda katta (5 MB gacha).",
+    "UNSUPPORTED_FILE_TYPE": "JPEG, PNG yoki WebP rasm yuklang.",
+    "FILE_UNREADABLE": "Faylni o'qib bo'lmadi. XLSX yoki CSV (UTF-8) qilib saqlang.",
+    "IMPORT_TOO_MANY_ROWS": "Qatorlar juda ko'p: bitta faylda 10 000 tagacha a'zo.",
+    "IMPORT_NOT_VALIDATED": "Avval qatorlarni tekshiring.",
+    "IMPORT_ALREADY_STARTED": "Bu import allaqachon boshlangan."
   },
   "organization": {
     "missingTitle": "Tashkilot topilmadi",
@@ -114,7 +124,8 @@
   },
   "nav": {
     "home": "Bosh sahifa",
-    "settings": "Sozlamalar"
+    "settings": "Sozlamalar",
+    "members": "A'zolar"
   },
   "settings": {
     "title": "Sozlamalar",
@@ -430,6 +441,113 @@
       "website": "Sayt",
       "import": "Import",
       "other": "Boshqa"
+    }
+  },
+  "members": {
+    "title": "A'zolar",
+    "add": "A'zo qo'shish",
+    "import": "Import",
+    "export": "Eksport",
+    "exportCsv": "CSV eksport",
+    "search": "Ism yoki telefon bo'yicha qidirish",
+    "status": "Holat",
+    "allStatuses": "Barcha holatlar",
+    "location": "Filial",
+    "allLocations": "Barcha filiallar",
+    "empty": "Hali a'zolar yo'q.",
+    "notFound": "Qidiruv bo'yicha hech kim topilmadi.",
+    "back": "A'zolarga qaytish",
+    "fields": {
+      "firstName": "Ism",
+      "lastName": "Familiya",
+      "phone": "Telefon",
+      "birthDate": "Tug'ilgan sana",
+      "gender": "Jins",
+      "source": "Bizni qayerdan topdi",
+      "notes": "Izoh",
+      "emergencyContactName": "Favqulodda aloqa",
+      "emergencyContactPhone": "Favqulodda aloqa telefoni",
+      "homeLocation": "Filial",
+      "createdAt": "Qo'shilgan"
+    },
+    "notSpecified": "Ko'rsatilmagan",
+    "new": "Yangi a'zo",
+    "editTitle": "A'zoni tahrirlash",
+    "created": "A'zo qo'shildi.",
+    "duplicates": {
+      "phoneTaken": "Bu telefon {name} ga tegishli.",
+      "phoneTakenArchived": "Bu telefon {name} ga tegishli, u arxivda.",
+      "open": "Ochish",
+      "restore": "Tiklash",
+      "similar": "Shu ismli a'zolar bor. Bu boshqa odam ekaniga ishonch hosil qiling:"
+    },
+    "photo": {
+      "title": "Foto",
+      "upload": "Foto yuklash",
+      "replace": "Fotoni almashtirish",
+      "remove": "Fotoni o'chirish",
+      "hint": "JPEG, PNG yoki WebP, 5 MB gacha.",
+      "alt": "{name} fotosi"
+    },
+    "block": {
+      "action": "Bloklash",
+      "title": "A'zoni bloklash",
+      "description": "Bloklangan a'zo blok olib tashlanmaguncha kira olmaydi.",
+      "reason": "Sabab",
+      "confirm": "Bloklash",
+      "unblock": "Blokdan chiqarish",
+      "reasonShown": "Bloklangan: {reason}"
+    },
+    "archive": {
+      "action": "Arxivlash",
+      "confirmText": "{name} arxivlansinmi? A'zo ro'yxatlardan yo'qoladi, telefoni band qoladi va uni tiklash mumkin.",
+      "restore": "Tiklash",
+      "archived": "Arxivda"
+    },
+    "importWizard": {
+      "title": "A'zolarni import qilish",
+      "steps": {
+        "upload": "Fayl",
+        "mapping": "Ustunlar",
+        "check": "Tekshiruv",
+        "done": "Tayyor"
+      },
+      "uploadHint": "XLSX yoki CSV, 5 MB va 10 000 qatorgacha. Birinchi qatorda ustun nomlari bo'lishi kerak.",
+      "chooseFile": "Fayl",
+      "template": "Namuna faylni yuklab olish",
+      "upload": "Yuklash",
+      "mappingHint": "Qaysi ustunda nima borligini ko'rsating. Telefon va to'liq ism (yoki ism va familiya) majburiy.",
+      "column": "Ustun",
+      "field": "Ma'nosi",
+      "skip": "Import qilinmasin",
+      "sample": "Misol",
+      "location": "A'zolar qaysi filialga",
+      "validate": "Qatorlarni tekshirish",
+      "rowsTotal": "Fayldagi qatorlar: {count}",
+      "valid": "Importga tayyor: {count}",
+      "invalid": "Muammolar: {count}",
+      "errorsShown": "Birinchi {count} ta muammo ko'rsatilgan.",
+      "row": "Qator",
+      "problem": "Muammo",
+      "start": "{count} ta a'zoni import qilish",
+      "running": "Import qilinmoqda… Bir daqiqa vaqt olishi mumkin.",
+      "finished": "Tayyor: {created} ta a'zo qo'shildi.",
+      "skipped": "{count} ta qator o'tkazib yuborildi: telefoni shu orada band bo'ldi.",
+      "failed": "Import muvaffaqiyatsiz tugadi. Boshqa hech narsa qo'shilmadi; qayta urinib ko'ring.",
+      "again": "Boshqa fayl import qilish",
+      "toList": "A'zolarga o'tish",
+      "mappingInvalid": "Telefon uchun, va to'liq ism yoki ism va familiya uchun ustun tanlang. Har ma'noga bitta ustun.",
+      "rowErrors": {
+        "NAME_REQUIRED": "Ism yo'q",
+        "PHONE_REQUIRED": "Telefon yo'q",
+        "PHONE_INVALID": "Telefon raqami noto'g'ri",
+        "PHONE_REPEATED": "Telefon oldingi qatorda bor",
+        "PHONE_EXISTS": "Bu telefon bilan a'zo allaqachon bor",
+        "BIRTH_DATE_INVALID": "Tug'ilgan sana noto'g'ri (masalan 17.05.1990)",
+        "GENDER_INVALID": "Jins tanilmadi",
+        "SOURCE_INVALID": "Manba tanilmadi",
+        "TOO_LONG": "Matn juda uzun"
+      }
     }
   }
 }
