@@ -7,6 +7,7 @@ import {
   type MemberDuplicatesDto,
   type MemberDuplicatesQuery,
   memberDuplicatesQuerySchema,
+  type MemberListItemDto,
   type MemberListQuery,
   memberListQuerySchema,
   type MemberUpdateInput,
@@ -64,7 +65,7 @@ export class MembersController {
   list(
     @Query(new ZodPipe(memberListQuerySchema)) query: MemberListQuery,
     @Req() req: AppRequest,
-  ): Promise<Page<MemberDto>> {
+  ): Promise<Page<MemberListItemDto>> {
     return this.members.list(this.tenantDb.tx, staffCaller(req), query);
   }
 

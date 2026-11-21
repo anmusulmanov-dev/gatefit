@@ -65,6 +65,40 @@ enum ImportStatus {
   @@map("import_status")
 }
 
+enum PlanType {
+  duration
+  visits
+  single
+  trial
+
+  @@map("plan_type")
+}
+
+enum DurationUnit {
+  day
+  month
+  year
+
+  @@map("duration_unit")
+}
+
+enum MembershipStatus {
+  scheduled
+  active
+  frozen
+  expired
+  cancelled
+
+  @@map("membership_status")
+}
+
+enum FreezeSource {
+  staff
+  member_request
+
+  @@map("freeze_source")
+}
+
 model Organization {
   id          String             @id @default(uuid(7)) @db.Uuid
   name        String
@@ -93,6 +127,9 @@ model Organization {
   subscriptions   SaasSubscription[]
   members         Member[]
   memberImports   MemberImport[]
+  plans           Plan[]
+  memberships     Membership[]
+  freezes         MembershipFreeze[]
 
   @@map("organizations")
 }
@@ -113,6 +150,7 @@ model Location {
   staffLocations StaffLocation[]
   members        Member[]
   memberImports  MemberImport[]
+  memberships    Membership[]
 
   @@unique([organizationId, id])
   @@unique([organizationId, name])
@@ -251,6 +289,7 @@ model Member {
   homeLocation Location      @relation(fields: [organizationId, homeLocationId], references: [organizationId, id])
   import       MemberImport? @relation(fields: [organizationId, importId], references: [organizationId, id])
   consents     Consent[]
+  memberships  Membership[]
 
   @@unique([organizationId, id])
   @@unique([organizationId, phone])
@@ -298,6 +337,127 @@ model MemberImport {
   @@unique([organizationId, id])
   @@index([organizationId, createdAt])
   @@map("member_imports")
+}
+
+// A tariff the club sells (docs/TZ.md F-2.1, F-2.2). Editing it does not change
+// memberships already sold: they copy its terms.
+model Plan {
+  id             String       @id @default(uuid(7)) @db.Uuid
+  organizationId String       @map("organization_id") @db.Uuid
+  name           String
+  description    String?
+  type           PlanType
+  durationValue  Int          @map("duration_value")
+  durationUnit   DurationUnit @map("duration_unit")
+  // null: unlimited visits within the term.
+  visitLimit     Int?         @map("visit_limit")
+  priceMinor     BigInt       @map("price_minor")
+  currency       String       @db.Char(3)
+  // { timeWindows, weekdays, dailyVisitLimit, locationIds } (packages/shared/src/plans.ts)
+  restrictions   Json
+  // 0: memberships of this plan cannot be frozen.
+  freezeMaxDays  Int          @default(0) @map("freeze_max_days")
+  freezeMaxTimes Int          @default(0) @map("freeze_max_times")
+  freezeMinDays  Int          @default(1) @map("freeze_min_days")
+  freezeFeeMinor BigInt       @default(0) @map("freeze_fee_minor")
+  isActive       Boolean      @default(true) @map("is_active")
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime     @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt      DateTime?    @map("deleted_at") @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  memberships  Membership[]
+
+  @@unique([organizationId, id])
+  @@index([organizationId, isActive])
+  @@map("plans")
+}
+
+// A plan sold to a member (docs/TZ.md F-2.3). Dates are calendar days in the time zone of
+// the location it was sold at; the *_at columns are the matching instants.
+model Membership {
+  id              String           @id @default(uuid(7)) @db.Uuid
+  organizationId  String           @map("organization_id") @db.Uuid
+  memberId        String           @map("member_id") @db.Uuid
+  planId          String           @map("plan_id") @db.Uuid
+  locationId      String           @map("location_id") @db.Uuid
+  // The plan's terms at the time of sale.
+  planName        String           @map("plan_name")
+  planType        PlanType         @map("plan_type")
+  visitLimit      Int?             @map("visit_limit")
+  priceMinor      BigInt           @map("price_minor")
+  currency        String           @db.Char(3)
+  restrictions    Json
+  freezeMaxDays   Int              @map("freeze_max_days")
+  freezeMaxTimes  Int              @map("freeze_max_times")
+  freezeMinDays   Int              @map("freeze_min_days")
+  freezeFeeMinor  BigInt           @map("freeze_fee_minor")
+  startsOn        DateTime         @map("starts_on") @db.Date
+  // Last day, inclusive. Freezes move it later.
+  endsOn          DateTime         @map("ends_on") @db.Date
+  // Midnight at the start of starts_on and after ends_on, in the location's time zone.
+  startsAt        DateTime         @map("starts_at") @db.Timestamptz(3)
+  endsAt          DateTime         @map("ends_at") @db.Timestamptz(3)
+  // Taken by check-ins (stage M5); null for unlimited visits.
+  visitsLeft      Int?             @map("visits_left")
+  status          MembershipStatus
+  // When the status will next change by itself (start, freeze, end); null once final.
+  // The hourly job picks up memberships whose moment has come.
+  statusChangesAt DateTime?        @map("status_changes_at") @db.Timestamptz(3)
+  // Renewal comes in v1 (docs/TZ.md F-2.5).
+  autoRenew       Boolean          @default(false) @map("auto_renew")
+  // users.id of who sold it.
+  soldBy          String           @map("sold_by") @db.Uuid
+  cancelledAt     DateTime?        @map("cancelled_at") @db.Timestamptz(3)
+  cancelledBy     String?          @map("cancelled_by") @db.Uuid
+  cancelReason    String?          @map("cancel_reason")
+  createdAt       DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime         @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt       DateTime?        @map("deleted_at") @db.Timestamptz(3)
+
+  organization Organization       @relation(fields: [organizationId], references: [id])
+  member       Member             @relation(fields: [organizationId, memberId], references: [organizationId, id])
+  plan         Plan               @relation(fields: [organizationId, planId], references: [organizationId, id])
+  location     Location           @relation(fields: [organizationId, locationId], references: [organizationId, id])
+  freezes      MembershipFreeze[]
+
+  @@unique([organizationId, id])
+  @@index([organizationId, memberId])
+  @@index([statusChangesAt])
+  @@map("memberships")
+}
+
+// A pause of a membership (docs/TZ.md F-2.4). It moves the membership's last day later by
+// its length. Ended early, it keeps only the days used; cancelled before it began, none.
+model MembershipFreeze {
+  id             String       @id @default(uuid(7)) @db.Uuid
+  organizationId String       @map("organization_id") @db.Uuid
+  membershipId   String       @map("membership_id") @db.Uuid
+  startsOn       DateTime     @map("starts_on") @db.Date
+  // Last frozen day, inclusive.
+  endsOn         DateTime     @map("ends_on") @db.Date
+  startsAt       DateTime     @map("starts_at") @db.Timestamptz(3)
+  endsAt         DateTime     @map("ends_at") @db.Timestamptz(3)
+  days           Int
+  reason         String
+  source         FreezeSource
+  // Charged in stage M4 (payments).
+  feeMinor       BigInt       @map("fee_minor")
+  currency       String       @db.Char(3)
+  // users.id of who entered it.
+  createdBy      String       @map("created_by") @db.Uuid
+  endedEarlyAt   DateTime?    @map("ended_early_at") @db.Timestamptz(3)
+  cancelledAt    DateTime?    @map("cancelled_at") @db.Timestamptz(3)
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime     @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt      DateTime?    @map("deleted_at") @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  membership   Membership   @relation(fields: [organizationId, membershipId], references: [organizationId, id])
+
+  @@unique([organizationId, id])
+  @@index([organizationId, membershipId])
+  @@map("membership_freezes")
 }
 
 // Append-only and partitioned by month on "at" (the partition key must be part of the
