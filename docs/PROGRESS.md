@@ -21,6 +21,36 @@ Har sessiya oxirida yangilanadi: nima qilindi, nima qoldi, ma'lum muammolar.
 | M3b Tariflar va abonementlar UI   | Tayyor (2026-11-22) — M3 yopildi |
 | M4a To'lovlar va kassa API        | Tayyor (2026-11-22)              |
 | M4b To'lovlar va kassa UI         | Tayyor (2026-11-22) — M4 yopildi |
+| M5a Kirish nazorati API           | Tayyor (2026-11-22)              |
+
+## 2026-11-22 — M5a: kirish nazorati (API)
+
+Branch: `feat/m5-access-api` (`feat/m4-billing-ui` ustiga). Qaror: `docs/ADR/0010-access.md`. Anvar tasdiqlagan javoblar: QR imzosi Ed25519; jonli yangilanish SSE; kamera uchun `jsqr` (M5b da); zaldagilar 3 soatdan keyin avtomatik chiqqan + qo'lda "chiqdi"; qarzdor rad etiladi. Standartlar: cheksiz abonement birinchi, keyin tugashi yaqini; 5 daqiqa ichida takror skan yangi tashrif emas; tashrifli abonementda kirish tashrifni kamaytiradi.
+
+### Qilindi
+
+- **QR**: `GET /me/qr` (faqat a'zo sessiyasi) — 30 soniyalik qadamda imzolangan token, 60 soniyada eskiradi. Kalit har tashkilot uchun `DATA_ENCRYPTION_KEY` dan hosil qilinadi, saqlanmaydi.
+- **`POST /access/verify`** (`access.verify`): imzo, muddat, a'zo holati (bloklangan, qarzdor), abonementlar (muddat, boshlanish, muzlatish, filial, hafta kuni, soat oynasi, kunlik limit), takror skan; `check_ins` ga yozadi (eskirgan kod ham — a'zo ma'lum), tashrifni ayiradi. Qoidalar `packages/shared/src/access-rules.ts` da.
+- **`POST /access/manual`** (`access.manual`, sabab majburiy, audit `check_in.manual`), **`POST /access/exit`**, **`GET /check-ins`** (jurnal, filial cheklovi), **`GET /locations/{id}/occupancy`**.
+- **Jonli oqim**: `GET /access/events?locationId=` (SSE), Redis pub/sub, commit'dan keyin (`TenantDb.afterCommit`).
+- **Oflayn**: `GET /access/offline` (ochiq kalit, filial a'zolari va abonementlari), `POST /access/sync` (ekran yaratgan id bilan, takror yuborilsa yozilmaydi, 48 soatdan eski rad, tashrif ayiriladi).
+- **`check_ins`**: oy bo'yicha partition, RLS, faqat `INSERT` + `SELECT`; kunlik `CheckInPartitionsJob` 3 oy oldinga yaratadi.
+
+### Tekshirildi
+
+- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` — yashil. **COUNTS**
+- `test/access.int-spec.ts` (26): mezon 4 (faol o'tadi 1 soniyadan tez; muddati tugagan, muzlatilgan, soatdan tashqari, boshqa kun, boshqa filial, boshlanmagan, abonementsiz, bloklangan, qarzdor — sababi bilan), mezon 5 (55 soniyada o'tadi, 65 da `expired_code`; soxta va boshqa tashkilot kodi), kunlik limit va takror skan, tashrif ayirish, qo'lda kiritish va audit, filial va ruxsat cheklovi, zaldagilar (kirdi, chiqdi, 3 soat), jurnal, oflayn snapshot (ochiq kalit bilan imzo tekshiruvi), sinxron takrori, SSE, "A tashkilot B ni ko'rmaydi", yozuvni o'zgartirish/o'chirish bazada rad, partitionlar, tezlik (p95 < 500 ms).
+- Birlik: kirish qoidalari va token formati (shared), `AccessTokensService`.
+
+### Rejadan chetlanishlar
+
+- Oxirgi 31 kunda tugagan abonementlar ham olinadi: rad sababi "abonement yo'q" emas, "muddati tugagan" bo'lishi uchun.
+- Noma'lum yoki soxta kod jurnalga yozilmaydi (a'zo noma'lum).
+
+### Qoldi
+
+- M5b: qabulxona ekrani (USB skaner, kamera — `jsqr`), kirish jurnali sahifasi, qo'lda kiritish va "chiqdi".
+- M5c: oflayn rejim (IndexedDB, navbat, sinxron) — mezon 11 web qismi.
 
 ## 2026-11-22 — M4b: to'lovlar va kassa (web)
 
