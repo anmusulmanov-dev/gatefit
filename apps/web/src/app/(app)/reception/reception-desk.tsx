@@ -2,7 +2,10 @@
 
 import {
   type AccessResultDto,
+  type ApiResult,
   type CheckInDto,
+  ErrorCode,
+  isUnreachable,
   localDate,
   type Page,
   startOfLocalDay,
@@ -27,6 +30,7 @@ import { CameraScanner } from './camera-scanner';
 import { ManualEntryDialog } from './manual-entry-dialog';
 import { ResultCard } from './result-card';
 import { useAccessFeed } from './use-access-feed';
+import { useOfflineAccess } from './use-offline-access';
 
 /** A code the camera keeps seeing is checked once in this window. */
 const SAME_CODE_MS = 5_000;
@@ -45,6 +49,7 @@ export function ReceptionDesk({ scope }: { scope: MemberScope }) {
   const location =
     locations.data?.find((item) => item.id === locationId) ?? locations.data?.[0] ?? null;
   const feed = useAccessFeed(location?.id ?? null);
+  const offline = useOfflineAccess(location?.id ?? null);
   const today = location ? localDate(new Date(), location.timezone) : null;
   const earlier = useApiGet<Page<CheckInDto>>(
     location && today
@@ -55,6 +60,8 @@ export function ReceptionDesk({ scope }: { scope: MemberScope }) {
   const exit = useApiAction();
   const [code, setCode] = useState('');
   const [result, setResult] = useState<AccessResultDto | null>(null);
+  /** The last result was decided by this screen, without the API. */
+  const [decidedOffline, setDecidedOffline] = useState(false);
   const [camera, setCamera] = useState(false);
   const [manual, setManual] = useState(false);
   const [leftIds, setLeftIds] = useState<string[]>([]);
@@ -73,12 +80,42 @@ export function ReceptionDesk({ scope }: { scope: MemberScope }) {
         return;
       }
       lastCode.current = { code: token, at: now };
+      let local = false;
       verify.run(
-        () => api.post<AccessResultDto>('/access/verify', { token, locationId: location.id }),
-        setResult,
+        async (): Promise<ApiResult<AccessResultDto>> => {
+          if (!offline.offline) {
+            const online = await api.post<AccessResultDto>('/access/verify', {
+              token,
+              locationId: location.id,
+            });
+            if (!isUnreachable(online)) {
+              return online;
+            }
+            offline.wentOffline();
+          }
+          // No internet: decide here and queue the entry (acceptance criterion 11).
+          local = true;
+          const decided = await offline.verify(token);
+          return decided
+            ? { ok: true, data: decided }
+            : {
+                ok: false,
+                status: 0,
+                error: {
+                  code: ErrorCode.INTERNAL_ERROR,
+                  message: 'No offline data',
+                  details: null,
+                },
+              };
+        },
+        (data) => {
+          setResult(data);
+          setDecidedOffline(local);
+        },
+        () => (local ? t('offline.noSnapshot') : undefined),
       );
     },
-    [location, verify],
+    [location, verify, offline, t],
   );
 
   // The scanner types into the field: keep it focused unless a dialog is open.
@@ -121,7 +158,16 @@ export function ReceptionDesk({ scope }: { scope: MemberScope }) {
           {feed.occupancy !== null && (
             <Badge tone="neutral">{t('occupancy', { count: feed.occupancy })}</Badge>
           )}
-          {!feed.connected && <Badge tone="muted">{t('offlineFeed')}</Badge>}
+          {offline.offline ? (
+            <Badge tone="warning">{t('offline.mode', { count: offline.queued })}</Badge>
+          ) : (
+            <>
+              {!feed.connected && <Badge tone="muted">{t('offlineFeed')}</Badge>}
+              {offline.queued > 0 && (
+                <Badge tone="muted">{t('offline.sending', { count: offline.queued })}</Badge>
+              )}
+            </>
+          )}
         </div>
         {locations.data.length > 1 && (
           <Select
@@ -182,7 +228,7 @@ export function ReceptionDesk({ scope }: { scope: MemberScope }) {
           {camera && <CameraScanner onCode={check} />}
           <FormMessage error={verify.error} />
         </div>
-        <ResultCard result={result} pending={verify.pending} />
+        <ResultCard result={result} pending={verify.pending} offline={decidedOffline} />
       </section>
 
       <section className="flex flex-col gap-3" aria-labelledby="recent-title">

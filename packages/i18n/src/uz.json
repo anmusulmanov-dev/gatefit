@@ -884,6 +884,12 @@
       "denied": "Rad etilgan",
       "empty": "Bu kunlarda kirish yo'q.",
       "count": "{count} ta yozuv"
+    },
+    "offline": {
+      "mode": "Oflayn: shu yerda tekshirilmoqda · navbatda {count} ta",
+      "sending": "Yuborilishi kutilmoqda: {count} ta",
+      "decided": "Oflayn tekshirildi: internet qaytganda yuboriladi.",
+      "noSnapshot": "Internet yo'q va bu filial uchun saqlangan a'zolar ro'yxati hali yo'q. Internet qaytganda a'zoni qo'lda kiriting."
     }
   }
 }
