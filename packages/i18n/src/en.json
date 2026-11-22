@@ -96,6 +96,16 @@
     "FREEZE_OVERLAP": "Another freeze already covers some of these days.",
     "INVALID_FREEZE_DATES": "A freeze starts today or later, before the membership ends.",
     "NO_FREEZE_TO_END": "There is no freeze to end.",
+    "IDEMPOTENCY_KEY_REQUIRED": "The request could not be sent safely. Try again.",
+    "IDEMPOTENCY_KEY_REUSED": "This request was already sent with different data. Refresh the page.",
+    "AMOUNT_EXCEEDS_BALANCE": "The amount is more than is owed.",
+    "INVOICE_VOID": "This invoice was written off.",
+    "INVOICE_PAID": "This invoice is already paid.",
+    "REFUND_EXCEEDS_PAYMENT": "You cannot refund more than was paid.",
+    "CASH_SHIFT_NOT_OPEN": "Open a cash shift first.",
+    "CASH_SHIFT_ALREADY_OPEN": "A cash shift is already open at this location.",
+    "CASH_SHIFT_CLOSED": "This cash shift is already closed.",
+    "INVALID_DUE_DATE": "The due date cannot be in the past.",
     "FILE_REQUIRED": "Choose a file.",
     "FILE_TOO_LARGE": "The file is too large (up to 5 MB).",
     "UNSUPPORTED_FILE_TYPE": "Use a JPEG, PNG or WebP image.",
@@ -113,7 +123,8 @@
     "unavailableText": "Refresh the page in a little while."
   },
   "sms": {
-    "otp": "Gatefit: your sign-in code is {code}. Do not share it."
+    "otp": "Gatefit: your sign-in code is {code}. Do not share it.",
+    "receipt": "{organization}: payment of {amount} received. Invoice {number}, still owed {balance}."
   },
   "web": {
     "home": {

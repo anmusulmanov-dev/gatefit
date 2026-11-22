@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { type InvoiceDto, paymentInputSchema, type PaymentDto } from './billing';
 import { DURATION_UNITS, type DurationUnit } from './dates';
 import { pageQuerySchema } from './pagination';
 import { minorAmountSchema } from './platform';
@@ -186,6 +187,10 @@ export const membershipSellSchema = z.object({
   locationId: z.uuid().optional(),
   /** First day, in the location's time zone. Defaults to today there. */
   startsOn: calendarDateSchema.optional(),
+  /** Money taken now; without it, or with "0", the whole price is owed. */
+  payment: paymentInputSchema.optional(),
+  /** Last day to pay what is left; omitted: owed at once. */
+  dueOn: calendarDateSchema.optional(),
 });
 export type MembershipSellInput = z.infer<typeof membershipSellSchema>;
 
@@ -195,6 +200,8 @@ export const membershipFreezeSchema = z.object({
   days: z.number().int().min(1).max(365),
   reason: reasonSchema,
   source: z.enum(FREEZE_SOURCES).default('staff'),
+  /** Pays the plan's freeze fee now, if it has one; otherwise the fee is owed. */
+  payment: paymentInputSchema.optional(),
 });
 export type MembershipFreezeInput = z.infer<typeof membershipFreezeSchema>;
 
@@ -248,4 +255,11 @@ export interface MembershipSummaryDto {
   endsOn: string;
   daysLeft: number | null;
   visitsLeft: number | null;
+}
+
+/** What selling a membership returns: the membership, its invoice (none for a free plan) and the payment taken. */
+export interface SaleDto {
+  membership: MembershipDto;
+  invoice: InvoiceDto | null;
+  payment: PaymentDto | null;
 }

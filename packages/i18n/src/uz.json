@@ -96,6 +96,16 @@
     "FREEZE_OVERLAP": "Bu kunlarning bir qismi allaqachon muzlatilgan.",
     "INVALID_FREEZE_DATES": "Muzlatish bugundan yoki keyinroq, abonement tugashidan oldin boshlanadi.",
     "NO_FREEZE_TO_END": "Tugatiladigan muzlatish yo'q.",
+    "IDEMPOTENCY_KEY_REQUIRED": "So'rovni xavfsiz yuborib bo'lmadi. Qayta urinib ko'ring.",
+    "IDEMPOTENCY_KEY_REUSED": "Bu so'rov boshqa ma'lumot bilan yuborilgan. Sahifani yangilang.",
+    "AMOUNT_EXCEEDS_BALANCE": "Summa qarzdan katta.",
+    "INVOICE_VOID": "Bu hisob bekor qilingan.",
+    "INVOICE_PAID": "Bu hisob to'langan.",
+    "REFUND_EXCEEDS_PAYMENT": "To'langandan ko'p qaytarib bo'lmaydi.",
+    "CASH_SHIFT_NOT_OPEN": "Avval kassa smenasini oching.",
+    "CASH_SHIFT_ALREADY_OPEN": "Bu filialda smena allaqachon ochiq.",
+    "CASH_SHIFT_CLOSED": "Bu smena allaqachon yopilgan.",
+    "INVALID_DUE_DATE": "To'lov muddati o'tgan sana bo'lishi mumkin emas.",
     "FILE_REQUIRED": "Faylni tanlang.",
     "FILE_TOO_LARGE": "Fayl juda katta (5 MB gacha).",
     "UNSUPPORTED_FILE_TYPE": "JPEG, PNG yoki WebP rasm yuklang.",
@@ -113,7 +123,8 @@
     "unavailableText": "Birozdan keyin sahifani yangilang."
   },
   "sms": {
-    "otp": "Gatefit: kirish kodi {code}. Uni hech kimga aytmang."
+    "otp": "Gatefit: kirish kodi {code}. Uni hech kimga aytmang.",
+    "receipt": "{organization}: {amount} to'lov qabul qilindi. Hisob {number}, qoldiq {balance}."
   },
   "web": {
     "home": {

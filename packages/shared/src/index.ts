@@ -1,5 +1,6 @@
 export * from './api-client';
 export * from './auth';
+export * from './billing';
 export * from './dates';
 export * from './errors';
 export * from './member-imports';
