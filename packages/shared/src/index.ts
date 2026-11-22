@@ -1,3 +1,5 @@
+export * from './access';
+export * from './access-rules';
 export * from './api-client';
 export * from './auth';
 export * from './billing';
