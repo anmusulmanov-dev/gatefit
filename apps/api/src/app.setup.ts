@@ -25,9 +25,13 @@ export function configureApp(app: NestExpressApplication): void {
   app.enableCors({ origin: config.get('CORS_ORIGINS', { infer: true }), credentials: true });
   app.enableShutdownHooks();
 
-  const document = SwaggerModule.createDocument(
-    app,
-    new DocumentBuilder().setTitle('Gatefit API').setVersion('1').build(),
-  );
-  SwaggerModule.setup(SWAGGER_PATH, app, document);
+  // The API description helps an attacker map the surface: off in production unless asked for.
+  const appEnv = config.get('APP_ENV', { infer: true }) ?? config.get('NODE_ENV', { infer: true });
+  if (config.get('SWAGGER_ENABLED', { infer: true }) ?? appEnv !== 'production') {
+    const document = SwaggerModule.createDocument(
+      app,
+      new DocumentBuilder().setTitle('Gatefit API').setVersion('1').build(),
+    );
+    SwaggerModule.setup(SWAGGER_PATH, app, document);
+  }
 }

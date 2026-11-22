@@ -27,6 +27,18 @@ https:// {
 	}
 	encode zstd gzip
 
+	# Security headers for every host (OWASP A05). HSTS without includeSubDomains: each
+	# organization's subdomain gets its certificate on its first visit. Pages may not be
+	# framed by other sites; the camera is allowed for the reception screen only (same origin).
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(self), microphone=(), geolocation=()"
+		-Server
+	}
+
 	handle /api/* {
 		reverse_proxy api:8000
 	}

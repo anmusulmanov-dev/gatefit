@@ -46,6 +46,9 @@ export const envSchema = z
       .string()
       .refine((value) => Buffer.from(value, 'base64').length === 32, 'must be 32 bytes in base64'),
 
+    // API description at /api/docs. Unset: on everywhere except production.
+    SWAGGER_ENABLED: z.stringbool().optional(),
+
     SMS_DRIVER: z.enum(['console', 'eskiz']).default('console'),
     // Eskiz account (SMS_DRIVER=eskiz). The sender name must be approved in the account.
     ESKIZ_BASE_URL: z.url({ protocol: /^https$/ }).default('https://notify.eskiz.uz'),
