@@ -42,7 +42,7 @@ Branch: `feat/m4-billing-ui` (`feat/m4-billing-api` ustiga). **M4a bilan birga b
 
 ### Ma'lum muammolar
 
-- **Qaytarish qarz qiladi**: `paid = to'lovlar − qaytarishlar`, abonement qoladi, shuning uchun qaytarilgan summa yana qoldiq bo'ladi va muddatsiz hisob a'zoni darhol `debtor` qiladi. Kechirish kerak bo'lsa hisobni `void` qilish (API bor, web'da tugma yo'q) yoki abonementni bekor qilish. Anvar bilan aniqlash kerak.
+- **Qaytarish qarz qiladi**: `paid = to'lovlar − qaytarishlar`, abonement qoladi, shuning uchun qaytarilgan summa yana qoldiq bo'ladi va muddatsiz hisob a'zoni darhol `debtor` qiladi. Kechirish kerak bo'lsa hisobni `void` qilish (API bor, web'da tugma yo'q) yoki abonementni bekor qilish. Anvar tasdiqladi (2026-11-22): shunday qoladi.
 - Hisobni `void` qilish va qo'lda hisob (`POST /invoices`) uchun web'da tugma yo'q.
 
 ## 2026-11-22 — M4a: to'lovlar va kassa (API)
