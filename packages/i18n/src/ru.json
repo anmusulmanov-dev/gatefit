@@ -730,6 +730,9 @@
       "paid": "Оплачен",
       "void": "Списан"
     },
+    "items": {
+      "freezeFee": "Плата за заморозку: {plan}"
+    },
     "overdue": "Просрочен",
     "refunded": "возвращено {amount}",
     "sale": {

@@ -27,6 +27,7 @@ import {
   openReceipt,
   PaymentMethodSelect,
   toTyped,
+  useItemLabel,
   useMethodName,
 } from '../../billing/billing-ui';
 import { RefundDialog } from '../../billing/refund-dialog';
@@ -60,6 +61,7 @@ export function BillingSection({
   const money = useMoney();
   const date = useCalendarDate();
   const methodName = useMethodName();
+  const itemLabel = useItemLabel();
   const sms = useApiAction();
   const [smsSentFor, setSmsSentFor] = useState<string | null>(null);
   const [open, setOpen] = useState<Open>(null);
@@ -112,7 +114,7 @@ export function BillingSection({
                 </div>
                 <span className="text-sm text-muted-foreground">
                   {[
-                    invoice.items.map((item) => item.description).join(', '),
+                    invoice.items.map(itemLabel).join(', '),
                     date(invoice.createdAt.slice(0, 10)),
                     t('billing.member.amounts', {
                       total: money(invoice.totalMinor, invoice.currency),

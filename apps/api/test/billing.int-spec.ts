@@ -615,7 +615,7 @@ describe('Payments and cash desk (integration)', () => {
         invoiceTotalMinor: PRICE,
         balanceMinor: '5000000',
         member: { phone: member.phone },
-        items: [{ description: 'Monthly', quantity: 1, totalMinor: PRICE }],
+        items: [{ kind: 'membership', description: 'Monthly', quantity: 1, totalMinor: PRICE }],
       });
       expect(t.sms.sent.filter((sms) => sms.to === member.phone)).toEqual([]);
       await owner.post(`/payments/${sale.payment?.id}/receipt/sms`).expect(204);

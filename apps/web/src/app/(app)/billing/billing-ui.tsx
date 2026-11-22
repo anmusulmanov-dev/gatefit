@@ -5,6 +5,7 @@ import {
   decimalToMinor,
   DESK_PAYMENT_METHODS,
   type DeskPaymentMethod,
+  type InvoiceItemKind,
   type InvoiceStatus,
   minorToDecimal,
   type PaymentMethod,
@@ -29,6 +30,13 @@ export function InvoiceStatusBadge({ status }: { status: InvoiceStatus }) {
 export function useMethodName() {
   const t = useTranslations('billing.methods');
   return (method: PaymentMethod) => t(method);
+}
+
+/** An invoice line as staff read it: a freeze fee says so, whatever plan it belongs to. */
+export function useItemLabel() {
+  const t = useTranslations('billing.items');
+  return (item: { kind: InvoiceItemKind; description: string }) =>
+    item.kind === 'freeze_fee' ? t('freezeFee', { plan: item.description }) : item.description;
 }
 
 export function PaymentMethodSelect({

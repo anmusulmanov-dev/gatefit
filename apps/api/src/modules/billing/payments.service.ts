@@ -185,6 +185,7 @@ export class PaymentsService {
         phone: payment.member.phone,
       },
       items: invoice.items.map((item) => ({
+        kind: item.kind,
         description: item.description,
         quantity: item.quantity,
         totalMinor: item.totalMinor.toString(),

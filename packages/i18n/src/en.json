@@ -730,6 +730,9 @@
       "paid": "Paid",
       "void": "Written off"
     },
+    "items": {
+      "freezeFee": "Freeze fee: {plan}"
+    },
     "overdue": "Overdue",
     "refunded": "refunded {amount}",
     "sale": {

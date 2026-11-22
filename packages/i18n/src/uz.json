@@ -730,6 +730,9 @@
       "paid": "To'langan",
       "void": "Bekor qilingan"
     },
+    "items": {
+      "freezeFee": "Muzlatish narxi: {plan}"
+    },
     "overdue": "Muddati o'tgan",
     "refunded": "{amount} qaytarilgan",
     "sale": {

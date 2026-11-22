@@ -7,7 +7,7 @@ import { LoadFailed, Loading } from '@/components/page-states';
 import { Button } from '@/components/ui/button';
 import { useApiGet } from '@/lib/use-api';
 
-import { useMethodName } from '../../billing/billing-ui';
+import { useItemLabel, useMethodName } from '../../billing/billing-ui';
 import { useMoney } from '../../plans/plan-ui';
 
 /** A printable receipt (docs/TZ.md F-4.2), narrow enough for a receipt printer. */
@@ -15,6 +15,7 @@ export function Receipt({ id }: { id: string }) {
   const t = useTranslations('billing.receipt');
   const format = useFormatter();
   const money = useMoney();
+  const itemLabel = useItemLabel();
   const methodName = useMethodName();
   const receipt = useApiGet<ReceiptDto>(`/payments/${id}/receipt`);
 
@@ -60,7 +61,7 @@ export function Receipt({ id }: { id: string }) {
           {data.items.map((item, index) => (
             <li key={index} className="flex justify-between gap-3">
               <span>
-                {item.description}
+                {itemLabel(item)}
                 {item.quantity > 1 && ` × ${String(item.quantity)}`}
               </span>
               <span>{money(item.totalMinor, data.currency)}</span>
