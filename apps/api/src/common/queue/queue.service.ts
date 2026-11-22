@@ -7,7 +7,7 @@ import {
   type OnApplicationShutdown,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { type ConnectionOptions, type Processor, Queue, Worker } from 'bullmq';
+import { type ConnectionOptions, type Processor, Queue, Worker, type WorkerOptions } from 'bullmq';
 import type { Env } from '../../config/env';
 
 /** Namespaces every queue in Redis. Tests give each app its own. */
@@ -51,8 +51,14 @@ export class QueueService implements OnApplicationShutdown {
     return queue;
   }
 
-  worker<Data>(name: string, processor: Processor<Data>): Worker<Data> {
+  /** `options` may add settings such as a backoff strategy; the connection is always ours. */
+  worker<Data>(
+    name: string,
+    processor: Processor<Data>,
+    options: Omit<WorkerOptions, 'connection' | 'prefix'> = {},
+  ): Worker<Data> {
     const worker = new Worker<Data>(name, processor, {
+      ...options,
       connection: this.connection,
       prefix: this.prefix,
     });

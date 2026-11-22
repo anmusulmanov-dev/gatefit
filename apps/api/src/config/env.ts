@@ -46,7 +46,12 @@ export const envSchema = z
       .string()
       .refine((value) => Buffer.from(value, 'base64').length === 32, 'must be 32 bytes in base64'),
 
-    SMS_DRIVER: z.enum(['console']).default('console'),
+    SMS_DRIVER: z.enum(['console', 'eskiz']).default('console'),
+    // Eskiz account (SMS_DRIVER=eskiz). The sender name must be approved in the account.
+    ESKIZ_BASE_URL: z.url({ protocol: /^https$/ }).default('https://notify.eskiz.uz'),
+    ESKIZ_EMAIL: z.string().optional(),
+    ESKIZ_PASSWORD: z.string().optional(),
+    ESKIZ_FROM: z.string().min(1).default('4546'),
 
     // Requests per minute from one IP: all endpoints, and sign-in endpoints separately.
     RATE_LIMIT_PER_MINUTE: z.coerce.number().int().min(1).default(300),
@@ -69,6 +74,13 @@ export const envSchema = z
         code: 'custom',
         path: ['SMS_DRIVER'],
         message: 'the console driver is not allowed in production',
+      });
+    }
+    if (env.SMS_DRIVER === 'eskiz' && (!env.ESKIZ_EMAIL || !env.ESKIZ_PASSWORD)) {
+      context.addIssue({
+        code: 'custom',
+        path: ['ESKIZ_EMAIL'],
+        message: 'the eskiz driver needs ESKIZ_EMAIL and ESKIZ_PASSWORD',
       });
     }
     if (appEnv === 'production' && DEV_ONLY_STORAGE_DRIVERS.includes(env.STORAGE_DRIVER)) {
