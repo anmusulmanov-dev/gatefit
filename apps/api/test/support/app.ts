@@ -48,10 +48,31 @@ export class TestClock extends Clock {
 /** Captures SMS instead of sending them. */
 export class FakeSms implements SmsProvider {
   readonly sent: { to: string; text: string }[] = [];
+  /** The next this many sends fail, as a provider that is down would. */
+  failNext = 0;
 
   send(to: string, text: string): Promise<void> {
+    if (this.failNext > 0) {
+      this.failNext -= 1;
+      return Promise.reject(new Error('Provider unavailable'));
+    }
     this.sent.push({ to, text });
     return Promise.resolve();
+  }
+
+  /** Waits for a message to this phone: messages go out through a queue. */
+  async waitFor(phone: string, timeoutMs = 5000): Promise<{ to: string; text: string }> {
+    const deadline = Date.now() + timeoutMs;
+    for (;;) {
+      const message = this.sent.findLast((sms) => sms.to === phone);
+      if (message) {
+        return message;
+      }
+      if (Date.now() > deadline) {
+        throw new Error(`No SMS reached ${phone}`);
+      }
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    }
   }
 
   /** The six-digit code from the latest message to this phone. */

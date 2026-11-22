@@ -442,6 +442,25 @@ export class MembersService {
     );
   }
 
+  /** Members added with this home location in a time range, for the daily report. */
+  countAdded(tx: TenantTransaction, locationId: string, from: Date, to: Date): Promise<number> {
+    return tx.member.count({
+      where: { homeLocationId: locationId, createdAt: { gte: from, lt: to } },
+    });
+  }
+
+  /** Names and phones of members, for messages to them; archived members are left out. */
+  async contactsOf(
+    tx: TenantTransaction,
+    ids: readonly string[],
+  ): Promise<Map<string, { id: string; firstName: string; lastName: string; phone: string }>> {
+    const rows = await tx.member.findMany({
+      where: { id: { in: [...ids] }, deletedAt: null },
+      select: { id: true, firstName: true, lastName: true, phone: true },
+    });
+    return new Map(rows.map((row) => [row.id, row]));
+  }
+
   /** The member the signed-in member app user is, in the current organization. */
   async memberIdOfUser(tx: TenantTransaction, userId: string): Promise<string | null> {
     const row = await tx.member.findFirst({

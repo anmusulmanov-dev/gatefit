@@ -3,6 +3,7 @@ import {
   daysBetween,
   type EntryMembership,
   ErrorCode,
+  type ExpiringMembershipDto,
   localDate,
   type MembershipCancelInput,
   type MembershipDto,
@@ -576,6 +577,39 @@ export class MembershipsService implements MembershipFacts {
       });
     }
     return summaries;
+  }
+
+  /**
+   * Memberships sold at a location whose last day falls between two calendar days
+   * (inclusive), still in force: for the daily report's "ending soon".
+   */
+  async endingBetween(
+    tx: TenantTransaction,
+    locationId: string,
+    firstDay: string,
+    lastDay: string,
+  ): Promise<ExpiringMembershipDto[]> {
+    const rows = await tx.membership.findMany({
+      where: {
+        locationId,
+        cancelledAt: null,
+        deletedAt: null,
+        status: { in: ['active', 'frozen'] },
+        endsOn: { gte: dateColumn(firstDay), lte: dateColumn(lastDay) },
+      },
+      orderBy: [{ endsOn: 'asc' }, { id: 'asc' }],
+      take: 200,
+    });
+    const contacts = await this.members.contactsOf(
+      tx,
+      rows.map((row) => row.memberId),
+    );
+    return rows.flatMap((row) => {
+      const member = contacts.get(row.memberId);
+      return member
+        ? [{ membershipId: row.id, member, planName: row.planName, endsOn: isoDate(row.endsOn) }]
+        : [];
+    });
   }
 
   // --- for entry control (the access module) ---
