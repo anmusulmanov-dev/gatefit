@@ -160,3 +160,9 @@ export function termEndDate(startsOn: string, value: number, unit: DurationUnit)
   const next = addMonths(startsOn, unit === 'year' ? value * 12 : value);
   return next.clamped ? next.date : addDays(next.date, -1);
 }
+
+/** `DD.MM.YYYY` of a calendar date: plain and the same in every language, for SMS texts. */
+export function formatCalendarDate(date: string): string {
+  const [year = '', month = '', day = ''] = date.split('-');
+  return `${day}.${month}.${year}`;
+}

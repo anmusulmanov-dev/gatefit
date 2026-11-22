@@ -32,6 +32,7 @@ export const PERMISSIONS = [
   'cash_shifts.manage',
   'reports.daily',
   'reports.financial',
+  'notifications.manage',
   'audit.read',
 ] as const;
 
@@ -65,6 +66,7 @@ export const SYSTEM_ROLE_PERMISSIONS: Record<SystemRole, readonly Permission[]> 
     'payments.accept',
     'cash_shifts.manage',
     'reports.daily',
+    'notifications.manage',
   ],
   receptionist: [
     'organization.read',

@@ -106,6 +106,7 @@
     "CASH_SHIFT_ALREADY_OPEN": "В этом филиале смена уже открыта.",
     "CASH_SHIFT_CLOSED": "Эта смена уже закрыта.",
     "INVALID_DUE_DATE": "Срок оплаты не может быть в прошлом.",
+    "INVALID_TEMPLATE": "В тексте есть подстановка, которой нет у этого сообщения.",
     "FILE_REQUIRED": "Выберите файл.",
     "FILE_TOO_LARGE": "Файл слишком большой (до 5 МБ).",
     "UNSUPPORTED_FILE_TYPE": "Загрузите изображение JPEG, PNG или WebP.",
@@ -124,7 +125,8 @@
   },
   "sms": {
     "otp": "Gatefit: код для входа {code}. Никому его не сообщайте.",
-    "receipt": "{organization}: оплата {amount} получена. Счёт {number}, остаток {balance}."
+    "receipt": "{organization}: оплата {amount} получена. Счёт {number}, остаток {balance}.",
+    "expiryReminder": "{organization}: {name}, ваш абонемент «{plan}» заканчивается {date} (осталось дней: {days}). Продлите его на ресепшене."
   },
   "web": {
     "home": {
@@ -317,6 +319,7 @@
     "payments": "Платежи",
     "cash_shifts": "Касса",
     "reports": "Отчёты",
+    "notifications": "Сообщения",
     "audit": "Аудит"
   },
   "permissions": {
@@ -368,6 +371,9 @@
     "reports": {
       "daily": "Ежедневный отчёт",
       "financial": "Финансовые отчёты"
+    },
+    "notifications": {
+      "manage": "Шаблоны сообщений"
     },
     "audit": {
       "read": "Просмотр журнала аудита"
