@@ -9,3 +9,4 @@ Sana: 2026-11-22. Holat: qabul qilingan.
 - **Qo'lda kiritish** qoidadan qat'i nazar `allowed` yoziladi (xodim qarori), sabab majburiy, auditda qoida nima degani (`refusal`) bilan.
 - **Jonli oqim SSE** (`GET /access/events`, paketsiz), Redis pub/sub orqali barcha API nusxalariga. Voqea faqat tranzaksiya commit bo'lgach yuboriladi (`TenantDb.afterCommit`). Oqim 1 soatda yopiladi, ekran qayta ulanadi (sessiya qayta tekshiriladi).
 - Kirish filial ko'rinishi (ADR 0006) bilan cheklanmaydi: a'zo abonementi ruxsat bergan istalgan filialga kiradi; xodim faqat o'z filialida tekshiradi.
+- **Oflayn ekran** (M5c): snapshot (ochiq kalit + filial a'zolari va abonementlari) va navbat IndexedDB da; imzo WebCrypto Ed25519 bilan, qaror `decideOffline` (shared). Navbatdagi kirish id si UUID v7, server takrorini `(id, at)` bo'yicha tashlaydi. 48 soatdan eski kirish qabul qilinmaydi.
