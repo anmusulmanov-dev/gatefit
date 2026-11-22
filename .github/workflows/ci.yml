@@ -104,6 +104,8 @@ jobs:
         run: pnpm --filter api prisma migrate deploy
 
       - run: pnpm format:check
+      - name: Translations complete in uz, ru and en
+        run: pnpm i18n:check
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test

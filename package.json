@@ -13,6 +13,7 @@
     "test": "turbo run test",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "i18n:check": "node packages/i18n/scripts/check-translations.mjs",
     "infra:up": "docker compose --env-file .env -f infra/docker-compose.dev.yml up -d",
     "infra:down": "docker compose --env-file .env -f infra/docker-compose.dev.yml down"
   },
