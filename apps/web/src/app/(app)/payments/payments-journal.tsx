@@ -53,7 +53,8 @@ export function PaymentsJournal({ scope }: { scope: MemberScope }) {
   query.set('to', startOfLocalDay(addDays(toDay, 1), timeZone).toISOString());
   if (location) query.set('locationId', location.id);
   if (method) query.set('method', method);
-  const payments = useApiGet<Page<PaymentDto>>(`/payments?${query.toString()}`);
+  // Wait for the location: its time zone decides where the days start.
+  const payments = useApiGet<Page<PaymentDto>>(location ? `/payments?${query.toString()}` : null);
 
   const items = payments.data?.items ?? [];
   const currency = items[0]?.currency;

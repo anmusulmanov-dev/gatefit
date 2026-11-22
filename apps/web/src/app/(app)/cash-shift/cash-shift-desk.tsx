@@ -37,10 +37,10 @@ export function CashShiftDesk({ scope }: { scope: MemberScope }) {
   const location =
     locations.data?.find((item) => item.id === locationId) ?? locations.data?.[0] ?? null;
   const current = useApiGet<{ shift: CashShiftDto | null }>(
-    location ? `/cash-shifts/current?locationId=${location.id}` : '/cash-shifts/current',
+    location ? `/cash-shifts/current?locationId=${location.id}` : null,
   );
   const history = useApiGet<Page<CashShiftDto>>(
-    location ? `/cash-shifts?locationId=${location.id}&limit=10` : '/cash-shifts?limit=10',
+    location ? `/cash-shifts?locationId=${location.id}&limit=10` : null,
   );
   const action = useApiAction();
   const [opening, setOpening] = useState('0');
