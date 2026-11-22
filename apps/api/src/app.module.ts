@@ -24,6 +24,7 @@ import { AccessInterceptor } from './modules/auth/access.interceptor';
 import { AuthGuard } from './modules/auth/auth.guard';
 import { AuthModule } from './modules/auth/auth.module';
 import { BillingModule } from './modules/billing/billing.module';
+import { AccessModule } from './modules/access/access.module';
 import { EntitlementsModule } from './modules/entitlements/entitlements.service';
 import { FilesModule } from './modules/files/files.module';
 import { HealthModule } from './modules/health/health.module';
@@ -56,6 +57,7 @@ import { OrganizationModule } from './modules/tenancy/organization.module';
     MembersModule,
     PlansModule,
     BillingModule,
+    AccessModule,
     PlatformModule,
     OrganizationModule,
     FilesModule,

@@ -5,6 +5,8 @@ export interface TenancyStore {
   organizationId: string;
   /** Transaction in which `app.current_org` is set. All tenant queries must go through it. */
   tx: TenantTransaction;
+  /** Work to do once the transaction has committed (see TenantDb.afterCommit). */
+  afterCommit: (() => void)[];
 }
 
 const storage = new AsyncLocalStorage<TenancyStore>();

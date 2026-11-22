@@ -22,10 +22,23 @@ export class TenantDb {
   async run<T>(organizationId: string, fn: (tx: TenantTransaction) => Promise<T>): Promise<T> {
     const id = organizationIdSchema.parse(organizationId);
 
-    return this.prisma.$transaction(async (tx) => {
+    const afterCommit: (() => void)[] = [];
+    const result = await this.prisma.$transaction(async (tx) => {
       await tx.$queryRaw`SELECT set_config('app.current_org', ${id}, true)`;
-      return TenancyContext.run({ organizationId: id, tx }, () => fn(tx));
+      return TenancyContext.run({ organizationId: id, tx, afterCommit }, () => fn(tx));
     }, TRANSACTION_OPTIONS);
+    for (const callback of afterCommit) {
+      callback();
+    }
+    return result;
+  }
+
+  /**
+   * Runs `callback` after the surrounding transaction commits, never if it rolls back: for
+   * news about what was written (live feeds), which must not announce a lost write.
+   */
+  afterCommit(callback: () => void): void {
+    TenancyContext.require().afterCommit.push(callback);
   }
 
   /** The transaction of the surrounding `run()`; throws when called outside of one. */

@@ -1,6 +1,7 @@
 import {
   addDays,
   daysBetween,
+  type EntryMembership,
   ErrorCode,
   localDate,
   type MembershipCancelInput,
@@ -30,6 +31,7 @@ import { MembersService } from '../members/members.service';
 import { OrganizationService } from '../tenancy/organization.service';
 import {
   checkFreeze,
+  countedFreezes,
   daysLeft,
   endFreeze,
   type FreezeSpan,
@@ -43,6 +45,9 @@ import { PlansService, readRestrictions } from './plans.service';
 /** How far back a sale may be dated (paper records brought in) and how far ahead. */
 export const SELL_DAYS_BACK = 31;
 export const SELL_DAYS_AHEAD = 90;
+
+/** How long after its end a membership still shows at the desk as the reason for refusal. */
+const ENTRY_LOOKBACK_DAYS = 31;
 
 /** Memberships the status job handles per round inside one organization. */
 const DUE_BATCH = 500;
@@ -556,6 +561,75 @@ export class MembershipsService implements MembershipFacts {
     return summaries;
   }
 
+  // --- for entry control (the access module) ---
+
+  /**
+   * Memberships that could let each member in: not cancelled and not long over. Read from their
+   * terms, not the stored status, so a membership that ended at midnight is over even
+   * before the hourly job has run. `locationId`, when given, keeps only those valid there.
+   */
+  async entryMemberships(
+    tx: TenantTransaction,
+    filter: { memberIds: readonly string[] } | { locationId: string },
+    now: Date,
+  ): Promise<Map<string, EntryMembership[]>> {
+    const rows = await tx.membership.findMany({
+      where: {
+        deletedAt: null,
+        cancelledAt: null,
+        // Recently ended ones too, so the desk can say "expired" rather than "no membership";
+        // the rules decide exactly.
+        endsAt: { gt: new Date(now.getTime() - ENTRY_LOOKBACK_DAYS * 24 * 60 * 60 * 1000) },
+        ...('memberIds' in filter ? { memberId: { in: [...filter.memberIds] } } : {}),
+      },
+      include: membershipInclude,
+      orderBy: { id: 'asc' },
+    });
+    const byMember = new Map<string, EntryMembership[]>();
+    for (const row of rows) {
+      const entry = toEntryMembership(row);
+      if (
+        'locationId' in filter &&
+        entry.restrictions.locationIds.length > 0 &&
+        !entry.restrictions.locationIds.includes(filter.locationId)
+      ) {
+        continue;
+      }
+      const list = byMember.get(row.memberId) ?? [];
+      list.push(entry);
+      byMember.set(row.memberId, list);
+    }
+    return byMember;
+  }
+
+  /**
+   * Spends one visit of a membership with a visit count; unlimited ones are untouched.
+   * The last visit ends the membership. Returns the visits left (null: unlimited).
+   */
+  async takeVisit(tx: TenantTransaction, membershipId: string, now: Date): Promise<number | null> {
+    const taken = await tx.membership.updateMany({
+      where: { id: membershipId, visitsLeft: { gt: 0 } },
+      data: { visitsLeft: { decrement: 1 } },
+    });
+    const row = await tx.membership.findUniqueOrThrow({
+      where: { id: membershipId },
+      include: membershipInclude,
+    });
+    if (taken.count === 1 && row.visitsLeft === 0) {
+      const terms = termsOf(row);
+      const timeZone = row.location.timezone;
+      await tx.membership.update({
+        where: { id: row.id },
+        data: {
+          status: statusOn(terms, localDate(now, timeZone)),
+          statusChangesAt: nextStatusChange(terms, now, timeZone),
+        },
+      });
+      await this.refreshMember(tx, row.memberId);
+    }
+    return row.visitsLeft;
+  }
+
   // --- helpers ---
 
   /** Moves the last day by `days` (negative: earlier) and recomputes the status. */
@@ -631,6 +705,23 @@ function toFreezeDto(row: FreezeRow): MembershipFreezeDto {
     currency: row.currency,
     endedEarly: row.endedEarlyAt !== null,
     createdAt: row.createdAt.toISOString(),
+  };
+}
+
+export function toEntryMembership(row: MembershipRow): EntryMembership {
+  return {
+    id: row.id,
+    planName: row.planName,
+    planType: row.planType,
+    startsOn: isoDate(row.startsOn),
+    endsOn: isoDate(row.endsOn),
+    visitsLeft: row.visitsLeft,
+    timeZone: row.location.timezone,
+    restrictions: readRestrictions(row.restrictions),
+    freezes: countedFreezes(row.freezes.map(freezeSpan)).map(({ startsOn, endsOn }) => ({
+      startsOn,
+      endsOn,
+    })),
   };
 }
 
