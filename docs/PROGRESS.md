@@ -9,7 +9,7 @@ Har sessiya oxirida yangilanadi: nima qilindi, nima qoldi, ma'lum muammolar.
 | 0.1 Loyiha karkasi                | Tayyor (2026-11-11)              |
 | 0.2 Ko'p mijozlilik va RLS        | Tayyor (2026-11-11)              |
 | 0.3 Autentifikatsiya va ruxsatlar | Tayyor (2026-11-17)              |
-| MVP (M1–M8)                       | Jarayonda (M1–M3 tayyor)         |
+| MVP (M1–M8)                       | Jarayonda (M1–M4 tayyor)         |
 | M1a Tashkilot ichki API           | Tayyor (2026-11-17)              |
 | M1b Platforma API                 | Tayyor (2026-11-17)              |
 | M1c Sozlamalar UI                 | Tayyor (2026-11-17)              |
@@ -20,6 +20,30 @@ Har sessiya oxirida yangilanadi: nima qilindi, nima qoldi, ma'lum muammolar.
 | M3a Tariflar va abonementlar API  | Tayyor (2026-11-22)              |
 | M3b Tariflar va abonementlar UI   | Tayyor (2026-11-22) — M3 yopildi |
 | M4a To'lovlar va kassa API        | Tayyor (2026-11-22)              |
+| M4b To'lovlar va kassa UI         | Tayyor (2026-11-22) — M4 yopildi |
+
+## 2026-11-22 — M4b: to'lovlar va kassa (web)
+
+Branch: `feat/m4-billing-ui` (`feat/m4-billing-api` ustiga). **M4a bilan birga birlashtiriladi**, avval M4a.
+
+### Qilindi
+
+- **Sotish dialogi**: tarif, filial, boshlanish sanasi va to'lov (usul, summa — standart to'liq narx). Kam to'lansa qarz summasi va ixtiyoriy muddat. Oxirida "Sotildi": chek chop etish, SMS, yopish. Bitta dialog — bitta `Idempotency-Key`.
+- **A'zo kartasi**: "Hisoblar va to'lovlar" (`payments.read`): hisoblar holati, muddati o'tgani, qarz belgisi, qoldiqni to'lash (qisman), to'lovlar ro'yxati, chek, SMS, qaytarish (`payments.refund`). Muzlatish dialogida narxni hozir qabul qilish.
+- **Sahifalar**: `/receipts/{id}` (chop etiladigan chek), `/payments` (jurnal: filial, kunlar filial vaqt mintaqasida, usul, sof jami, qaytarish), `/cash-shift` (smenani ochish, yig'indilar, sanalgan summa va jonli farq bilan yopish, oxirgi smenalar). Menyu: "To'lovlar", "Kassa".
+- **Muzlatish narxi** hisob va chekda "Muzlatish narxi: <tarif>" deb ko'rinadi (`ReceiptDto.items[].kind`).
+- **Xato matnlari**: `errorMessageKey` ro'yxati katalogdagi barcha `errors.*` kalitlari bilan tenglashtirildi (M3 va M4 kodlari "Xatolik yuz berdi" bo'lib chiqayotgan edi), sinxronlik testi qo'shildi.
+- `useApiGet(null)` — so'rovni kutadi; kassa va jurnal filial yuklanmasdan so'rov yubormaydi.
+
+### Tekshirildi
+
+- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` — yashil. API: **API** test, shared: **SHARED**, i18n: **I18N**.
+- Brauzerda (`demo.localhost`, owner): smena ochish (100 000); smenasiz filialda naqd sotish — "Avval kassa smenasini oching", o'sha dialogda filialni almashtirib sotish (kalit qayta ishlatildi); chek sahifasi va SMS (konsol drayveri); karta bilan qisman sotish — `Qarzdor`, qarz belgisi; qoldiqni naqd + o'tkazma bilan to'lash — `Faol`; naqd qaytarish; smenasiz filialda karta bilan sotish; muzlatish narxini karta bilan olish; jurnal (sof 900 000); smena yig'indilari (kutilgan 600 000) va 595 000 bilan yopish (farq −5 000). 375 px da gorizontal aylantirish yo'q, konsolda kutilmagan xato yo'q.
+
+### Ma'lum muammolar
+
+- **Qaytarish qarz qiladi**: `paid = to'lovlar − qaytarishlar`, abonement qoladi, shuning uchun qaytarilgan summa yana qoldiq bo'ladi va muddatsiz hisob a'zoni darhol `debtor` qiladi. Kechirish kerak bo'lsa hisobni `void` qilish (API bor, web'da tugma yo'q) yoki abonementni bekor qilish. Anvar bilan aniqlash kerak.
+- Hisobni `void` qilish va qo'lda hisob (`POST /invoices`) uchun web'da tugma yo'q.
 
 ## 2026-11-22 — M4a: to'lovlar va kassa (API)
 
@@ -56,7 +80,7 @@ Branch: `feat/m4-billing-api`. Qaror: `docs/ADR/0009-billing.md`. Anvar tasdiqla
 
 ### Qoldi
 
-- M4b: web — sotish dialogida to'lov qadami (60 soniya), chek sahifasi, a'zo kartasida hisoblar va qarz, `/payments` jurnali, kassa smenasi sahifasi.
+- M4b: web (yuqoridagi yozuv).
 - **M4a yolg'iz birlashsa**: web sotishda to'lov so'ramaydi, ya'ni har sotuv qarz bo'lib qoladi. M4b bilan birga birlashtirish kerak.
 - Xodim ismi jurnalda yo'q (faqat `received_by` id) — kerak bo'lsa staff servisi orqali.
 
