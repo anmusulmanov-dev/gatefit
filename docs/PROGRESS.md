@@ -28,6 +28,36 @@ Har sessiya oxirida yangilanadi: nima qilindi, nima qoldi, ma'lum muammolar.
 | M6b A'zo PWA                      | Tayyor (2026-11-22)              |
 | M7a Xabarnomalar va hisobot API   | Tayyor (2026-11-22)              |
 | M7b Bosh sahifa va shablonlar UI  | Tayyor (2026-11-22) — M7 yopildi |
+| M8a Mezonlar, tarjima, xavfsizlik | Tayyor (2026-11-22)              |
+
+## 2026-11-22 — M8a: qabul mezonlari, tarjima tekshiruvi, xavfsizlik ko'rigi
+
+Branch: `feat/m8-acceptance` (`feat/m7-dashboard-ui` ustiga). Anvar tasdiqlagan M8 javoblari: WAL-G + kunlik pg_dump, tashqi S3 env orqali; yuklama testi k6 (Docker); staging'da bir martalik yuklama va tiklash mashqi; demo seed alohida buyruq; e2e `feat/e2e-playwright` birlashgach. Yangi paket yo'q.
+
+### Qilindi
+
+- **`docs/ACCEPTANCE.md`**: 14 mezon → test fayli va bloki yoki "yo'q". Bor: 2, 4–10, 13. Qisman: 1, 3, 11 (e2e kerak). Yo'q: 12 (tiklash, M8b), 14 (yuklama, M8c).
+- **Tarjima tekshiruvi** `pnpm i18n:check` (`packages/i18n/scripts/check-translations.mjs`) va CI qadami: kalitlar bir xil, bo'sh matn yo'q, o'zgaruvchilar inglizchadagi bilan bir xil, inglizcha qolgan matn yo'q (ataylab bir xillar ro'yxati bilan). 770 matn. Buzilgan holat bilan sinab ko'rildi: ikkala xato topildi.
+- **Xavfsizlik tuzatishlari**: so'rov logida query qatori va qiymatlari yo'q (`requestForLog`; a'zo qidiruvida telefon logga tushardi — CLAUDE.md qoida 9); Caddy: HSTS, nosniff, `X-Frame-Options: DENY`, Referrer-Policy, Permissions-Policy (kamera faqat o'z sayti), `Server` sarlavhasi olib tashlandi; Swagger production'da o'chiq (`SWAGGER_ENABLED` bilan yoqiladi).
+
+### OWASP Top 10 ko'rigi
+
+- **A01 Ruxsatlar**: har endpointda bitta belgi (`endpoint-protection.int-spec.ts`), har jadvalda RLS (`rls-coverage.int-spec.ts`), filial cheklovi va "A B ni ko'rmaydi" testlari. Topilma yo'q.
+- **A02 Kriptografiya**: parol Argon2id (19 MiB, 2 iteratsiya), TOTP shifrlangan (AES-256-GCM, HKDF), cookie `httpOnly` + `sameSite=lax` + prod'da `secure`, QR Ed25519. Topilma yo'q.
+- **A03 Injection**: faqat Prisma va teglangan `$queryRaw` (`Unsafe` chaqiriqlari yo'q), kirish zod bilan. Topilma yo'q.
+- **A04 Dizayn**: pul amallarida idempotentlik, so'rov tezligi cheklovi, OTP urinishlari cheklovi, QR 60 soniya + 5 daqiqalik takror skan qoidasi. QR 60 soniya ichida skrinshot bilan ishlashi mumkin — qabul qilingan xavf (ADR 0010).
+- **A05 Sozlamalar**: xavfsizlik sarlavhalari va Swagger tuzatildi. **Qoldi**: web va member uchun Content-Security-Policy (Next inline skriptlari bilan ehtiyotkor sozlash kerak).
+- **A06 Komponentlar**: CI'da `pnpm audit` (prod high, hammasi critical). Topilma yo'q.
+- **A07 Autentifikatsiya**: kirishda tezlik cheklovi, owner/accountant uchun TOTP, sessiya har so'rovda bazadan tekshiriladi, chiqish va hamma qurilmadan chiqish. Topilma yo'q.
+- **A08 Yaxlitlik**: `--frozen-lockfile`, service worker API javoblarini keshlamaydi. Topilma yo'q.
+- **A09 Log**: telefon query orqali logga tushardi — tuzatildi; `last_error` da telefon va matn yo'q. Topilma yopildi.
+- **A10 SSRF**: foydalanuvchi bergan URL'ga so'rov yo'q (S3, Eskiz manzillari faqat env'dan). Topilma yo'q.
+
+### Tekshirildi
+
+- `pnpm format:check`, `pnpm i18n:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` — yashil. **COUNTS**
+- `request-log.spec.ts`: query va telefon logda yo'q.
+- Caddyfile o'zgarishi lokal Docker bilan tekshirilmadi (image yuklanmadi): staging deploy'da `caddy validate` bilan tekshiriladi.
 
 ## 2026-11-22 — M7b: bosh sahifa va xabar shablonlari (web)
 
