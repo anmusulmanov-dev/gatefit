@@ -9,7 +9,7 @@ Har sessiya oxirida yangilanadi: nima qilindi, nima qoldi, ma'lum muammolar.
 | 0.1 Loyiha karkasi                | Tayyor (2026-11-11)              |
 | 0.2 Ko'p mijozlilik va RLS        | Tayyor (2026-11-11)              |
 | 0.3 Autentifikatsiya va ruxsatlar | Tayyor (2026-11-17)              |
-| MVP (M1–M8)                       | Boshlanmagan                     |
+| MVP (M1–M8)                       | Jarayonda (M1–M3 tayyor)         |
 | M1a Tashkilot ichki API           | Tayyor (2026-11-17)              |
 | M1b Platforma API                 | Tayyor (2026-11-17)              |
 | M1c Sozlamalar UI                 | Tayyor (2026-11-17)              |
@@ -19,6 +19,46 @@ Har sessiya oxirida yangilanadi: nima qilindi, nima qoldi, ma'lum muammolar.
 | M2c A'zolar UI                    | Tayyor (2026-11-21) — M2 yopildi |
 | M3a Tariflar va abonementlar API  | Tayyor (2026-11-22)              |
 | M3b Tariflar va abonementlar UI   | Tayyor (2026-11-22) — M3 yopildi |
+| M4a To'lovlar va kassa API        | Tayyor (2026-11-22)              |
+
+## 2026-11-22 — M4a: to'lovlar va kassa (API)
+
+Branch: `feat/m4-billing-api`. Qaror: `docs/ADR/0009-billing.md`. Anvar tasdiqlagan reja va savollarga javoblar (taklif qilinganicha): to'lov muddati sotishda tanlanadi, standart — darhol; kassa smenasi filialda bitta; naqd uchun ochiq smena majburiy, terminal va o'tkazma ochiq smenaga bog'lanadi; qaytarish abonementni bekor qilmaydi, abonement bekor qilinsa qoldiq `void`; chek SMS'i faqat xodim bosganda.
+
+### Qilindi
+
+- **Jadvallar** (RLS): `invoices`, `invoice_items`, `invoice_counters`, `payments`, `refunds`, `cash_shifts`, `idempotency_keys`. `payments`, `refunds`, `invoice_items` ga faqat `INSERT` + `SELECT` grant. CHECK: summalar musbat, `paid_minor <= total_minor`, qator summasi = narx × soni. Filialda bitta ochiq smena (qisman yagona indeks).
+- **Idempotentlik** (`@Idempotent()`, `src/common/idempotency`): kalit majburiy (400), takror — avvalgi javob (`Idempotent-Replayed`), boshqa tana — 422, parallel so'rovlar navbatga qo'yiladi, yiqilgan so'rov kaliti qayta ishlatiladi.
+- **Sotish to'lov bilan**: `POST /members/{id}/memberships` endi `payment` va `dueOn` qabul qiladi va `{ membership, invoice, payment }` qaytaradi; hammasi bitta tranzaksiyada (naqd smenasiz bo'lsa abonement ham yozilmaydi). Bepul tarifga hisob yaratilmaydi.
+- **Hisoblar**: `GET/POST /invoices`, `GET /invoices/{id}`, `POST /invoices/{id}/payments` (qisman, qoldiqdan ko'p emas), `POST /invoices/{id}/void` (`payments.refund`). Raqam tashkilot va yil bo'yicha (`2026-000001`).
+- **To'lovlar**: `GET /payments` (jurnal: a'zo, filial, usul, smena, vaqt oralig'i), `GET /payments/{id}`, `POST /payments/{id}/refund` (`payments.refund`, sabab, qoldiqdan ko'p emas, naqd — ochiq smenadan), `GET /payments/{id}/receipt`, `POST /payments/{id}/receipt/sms`.
+- **Kassa**: `POST /cash-shifts/open`, `GET /cash-shifts/current?locationId=`, `GET /cash-shifts`, `GET /cash-shifts/{id}`, `POST /cash-shifts/{id}/close` (kutilgan, sanalgan, farq).
+- **Muzlatish narxi** muzlatishda hisobga yoziladi, `payment` bilan shu yerda to'lanadi; abonement bekor qilinsa uning to'lanmagan hisoblari `void`.
+- **`debtor`**: muddati o'tgan qoldiq (blocked dan past, abonementlardan ustun). Soatlik `DebtStatusJob`, har hisob bir marta (`overdue_marked_at`).
+- **`FiscalProvider`** porti va bo'sh drayver. Chek SMS matni uz/ru/en.
+- **API klienti** har POST ga `Idempotency-Key` qo'shadi (`options.idempotencyKey` bilan bitta amal uchun bir kalit).
+- **Audit**: `invoice.create`, `invoice.void`, `payment.create`, `refund.create`, `cash_shift.open`, `cash_shift.close`.
+- **Seed**: demo abonementlarga hisob va karta to'lovi; bitta a'zo yarmini to'lagan (`debtor`). Idempotent.
+
+### Tekshirildi
+
+- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` — yashil. API: 463 test, shared: 53, i18n: 11.
+- `test/billing.int-spec.ts`: mezon 2 (a'zo qo'shish + sotish + naqd to'lov), mezon 8 (smena hisoboti = jurnaldagi naqd − qaytarish, farq), mezon 9 (qaytarish faqat ruxsat bilan, auditda), qisman to'lov va qarz, muddat o'tishi (Toshkent yarim tuni), soatlik vazifa, bekor qilishda `void`, idempotentlik (takror, boshqa tana, kalitsiz, parallel, yiqilgandan keyin), filial cheklovi, chek va SMS, "A tashkilot B ni ko'rmaydi" (HTTP va RLS), to'lovni tahrirlash va o'chirish bazada rad etiladi.
+- Birlik: hisob holati, qoldiq (katta summalar), kutilgan naqd, so'rov xeshi, a'zo holati qarz bilan.
+- Seed test bazasida ikki marta ishga tushirildi: 20 hisob, 1 qarzdor.
+
+### Rejadan chetlanishlar
+
+- **`payments` va `refunds` da `updated_at`/`deleted_at` yo'q**: ular hech qachon o'zgarmaydi (TZ 6 dagi umumiy qoidadan istisno, `audit_logs` kabi).
+- **Jurnal vaqt filtri** `from`/`to` lahza (ISO), sana emas: klient filial vaqt mintaqasida kun chegarasini hisoblaydi.
+- **Hisobni bekor qilish** uchun alohida ruxsat qo'shilmadi: `payments.refund`.
+- **Idempotentlik kalitlari muddatsiz** saqlanadi (TZ da muddat yo'q).
+
+### Qoldi
+
+- M4b: web — sotish dialogida to'lov qadami (60 soniya), chek sahifasi, a'zo kartasida hisoblar va qarz, `/payments` jurnali, kassa smenasi sahifasi.
+- **M4a yolg'iz birlashsa**: web sotishda to'lov so'ramaydi, ya'ni har sotuv qarz bo'lib qoladi. M4b bilan birga birlashtirish kerak.
+- Xodim ismi jurnalda yo'q (faqat `received_by` id) — kerak bo'lsa staff servisi orqali.
 
 ## 2026-11-22 — M3b: tariflar va abonementlar UI
 

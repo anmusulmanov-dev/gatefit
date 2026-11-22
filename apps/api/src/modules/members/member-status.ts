@@ -2,15 +2,19 @@ import type { MemberStatus, MembershipStatus, MembershipSummaryDto } from '@gate
 import type { TenantTransaction } from '../../common/prisma/prisma.service';
 
 /**
- * A member's status from the statuses of their memberships (docs/TZ.md F-1.3). `blocked`
- * is set by staff and `debtor` by payments (stage M4); memberships do not override them.
+ * A member's status (docs/TZ.md F-1.3): `blocked` is set by staff and stays; then `debtor`
+ * when money is owed past its due moment; otherwise it follows the memberships.
  */
 export function memberStatusFrom(
   current: MemberStatus,
   memberships: readonly MembershipStatus[],
+  debtor = false,
 ): MemberStatus {
-  if (current === 'blocked' || current === 'debtor') {
+  if (current === 'blocked') {
     return current;
+  }
+  if (debtor) {
+    return 'debtor';
   }
   if (memberships.includes('active')) {
     return 'active';
@@ -40,3 +44,11 @@ export interface MembershipFacts {
 }
 
 export const MEMBERSHIP_FACTS = Symbol('MEMBERSHIP_FACTS');
+
+/** What the members module needs to know about money owed, which the billing module owns. */
+export interface DebtFacts {
+  /** Whether the member owes money past its due moment. */
+  isDebtor(tx: TenantTransaction, memberId: string): Promise<boolean>;
+}
+
+export const DEBT_FACTS = Symbol('DEBT_FACTS');

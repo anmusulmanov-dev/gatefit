@@ -1,4 +1,5 @@
 import { CLIENT_HEADER, type SessionAudience } from './auth';
+import { IDEMPOTENCY_HEADER } from './billing';
 import { type ApiError, apiErrorSchema, ErrorCode } from './errors';
 
 export type ApiResult<T> = { ok: true; data: T } | { ok: false; status: number; error: ApiError };
@@ -28,6 +29,11 @@ export interface ApiClientOptions {
   refreshOnExpiry?: boolean;
 }
 
+/** A fresh key for one money operation. */
+export function newIdempotencyKey(): string {
+  return globalThis.crypto.randomUUID();
+}
+
 export function createApiClient(
   audience: SessionAudience,
   { prefix = API_PREFIX, refreshOnExpiry = true }: ApiClientOptions = {},
@@ -49,6 +55,7 @@ export function createApiClient(
     path: string,
     body?: unknown,
     read: Reader = readJson,
+    idempotencyKey?: string,
   ): Promise<ApiResult<T>> {
     let response: Response;
     try {
@@ -59,6 +66,7 @@ export function createApiClient(
         credentials: 'same-origin',
         headers: {
           [CLIENT_HEADER]: audience,
+          ...(idempotencyKey ? { [IDEMPOTENCY_HEADER]: idempotencyKey } : {}),
           ...(body === undefined || isForm ? {} : { 'content-type': 'application/json' }),
         },
         body: body === undefined ? undefined : isForm ? body : JSON.stringify(body),
@@ -80,8 +88,9 @@ export function createApiClient(
     path: string,
     body?: unknown,
     read?: Reader,
+    idempotencyKey?: string,
   ): Promise<ApiResult<T>> {
-    const result = await send<T>(method, path, body, read);
+    const result = await send<T>(method, path, body, read, idempotencyKey);
 
     const sessionExpired =
       refreshOnExpiry &&
@@ -92,12 +101,19 @@ export function createApiClient(
       return result;
     }
 
-    return (await refreshSession()) ? send<T>(method, path, body, read) : result;
+    // The retry carries the same key: it is the same operation.
+    return (await refreshSession()) ? send<T>(method, path, body, read, idempotencyKey) : result;
   }
 
   return {
     get: <T>(path: string) => request<T>('GET', path),
-    post: <T = void>(path: string, body?: unknown) => request<T>('POST', path, body),
+    /**
+     * Every POST carries an Idempotency-Key (money endpoints require one). Pass the same
+     * key when repeating one operation, e.g. one per open sale dialog; by default each call
+     * gets a fresh key.
+     */
+    post: <T = void>(path: string, body?: unknown, options: { idempotencyKey?: string } = {}) =>
+      request<T>('POST', path, body, undefined, options.idempotencyKey ?? newIdempotencyKey()),
     patch: <T>(path: string, body: unknown) => request<T>('PATCH', path, body),
     put: <T>(path: string, body: unknown) => request<T>('PUT', path, body),
     delete: <T = void>(path: string) => request<T>('DELETE', path),

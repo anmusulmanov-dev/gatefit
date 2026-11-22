@@ -220,7 +220,11 @@ export function apiAs(t: TestApp, organization: Organization, cookies: string[])
       .set('Cookie', cookies);
   return {
     get: (path: string) => send('get', path),
-    post: (path: string, body?: object) => send('post', path).send(body),
+    /** Every POST carries a fresh Idempotency-Key (money endpoints require one), unless given. */
+    post: (path: string, body?: object, idempotencyKey: string = randomUUID()) =>
+      send('post', path).set('Idempotency-Key', idempotencyKey).send(body),
+    /** A POST without an Idempotency-Key. */
+    postWithoutKey: (path: string, body?: object) => send('post', path).send(body),
     patch: (path: string, body: object) => send('patch', path).send(body),
     put: (path: string, body: object) => send('put', path).send(body),
     delete: (path: string) => send('delete', path),

@@ -12,6 +12,7 @@ import {
   type MembershipSummaryDto,
   type Page,
   type PageQuery,
+  type SaleDto,
   startOfLocalDay,
   termEndDate,
 } from '@gatefit/shared';
@@ -23,6 +24,7 @@ import { canSeeLocation, type StaffCaller } from '../../common/http/staff-reques
 import { pageArgs, toPage } from '../../common/pagination/paginate';
 import type { TenantTransaction } from '../../common/prisma/prisma.service';
 import type { Prisma } from '../../generated/prisma/client';
+import { InvoicesService, toInvoiceDto } from '../billing/invoices.service';
 import type { MembershipFacts } from '../members/member-status';
 import { MembersService } from '../members/members.service';
 import { OrganizationService } from '../tenancy/organization.service';
@@ -89,6 +91,7 @@ export class MembershipsService implements MembershipFacts {
     private readonly members: MembersService,
     private readonly plans: PlansService,
     private readonly organizations: OrganizationService,
+    private readonly invoices: InvoicesService,
   ) {}
 
   async listForMember(
@@ -112,13 +115,16 @@ export class MembershipsService implements MembershipFacts {
     return toMembershipDto(await this.findVisible(tx, caller, id), this.clock.now());
   }
 
-  /** Sells a plan to a member. It starts today in the location's time zone unless dated. */
+  /**
+   * Sells a plan to a member, bills it and takes any payment, all in one transaction. It
+   * starts today in the location's time zone unless dated.
+   */
   async sell(
     tx: TenantTransaction,
     caller: StaffCaller,
     memberId: string,
     input: MembershipSellInput,
-  ): Promise<MembershipDto> {
+  ): Promise<SaleDto> {
     const member = await this.members.findEditable(tx, caller, memberId);
     const plan = await this.plans.find(tx, input.planId);
     if (!plan.isActive) {
@@ -216,8 +222,30 @@ export class MembershipsService implements MembershipFacts {
         status: row.status,
       },
     });
-    await this.refreshMember(tx, memberId);
-    return toMembershipDto(row, now);
+    let invoice: SaleDto['invoice'] = null;
+    let payment: SaleDto['payment'] = null;
+    if (plan.priceMinor > 0n) {
+      const charged = await this.invoices.charge(tx, caller, {
+        memberId,
+        locationId,
+        dueOn: input.dueOn,
+        payment: input.payment,
+        items: [
+          {
+            kind: 'membership',
+            description: plan.name,
+            quantity: 1,
+            unitMinor: plan.priceMinor,
+            membershipId: row.id,
+          },
+        ],
+      });
+      invoice = toInvoiceDto(charged.invoice, now);
+      payment = charged.payment && (await this.invoices.paymentDto(tx, charged.payment.id));
+    } else {
+      await this.refreshMember(tx, memberId);
+    }
+    return { membership: toMembershipDto(row, now), invoice, payment };
   }
 
   /** Freezes a membership from a day on; its last day moves later by the frozen days. */
@@ -304,7 +332,26 @@ export class MembershipsService implements MembershipFacts {
         status: updated.status,
       },
     });
-    await this.refreshMember(tx, row.memberId);
+    if (row.freezeFeeMinor > 0n) {
+      // The plan's fee is billed with the freeze; unpaid, it is owed at once.
+      await this.invoices.charge(tx, caller, {
+        memberId: row.memberId,
+        locationId: row.locationId,
+        payment: input.payment,
+        items: [
+          {
+            kind: 'freeze_fee',
+            description: row.planName,
+            quantity: 1,
+            unitMinor: row.freezeFeeMinor,
+            membershipId: id,
+            freezeId: created.id,
+          },
+        ],
+      });
+    } else {
+      await this.refreshMember(tx, row.memberId);
+    }
     return toMembershipDto(updated, now);
   }
 
@@ -405,6 +452,8 @@ export class MembershipsService implements MembershipFacts {
       before: { status: before },
       after: { status: 'cancelled', reason: input.reason },
     });
+    // Nothing more is owed for a cancelled membership; refunds are a separate step.
+    await this.invoices.voidForMembership(tx, caller, id, input.reason);
     await this.refreshMember(tx, row.memberId);
     return toMembershipDto(updated, now);
   }
@@ -538,7 +587,7 @@ export class MembershipsService implements MembershipFacts {
   }
 
   private async refreshMember(tx: TenantTransaction, memberId: string): Promise<void> {
-    await this.members.refreshStatus(tx, memberId, await this.statusesOf(tx, memberId));
+    await this.members.refreshStatus(tx, memberId);
   }
 
   private async findVisible(

@@ -186,10 +186,11 @@ Barcha biznes jadvallarida: `id` (UUID v7), `organization_id`, `created_at`, `up
 | memberships | tarif shartlari nusxasi (plan_name, plan_type, visit_limit, price_minor, currency, restrictions, freeze_*), starts_on, ends_on, starts_at, ends_at, visits_left, status (scheduled, active, frozen, expired, cancelled), status_changes_at, auto_renew, sold_by, cancelled_at, cancel_reason | member, plan, location (sotilgan filial) | M |
 | membership_freezes | starts_on, ends_on, starts_at, ends_at, days, reason, source (staff, member_request), fee_minor, currency, ended_early_at, cancelled_at | membership | M |
 | check_ins | at, direction, method, result, deny_reason | member, location, device?, staff? | M |
-| invoices, invoice_items | number, total_minor, tax_minor, status, due_at | member | M |
-| payments | amount_minor, currency, method, provider, external_id, status, idempotency_key | invoice, cash_shift | M |
-| refunds | amount_minor, reason | payment, staff | M |
-| cash_shifts | opened_at, closed_at, opening_minor, closing_minor | location, staff | M |
+| invoices, invoice_items | number (tashkilot va yil bo'yicha), total_minor, paid_minor, currency, status (open, partially_paid, paid, void), due_on, due_at, void_reason; qatorlar: kind (membership, freeze_fee, other), quantity, unit_minor, total_minor, membership_id | member, location | M |
+| payments | amount_minor, currency, method (cash, card_terminal, transfer; online — v1), provider, external_id, status; faqat qo'shiladi | invoice, member, location, cash_shift? | M |
+| refunds | amount_minor, currency, method, reason; faqat qo'shiladi | payment, invoice, cash_shift? | M |
+| cash_shifts | status, opened_at, closed_at, opening_minor, counted_minor, expected_minor, difference_minor, note; filialda bitta ochiq | location | M |
+| idempotency_keys | key, request_hash, status_code, response | organization | M |
 | otp_codes, sessions | code_hash, expires_at, attempts; refresh_token_hash, user_agent | user | M |
 | notification_templates, notifications | channel, body, status, sent_at | organization, member | M |
 | consents | type, version, at, ip | member yoki organization | M |
@@ -231,8 +232,8 @@ Qoidalar:
 | Tariflar | GET/POST /plans, GET/PATCH /plans/{id} | M |
 | Abonementlar | GET/POST /members/{id}/memberships, GET /memberships/{id}, POST /memberships/{id}/freeze, /unfreeze, /cancel | M |
 | Kirish | GET /me/qr, POST /access/verify, POST /access/manual, GET /check-ins, GET /locations/{id}/occupancy | M |
-| To'lovlar | POST /invoices, POST /invoices/{id}/payments, POST /payments/{id}/refund, GET /payments | M |
-| Kassa | POST /cash-shifts/open, POST /cash-shifts/{id}/close, GET /cash-shifts/current | M |
+| To'lovlar | GET/POST /invoices, GET /invoices/{id}, POST /invoices/{id}/payments, /void, GET /payments, GET /payments/{id}, POST /payments/{id}/refund, GET /payments/{id}/receipt, POST /payments/{id}/receipt/sms; abonement sotish to'lov bilan (`POST /members/{id}/memberships`) | M |
+| Kassa | POST /cash-shifts/open, POST /cash-shifts/{id}/close, GET /cash-shifts/current?locationId=, GET /cash-shifts, GET /cash-shifts/{id} | M |
 | Hisobotlar | GET /reports/daily | M |
 | A'zo | GET /me, GET /me/memberships, GET /me/payments | M |
 | Platforma | POST /platform/auth/login, /platform/auth/totp/setup, /platform/auth/totp/confirm, /platform/auth/logout, GET /platform/me; GET/POST /platform/organizations, GET/PATCH /platform/organizations/{id}, POST /platform/organizations/{id}/staff/{staffId}/reset-password, .../reset-totp; GET/POST /platform/saas-plans, PATCH /platform/saas-plans/{id} | M |

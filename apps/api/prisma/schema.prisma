@@ -99,6 +99,47 @@ enum FreezeSource {
   @@map("freeze_source")
 }
 
+enum InvoiceStatus {
+  open
+  partially_paid
+  paid
+  void
+
+  @@map("invoice_status")
+}
+
+enum InvoiceItemKind {
+  membership
+  freeze_fee
+  other
+
+  @@map("invoice_item_kind")
+}
+
+enum PaymentMethod {
+  cash
+  card_terminal
+  transfer
+  online
+
+  @@map("payment_method")
+}
+
+enum PaymentStatus {
+  succeeded
+  pending
+  failed
+
+  @@map("payment_status")
+}
+
+enum CashShiftStatus {
+  open
+  closed
+
+  @@map("cash_shift_status")
+}
+
 model Organization {
   id          String             @id @default(uuid(7)) @db.Uuid
   name        String
@@ -130,6 +171,13 @@ model Organization {
   plans           Plan[]
   memberships     Membership[]
   freezes         MembershipFreeze[]
+  idempotencyKeys IdempotencyKey[]
+  invoiceCounters InvoiceCounter[]
+  invoices        Invoice[]
+  invoiceItems    InvoiceItem[]
+  payments        Payment[]
+  refunds         Refund[]
+  cashShifts      CashShift[]
 
   @@map("organizations")
 }
@@ -151,6 +199,10 @@ model Location {
   members        Member[]
   memberImports  MemberImport[]
   memberships    Membership[]
+  invoices       Invoice[]
+  payments       Payment[]
+  refunds        Refund[]
+  cashShifts     CashShift[]
 
   @@unique([organizationId, id])
   @@unique([organizationId, name])
@@ -290,6 +342,8 @@ model Member {
   import       MemberImport? @relation(fields: [organizationId, importId], references: [organizationId, id])
   consents     Consent[]
   memberships  Membership[]
+  invoices     Invoice[]
+  payments     Payment[]
 
   @@unique([organizationId, id])
   @@unique([organizationId, phone])
@@ -458,6 +512,194 @@ model MembershipFreeze {
   @@unique([organizationId, id])
   @@index([organizationId, membershipId])
   @@map("membership_freezes")
+}
+
+// A response stored under an Idempotency-Key (CLAUDE.md rule 6): a repeated money request
+// gets the first answer instead of running again.
+model IdempotencyKey {
+  organizationId String   @map("organization_id") @db.Uuid
+  key            String
+  // sha256 of method, path and body: the same key with another request is refused.
+  requestHash    String   @map("request_hash")
+  // Filled once the first request has succeeded.
+  statusCode     Int?     @map("status_code")
+  response       Json?
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@id([organizationId, key])
+  @@map("idempotency_keys")
+}
+
+// Next invoice number per organization and year.
+model InvoiceCounter {
+  organizationId String @map("organization_id") @db.Uuid
+  year           Int
+  last           Int
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@id([organizationId, year])
+  @@map("invoice_counters")
+}
+
+// What a member owes (docs/TZ.md F-4.1). paid_minor is payments less refunds.
+model Invoice {
+  id              String        @id @default(uuid(7)) @db.Uuid
+  organizationId  String        @map("organization_id") @db.Uuid
+  // 2026-000001, per organization and year.
+  number          String
+  memberId        String        @map("member_id") @db.Uuid
+  locationId      String        @map("location_id") @db.Uuid
+  currency        String        @db.Char(3)
+  totalMinor      BigInt        @map("total_minor")
+  paidMinor       BigInt        @default(0) @map("paid_minor")
+  status          InvoiceStatus @default(open)
+  // Last day to pay, in the location's time zone; null: owed at once.
+  dueOn           DateTime?     @map("due_on") @db.Date
+  // From this moment an unpaid balance makes the member a debtor.
+  dueAt           DateTime      @map("due_at") @db.Timestamptz(3)
+  // Set by the job once the member's status has been brought in line after due_at.
+  overdueMarkedAt DateTime?     @map("overdue_marked_at") @db.Timestamptz(3)
+  // users.id
+  createdBy       String        @map("created_by") @db.Uuid
+  voidedAt        DateTime?     @map("voided_at") @db.Timestamptz(3)
+  voidedBy        String?       @map("voided_by") @db.Uuid
+  voidReason      String?       @map("void_reason")
+  createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime      @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt       DateTime?     @map("deleted_at") @db.Timestamptz(3)
+
+  organization Organization  @relation(fields: [organizationId], references: [id])
+  member       Member        @relation(fields: [organizationId, memberId], references: [organizationId, id])
+  location     Location      @relation(fields: [organizationId, locationId], references: [organizationId, id])
+  items        InvoiceItem[]
+  payments     Payment[]
+  refunds      Refund[]
+
+  @@unique([organizationId, id])
+  @@unique([organizationId, number])
+  @@index([organizationId, memberId])
+  @@index([dueAt])
+  @@map("invoices")
+}
+
+model InvoiceItem {
+  id             String          @id @default(uuid(7)) @db.Uuid
+  organizationId String          @map("organization_id") @db.Uuid
+  invoiceId      String          @map("invoice_id") @db.Uuid
+  kind           InvoiceItemKind
+  description    String
+  quantity       Int
+  unitMinor      BigInt          @map("unit_minor")
+  totalMinor     BigInt          @map("total_minor")
+  // The plans module's membership or freeze this item charges for, if any.
+  membershipId   String?         @map("membership_id") @db.Uuid
+  freezeId       String?         @map("freeze_id") @db.Uuid
+  createdAt      DateTime        @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  invoice      Invoice      @relation(fields: [organizationId, invoiceId], references: [organizationId, id])
+
+  @@unique([organizationId, id])
+  @@index([organizationId, invoiceId])
+  @@index([organizationId, membershipId])
+  @@map("invoice_items")
+}
+
+// Money received (docs/TZ.md F-4.1). Never changed or deleted: a mistake is put right
+// with a refund (CLAUDE.md rule 2), so the API may only insert and read.
+model Payment {
+  id             String        @id @default(uuid(7)) @db.Uuid
+  organizationId String        @map("organization_id") @db.Uuid
+  invoiceId      String        @map("invoice_id") @db.Uuid
+  memberId       String        @map("member_id") @db.Uuid
+  locationId     String        @map("location_id") @db.Uuid
+  cashShiftId    String?       @map("cash_shift_id") @db.Uuid
+  method         PaymentMethod
+  // manual: recorded by staff. Online providers come in v1.
+  provider       String        @default("manual")
+  externalId     String?       @map("external_id")
+  amountMinor    BigInt        @map("amount_minor")
+  currency       String        @db.Char(3)
+  status         PaymentStatus @default(succeeded)
+  // users.id
+  receivedBy     String        @map("received_by") @db.Uuid
+  createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  invoice      Invoice      @relation(fields: [organizationId, invoiceId], references: [organizationId, id])
+  member       Member       @relation(fields: [organizationId, memberId], references: [organizationId, id])
+  location     Location     @relation(fields: [organizationId, locationId], references: [organizationId, id])
+  cashShift    CashShift?   @relation(fields: [organizationId, cashShiftId], references: [organizationId, id])
+  refunds      Refund[]
+
+  @@unique([organizationId, id])
+  @@index([organizationId, createdAt])
+  @@index([organizationId, invoiceId])
+  @@index([organizationId, cashShiftId])
+  @@map("payments")
+}
+
+// Money given back (docs/TZ.md F-4.3). Insert and read only, like payments.
+model Refund {
+  id             String        @id @default(uuid(7)) @db.Uuid
+  organizationId String        @map("organization_id") @db.Uuid
+  paymentId      String        @map("payment_id") @db.Uuid
+  invoiceId      String        @map("invoice_id") @db.Uuid
+  locationId     String        @map("location_id") @db.Uuid
+  cashShiftId    String?       @map("cash_shift_id") @db.Uuid
+  method         PaymentMethod
+  amountMinor    BigInt        @map("amount_minor")
+  currency       String        @db.Char(3)
+  reason         String
+  // users.id
+  refundedBy     String        @map("refunded_by") @db.Uuid
+  createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  payment      Payment      @relation(fields: [organizationId, paymentId], references: [organizationId, id])
+  invoice      Invoice      @relation(fields: [organizationId, invoiceId], references: [organizationId, id])
+  location     Location     @relation(fields: [organizationId, locationId], references: [organizationId, id])
+  cashShift    CashShift?   @relation(fields: [organizationId, cashShiftId], references: [organizationId, id])
+
+  @@unique([organizationId, id])
+  @@index([organizationId, paymentId])
+  @@index([organizationId, cashShiftId])
+  @@map("refunds")
+}
+
+// A cash desk session at a location (docs/TZ.md F-4.4). One open at a time per location.
+model CashShift {
+  id              String          @id @default(uuid(7)) @db.Uuid
+  organizationId  String          @map("organization_id") @db.Uuid
+  locationId      String          @map("location_id") @db.Uuid
+  status          CashShiftStatus @default(open)
+  openingMinor    BigInt          @map("opening_minor")
+  currency        String          @db.Char(3)
+  // users.id
+  openedBy        String          @map("opened_by") @db.Uuid
+  openedAt        DateTime        @map("opened_at") @db.Timestamptz(3)
+  closedBy        String?         @map("closed_by") @db.Uuid
+  closedAt        DateTime?       @map("closed_at") @db.Timestamptz(3)
+  countedMinor    BigInt?         @map("counted_minor")
+  expectedMinor   BigInt?         @map("expected_minor")
+  // counted - expected; negative when cash is missing.
+  differenceMinor BigInt?         @map("difference_minor")
+  note            String?
+  createdAt       DateTime        @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime        @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt       DateTime?       @map("deleted_at") @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  location     Location     @relation(fields: [organizationId, locationId], references: [organizationId, id])
+  payments     Payment[]
+  refunds      Refund[]
+
+  @@unique([organizationId, id])
+  @@index([organizationId, locationId, openedAt])
+  @@map("cash_shifts")
 }
 
 // Append-only and partitioned by month on "at" (the partition key must be part of the

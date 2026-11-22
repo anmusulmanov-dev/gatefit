@@ -409,9 +409,61 @@ async function seed(prisma: PrismaClient): Promise<void> {
         },
       });
     }
+    // Billed and paid by card on the first day; one member paid half and owes the rest.
+    let debtor = false;
+    if (plan.priceMinor > 0n) {
+      const paidMinor = index === 3 ? plan.priceMinor / 2n : plan.priceMinor;
+      debtor = paidMinor < plan.priceMinor;
+      const year = Number(today.slice(0, 4));
+      const [counter] = await prisma.$queryRaw<{ last: number }[]>`
+        INSERT INTO invoice_counters (organization_id, year, last)
+        VALUES (${organizationId}::uuid, ${year}, 1)
+        ON CONFLICT (organization_id, year) DO UPDATE SET last = invoice_counters.last + 1
+        RETURNING last`;
+      const invoice = await prisma.invoice.create({
+        data: {
+          organizationId,
+          number: `${String(year)}-${String(counter?.last ?? 1).padStart(6, '0')}`,
+          memberId: member.id,
+          locationId: member.homeLocationId,
+          currency: plan.currency,
+          totalMinor: plan.priceMinor,
+          paidMinor,
+          status: debtor ? 'partially_paid' : 'paid',
+          dueAt: membership.startsAt,
+          overdueMarkedAt: now,
+          createdBy: owner.id,
+          items: {
+            create: [
+              {
+                kind: 'membership',
+                description: plan.name,
+                quantity: 1,
+                unitMinor: plan.priceMinor,
+                totalMinor: plan.priceMinor,
+                membershipId: membership.id,
+              },
+            ],
+          },
+        },
+      });
+      await prisma.payment.create({
+        data: {
+          organizationId,
+          invoiceId: invoice.id,
+          memberId: member.id,
+          locationId: member.homeLocationId,
+          method: 'card_terminal',
+          amountMinor: paidMinor,
+          currency: plan.currency,
+          receivedBy: owner.id,
+          createdAt: membership.startsAt,
+        },
+      });
+    }
     await prisma.member.update({
       where: { id: member.id },
-      data: { status: memberStatusFrom(member.status, [status]) },
+      data: { status: memberStatusFrom(member.status, [status], debtor) },
     });
   }
 
