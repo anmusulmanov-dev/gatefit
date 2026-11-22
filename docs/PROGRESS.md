@@ -4,21 +4,21 @@ Har sessiya oxirida yangilanadi: nima qilindi, nima qoldi, ma'lum muammolar.
 
 ## Holat
 
-| Bosqich                           | Holat                                                       |
-| --------------------------------- | ----------------------------------------------------------- |
-| 0.1 Loyiha karkasi                | Tayyor (2026-11-11)                                         |
-| 0.2 Ko'p mijozlilik va RLS        | Tayyor (2026-11-11)                                         |
-| 0.3 Autentifikatsiya va ruxsatlar | Tayyor (2026-11-17)                                         |
-| MVP (M1–M8)                       | Boshlanmagan                                                |
-| M1a Tashkilot ichki API           | Tayyor (2026-11-17)                                         |
-| M1b Platforma API                 | Tayyor (2026-11-17)                                         |
-| M1c Sozlamalar UI                 | Tayyor (2026-11-17)                                         |
-| M1d Super-admin UI                | Tayyor (2026-11-17) — M1 yopildi                            |
-| M2a A'zolar API                   | Tayyor (2026-11-21)                                         |
-| M2b Foto, import, eksport         | Tayyor (2026-11-21)                                         |
-| M2c A'zolar UI                    | Tayyor (2026-11-21) — M2 yopildi                            |
-| M3a Tariflar va abonementlar API  | Tayyor (2026-11-22)                                         |
-| M3b Tariflar va abonementlar UI   | Tayyor (2026-11-22), tarif formasi brauzerda tekshirilmagan |
+| Bosqich                           | Holat                            |
+| --------------------------------- | -------------------------------- |
+| 0.1 Loyiha karkasi                | Tayyor (2026-11-11)              |
+| 0.2 Ko'p mijozlilik va RLS        | Tayyor (2026-11-11)              |
+| 0.3 Autentifikatsiya va ruxsatlar | Tayyor (2026-11-17)              |
+| MVP (M1–M8)                       | Boshlanmagan                     |
+| M1a Tashkilot ichki API           | Tayyor (2026-11-17)              |
+| M1b Platforma API                 | Tayyor (2026-11-17)              |
+| M1c Sozlamalar UI                 | Tayyor (2026-11-17)              |
+| M1d Super-admin UI                | Tayyor (2026-11-17) — M1 yopildi |
+| M2a A'zolar API                   | Tayyor (2026-11-21)              |
+| M2b Foto, import, eksport         | Tayyor (2026-11-21)              |
+| M2c A'zolar UI                    | Tayyor (2026-11-21) — M2 yopildi |
+| M3a Tariflar va abonementlar API  | Tayyor (2026-11-22)              |
+| M3b Tariflar va abonementlar UI   | Tayyor (2026-11-22) — M3 yopildi |
 
 ## 2026-11-22 — M3b: tariflar va abonementlar UI
 
@@ -41,11 +41,11 @@ Branch: `feat/m3-memberships-ui` (`feat/m3-memberships-api` ustidan).
 
 - `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm --filter web build` — yashil.
 - **Brauzerda** (`demo.localhost:3000`, menejer, Anvar kirdi): tariflar ro'yxati; a'zolar ro'yxatida qolgan kunlar; abonementsiz a'zoga "Oylik" sotish (a'zo `Faol`), bugundan 7 kun muzlatish (tugash 7 kunga surildi, a'zo `Muzlatilgan`), muzlatishni tugatish (sana qaytdi, `Faol`), sabab bilan bekor qilish (`Abonementsiz`). 375 px da gorizontal skroll yo'q. Bepul muzlatish "bepul" deb ko'rsatiladigan qilindi.
-- **Tarif formasi brauzerda tekshirilmagan:** menejerda `plans.manage` yo'q, owner TOTP talab qiladi.
+- **Tarif formasi staging'da tekshirildi** (`demo.staging.gatefit.uz`, owner, M3 birlashgandan keyin): "Sinov tarifi (Claude)" qo'shildi (tashriflar bo'yicha, 8 tashrif, 07:00–12:00, Sh/Ya, kuniga 1, Chilonzor, muzlatish 14 kun / 2 marta / 10 000), ro'yxatda hammasi to'g'ri ko'rindi; narx 260 000 ga o'zgartirildi va sotuvdan olindi ("Sotuvdan olinganlar" filtrida ko'rinadi). 375 px da dialog sig'adi, gorizontal skroll yo'q. Sinov tarifi staging'da sotuvdan olingan holda qoldi.
 
 ### Qoldi
 
-- Tarif formasini owner bilan brauzerda tekshirish; Playwright — `feat/e2e-playwright` birlashgach.
+- Playwright — `feat/e2e-playwright` birlashgach.
 - Kirish soatlarida `24:00` ni UI orqali kiritib bo'lmaydi (`type="time"`); `23:59` yetadi.
 
 ## 2026-11-22 — M3a: tariflar, abonementlar, muzlatish (API)
