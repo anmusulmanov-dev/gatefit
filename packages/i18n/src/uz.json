@@ -145,7 +145,9 @@
   "nav": {
     "home": "Bosh sahifa",
     "settings": "Sozlamalar",
+    "reception": "Qabulxona",
     "members": "A'zolar",
+    "checkIns": "Kirishlar",
     "plans": "Tariflar",
     "payments": "To'lovlar",
     "cashShift": "Kassa"
@@ -811,6 +813,77 @@
       "noHistory": "Yopilgan smenalar hali yo'q.",
       "expectedShort": "kutilgan {amount}",
       "countedShort": "sanalgan {amount}"
+    }
+  },
+  "access": {
+    "title": "Qabulxona",
+    "location": "Filial",
+    "noLocation": "Siz hech bir filialga biriktirilmagansiz.",
+    "occupancy": "Zalda: {count}",
+    "offlineFeed": "Jonli yangilanish to'xtagan",
+    "scanLabel": "A'zo kodi",
+    "scanPlaceholder": "Kodni skanerlang yoki kiritib Enter bosing",
+    "waiting": "Kod kutilmoqda",
+    "checking": "Tekshirilmoqda…",
+    "allowed": "Kirish mumkin",
+    "denied": "Kirish mumkin emas",
+    "repeat": "Hozirgina kirgan: yangi tashrif hisoblanmadi.",
+    "until": "{date} gacha",
+    "daysLeft": "{count} kun qoldi",
+    "visitsLeft": "{count} tashrif qoldi",
+    "in": "Kirdi",
+    "out": "Chiqdi",
+    "exit": "Chiqdi",
+    "recent": "Bugun shu filialda",
+    "noEntries": "Bugun hali hech kim kirmagan.",
+    "camera": {
+      "start": "Kamerani yoqish",
+      "stop": "Kamerani o'chirish",
+      "label": "Kamera",
+      "denied": "Kameraga ruxsat berilmadi. Brauzer sozlamalarida ruxsat bering.",
+      "unavailable": "Kamera topilmadi. Skanerdan foydalaning."
+    },
+    "manual": {
+      "action": "Qo'lda kiritish",
+      "title": "A'zoni qo'lda kiritish",
+      "description": "A'zoni toping va sababini yozing. Kirish jurnalga va auditga yoziladi.",
+      "search": "Telefon yoki ism",
+      "results": "Topilgan a'zolar",
+      "notFound": "A'zo topilmadi.",
+      "reason": "Sabab",
+      "required": "A'zoni tanlang va sababini yozing.",
+      "confirm": "Kiritish"
+    },
+    "methods": {
+      "qr": "QR",
+      "manual": "Qo'lda",
+      "qr_offline": "QR, oflayn"
+    },
+    "reasons": {
+      "invalid_code": "Kod yaroqsiz",
+      "expired_code": "Kod eskirgan: yangilashni so'rang",
+      "member_not_found": "A'zo topilmadi",
+      "member_blocked": "A'zo bloklangan",
+      "debt": "Qarzi bor",
+      "no_membership": "Abonement yo'q",
+      "membership_expired": "Abonement muddati tugagan",
+      "membership_not_started": "Abonement hali boshlanmagan",
+      "membership_frozen": "Abonement muzlatilgan",
+      "wrong_location": "Bu filialda amal qilmaydi",
+      "wrong_day": "Bugun amal qilmaydi",
+      "outside_hours": "Bu soatda amal qilmaydi",
+      "daily_limit": "Kunlik tashrif limiti tugagan"
+    },
+    "journal": {
+      "title": "Kirishlar",
+      "from": "Dan",
+      "to": "Gacha",
+      "result": "Natija",
+      "all": "Hammasi",
+      "allowed": "Kirgan",
+      "denied": "Rad etilgan",
+      "empty": "Bu kunlarda kirish yo'q.",
+      "count": "{count} ta yozuv"
     }
   }
 }
