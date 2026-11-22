@@ -1,6 +1,7 @@
 import { type MiddlewareConsumer, Module, type NestModule } from '@nestjs/common';
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ClockModule } from './common/clock/clock';
+import { FiscalModule } from './common/fiscal/fiscal.provider';
 import { CryptoModule } from './common/crypto/crypto.service';
 import { AuditModule } from './common/audit/audit.service';
 import { AllExceptionsFilter } from './common/errors/all-exceptions.filter';
@@ -22,6 +23,7 @@ import { ConfigModule } from './config/config.module';
 import { AccessInterceptor } from './modules/auth/access.interceptor';
 import { AuthGuard } from './modules/auth/auth.guard';
 import { AuthModule } from './modules/auth/auth.module';
+import { BillingModule } from './modules/billing/billing.module';
 import { EntitlementsModule } from './modules/entitlements/entitlements.service';
 import { FilesModule } from './modules/files/files.module';
 import { HealthModule } from './modules/health/health.module';
@@ -42,6 +44,7 @@ import { OrganizationModule } from './modules/tenancy/organization.module';
     QueueModule,
     RateLimitModule,
     SmsModule,
+    FiscalModule,
     FileStorageModule,
     FileLinksModule,
     SecurityModule,
@@ -52,6 +55,7 @@ import { OrganizationModule } from './modules/tenancy/organization.module';
     StaffModule,
     MembersModule,
     PlansModule,
+    BillingModule,
     PlatformModule,
     OrganizationModule,
     FilesModule,

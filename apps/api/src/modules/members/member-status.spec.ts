@@ -18,8 +18,17 @@ describe('memberStatusFrom', () => {
     expect(memberStatusFrom('active', ['cancelled', 'scheduled'])).toBe('inactive');
   });
 
-  it('keeps a block and a debt', () => {
+  it('keeps a block, even over a debt', () => {
     expect(memberStatusFrom('blocked', ['active'])).toBe('blocked');
-    expect(memberStatusFrom('debtor', ['active'])).toBe('debtor');
+    expect(memberStatusFrom('blocked', ['active'], true)).toBe('blocked');
+  });
+
+  it('is a debtor while money is overdue, whatever the memberships', () => {
+    expect(memberStatusFrom('active', ['active'], true)).toBe('debtor');
+    expect(memberStatusFrom('inactive', [], true)).toBe('debtor');
+  });
+
+  it('leaves debtor once the debt is settled', () => {
+    expect(memberStatusFrom('debtor', ['active'], false)).toBe('active');
   });
 });

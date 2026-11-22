@@ -1,4 +1,11 @@
-import type { MemberDto, MemberListItemDto, MembershipDto, Page, PlanDto } from '@gatefit/shared';
+import type {
+  MemberDto,
+  MemberListItemDto,
+  MembershipDto,
+  Page,
+  PlanDto,
+  SaleDto,
+} from '@gatefit/shared';
 import { TenantDb } from '../src/common/tenancy/tenant-db.service';
 import type { Location, Organization, PrismaClient } from '../src/generated/prisma/client';
 import { MembershipStatusJob } from '../src/modules/plans/membership-status.job';
@@ -75,8 +82,16 @@ describe('Plans and memberships (integration)', () => {
         })
         .expect(201)
     ).body as MemberDto;
+  // Payment is far off, so a sale alone does not make the member a debtor; the billing
+  // tests cover debts.
   const sell = async (memberId: string, body: object, as = owner): Promise<MembershipDto> =>
-    (await as.post(`/members/${memberId}/memberships`, body).expect(201)).body as MembershipDto;
+    (
+      (
+        await as
+          .post(`/members/${memberId}/memberships`, { dueOn: '2099-12-31', ...body })
+          .expect(201)
+      ).body as SaleDto
+    ).membership;
   const memberStatus = async (memberId: string) =>
     ((await owner.get(`/members/${memberId}`).expect(200)).body as MemberDto).status;
   const membership = async (id: string) =>
@@ -481,8 +496,12 @@ describe('Plans and memberships (integration)', () => {
       plan = await createPlanVia();
     });
 
+    // The monthly plan's freeze fee is paid on the spot, so freezing creates no debt.
     const freeze = (id: string, body: object, as = owner) =>
-      as.post(`/memberships/${id}/freeze`, body);
+      as.post(`/memberships/${id}/freeze`, {
+        payment: { method: 'card_terminal', amountMinor: '1000000' },
+        ...body,
+      });
 
     it('moves the end later by the frozen days and freezes the member on those days', async () => {
       await travel(MARCH_1_TASHKENT_NOON);

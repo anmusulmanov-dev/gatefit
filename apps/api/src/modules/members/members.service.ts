@@ -10,7 +10,6 @@ import {
   type MemberListQuery,
   type MemberSource,
   type MemberStatus,
-  type MembershipStatus,
   type MemberSummaryDto,
   type MemberUpdateInput,
   MEMBER_PHOTO_MAX_BYTES,
@@ -29,7 +28,13 @@ import { FileLinksService } from '../../common/storage/file-links.service';
 import { FILE_STORAGE, type FileStorage } from '../../common/storage/file-storage';
 import type { Prisma } from '../../generated/prisma/client';
 import { imageType } from './image-type';
-import { MEMBERSHIP_FACTS, type MembershipFacts, memberStatusFrom } from './member-status';
+import {
+  DEBT_FACTS,
+  type DebtFacts,
+  MEMBERSHIP_FACTS,
+  type MembershipFacts,
+  memberStatusFrom,
+} from './member-status';
 import { searchConditions } from './member-search';
 
 export const memberInclude = { homeLocation: { select: { id: true, name: true } } } as const;
@@ -74,6 +79,11 @@ export class MembersService {
   /** Looked up on use: the plans module that provides it depends on this one. */
   private get memberships(): MembershipFacts {
     return this.moduleRef.get<MembershipFacts>(MEMBERSHIP_FACTS, { strict: false });
+  }
+
+  /** Looked up on use, like memberships: the billing module depends on this one. */
+  private get debts(): DebtFacts {
+    return this.moduleRef.get<DebtFacts>(DEBT_FACTS, { strict: false });
   }
 
   async list(
@@ -219,6 +229,7 @@ export class MembersService {
     const status: MemberStatus = memberStatusFrom(
       'inactive',
       await this.memberships.statusesOf(tx, id),
+      await this.debts.isDebtor(tx, id),
     );
     const updated = await tx.member.update({
       where: { id },
@@ -236,15 +247,19 @@ export class MembersService {
   }
 
   /**
-   * Brings the member's status in line with their memberships' statuses. Called by the
-   * plans module whenever a membership of the member changes.
+   * Brings the member's status in line with their memberships and debts. Called by the
+   * plans and billing modules whenever either changes.
    */
-  async refreshStatus(tx: TenantTransaction, memberId: string, statuses: MembershipStatus[]) {
+  async refreshStatus(tx: TenantTransaction, memberId: string): Promise<void> {
     const member = await tx.member.findUniqueOrThrow({
       where: { id: memberId },
       select: { status: true },
     });
-    const status = memberStatusFrom(member.status, statuses);
+    const status = memberStatusFrom(
+      member.status,
+      await this.memberships.statusesOf(tx, memberId),
+      await this.debts.isDebtor(tx, memberId),
+    );
     if (status !== member.status) {
       await tx.member.update({ where: { id: memberId }, data: { status } });
     }

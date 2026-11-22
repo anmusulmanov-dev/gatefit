@@ -7,6 +7,7 @@ import {
   type MembershipSellInput,
   membershipSellSchema,
   type Page,
+  type SaleDto,
   type PageQuery,
   pageQuerySchema,
 } from '@gatefit/shared';
@@ -25,6 +26,7 @@ import {
 import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { AppRequest } from '../../common/http/app-request';
 import { staffCaller } from '../../common/http/staff-request';
+import { Idempotent } from '../../common/idempotency/idempotency.interceptor';
 import { TenantDb } from '../../common/tenancy/tenant-db.service';
 import { ZodPipe, zodBody } from '../../common/validation/zod';
 import { RequirePermission } from '../auth/auth.decorators';
@@ -52,14 +54,15 @@ export class MemberMembershipsController {
   }
 
   @Post()
+  @Idempotent()
   @RequirePermission('memberships.sell')
-  @ApiOperation({ summary: 'Sell a plan to the member' })
+  @ApiOperation({ summary: 'Sell a plan to the member, with its invoice and any payment taken' })
   @ApiBody(zodBody(membershipSellSchema))
   sell(
     @Param('memberId', ParseUUIDPipe) memberId: string,
     @Body(new ZodPipe(membershipSellSchema)) body: MembershipSellInput,
     @Req() req: AppRequest,
-  ): Promise<MembershipDto> {
+  ): Promise<SaleDto> {
     return this.memberships.sell(this.tenantDb.tx, staffCaller(req), memberId, body);
   }
 }
@@ -82,6 +85,7 @@ export class MembershipsController {
 
   @Post(':id/freeze')
   @HttpCode(HttpStatus.OK)
+  @Idempotent()
   @RequirePermission('memberships.freeze')
   @ApiOperation({ summary: 'Freeze from a day for a number of days; the end moves later' })
   @ApiBody(zodBody(membershipFreezeSchema))

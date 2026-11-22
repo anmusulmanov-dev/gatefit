@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { BillingModule } from '../billing/billing.module';
 import { MEMBERSHIP_FACTS } from '../members/member-status';
 import { MembersModule } from '../members/members.module';
 import { OrganizationModule } from '../tenancy/organization.module';
@@ -11,7 +12,7 @@ import { PlansService } from './plans.service';
 // Owns the plans, memberships and membership_freezes tables (docs/TZ.md 5.2). Other
 // modules reach them only through the services exported here (CLAUDE.md rule 7).
 @Module({
-  imports: [MembersModule, OrganizationModule],
+  imports: [MembersModule, OrganizationModule, BillingModule],
   controllers: [PlansController, MemberMembershipsController, MembershipsController],
   providers: [
     PlansService,
