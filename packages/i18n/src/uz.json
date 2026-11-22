@@ -197,6 +197,7 @@
       "locations": "Filiallar",
       "staff": "Xodimlar",
       "roles": "Rollar",
+      "messages": "Xabarlar",
       "account": "Mening hisobim"
     }
   },
@@ -932,5 +933,42 @@
       "decided": "Oflayn tekshirildi: internet qaytganda yuboriladi.",
       "noSnapshot": "Internet yo'q va bu filial uchun saqlangan a'zolar ro'yxati hali yo'q. Internet qaytganda a'zoni qo'lda kiriting."
     }
+  },
+  "dashboard": {
+    "title": "Kun xulosasi",
+    "location": "Filial",
+    "date": "Kun",
+    "noLocation": "Siz hech bir filialga biriktirilmagansiz.",
+    "net": "Tushum (sof)",
+    "refunds": "{amount} qaytarilgan",
+    "newMembers": "Yangi a'zolar",
+    "visits": "Tashriflar",
+    "visitsHint": "{members} a'zo · {refused} rad",
+    "expiring": "Bir haftada tugaydi",
+    "byMethod": "To'lov usullari bo'yicha",
+    "count": "{count} ta to'lov",
+    "noPayments": "Bu kunda to'lov yo'q.",
+    "expiringTitle": "Bir hafta ichida tugaydigan abonementlar",
+    "noExpiring": "Bir hafta ichida tugaydigan abonement yo'q."
+  },
+  "messages": {
+    "intro": "Klub yuboradigan SMS matnlari. Jingalak qavsdagi o'zgaruvchilar har bir a'zo uchun to'ldiriladi. Har yangi matn Eskiz'da tasdiqlanishi kerak.",
+    "language": "Til",
+    "locales": {
+      "uz": "O'zbekcha",
+      "ru": "Русский",
+      "en": "English"
+    },
+    "keys": {
+      "payment_receipt": "To'lov cheki",
+      "expiry_reminder": "Abonement tugashi haqida eslatma (3 kun oldin)"
+    },
+    "standard": "Standart",
+    "custom": "Klub matni",
+    "variables": "O'zgaruvchilar:",
+    "length": "{count} belgi",
+    "preview": "Namuna",
+    "reset": "Standartga qaytarish",
+    "save": "Saqlash"
   }
 }
