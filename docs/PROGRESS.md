@@ -9,7 +9,7 @@ Har sessiya oxirida yangilanadi: nima qilindi, nima qoldi, ma'lum muammolar.
 | 0.1 Loyiha karkasi                | Tayyor (2026-11-11)              |
 | 0.2 Ko'p mijozlilik va RLS        | Tayyor (2026-11-11)              |
 | 0.3 Autentifikatsiya va ruxsatlar | Tayyor (2026-11-17)              |
-| MVP (M1–M8)                       | Jarayonda (M1–M5 tayyor)         |
+| MVP (M1–M8)                       | Jarayonda (M1–M7 tayyor)         |
 | M1a Tashkilot ichki API           | Tayyor (2026-11-17)              |
 | M1b Platforma API                 | Tayyor (2026-11-17)              |
 | M1c Sozlamalar UI                 | Tayyor (2026-11-17)              |
@@ -27,6 +27,26 @@ Har sessiya oxirida yangilanadi: nima qilindi, nima qoldi, ma'lum muammolar.
 | M6a A'zo ilovasi API              | Tayyor (2026-11-22)              |
 | M6b A'zo PWA                      | Tayyor (2026-11-22)              |
 | M7a Xabarnomalar va hisobot API   | Tayyor (2026-11-22)              |
+| M7b Bosh sahifa va shablonlar UI  | Tayyor (2026-11-22) — M7 yopildi |
+
+## 2026-11-22 — M7b: bosh sahifa va xabar shablonlari (web)
+
+Branch: `feat/m7-dashboard-ui` (`feat/m7-notifications-api` ustiga). Yangi paket yo'q.
+
+### Qilindi
+
+- **Bosh sahifa** (`reports.daily` bo'lsa): kun xulosasi — filial va kun tanlash, sof tushum (qaytarilgani bilan), yangi a'zolar, tashriflar (a'zolar, rad), bir haftada tugaydiganlar; usullar bo'yicha tushum; tugaydigan abonementlar ro'yxati (a'zo kartasiga havola, telefon).
+- **Sozlamalar → Xabarlar** (`notifications.manage`): til bo'yicha chek va muddat eslatmasi matnlari, o'zgaruvchilar, belgilar soni, namuna ko'rinishi, saqlash va standartga qaytarish; noma'lum o'zgaruvchi xatosi.
+- Tarjimalar uz/ru/en (`dashboard.*`, `messages.*`, `permissionAreas.notifications`).
+
+### Tekshirildi
+
+- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` — yashil. **COUNTS**
+- Brauzerda (`demo.localhost`, owner): Chilonzor bugungi xulosa M4–M5 sinov ma'lumotiga mos (sof 900 000, qaytarilgan 50 000; karta 250 000, naqd 550 000, o'tkazma 150 000; tashriflar 3, 2 a'zo, 1 rad; 2 ta tugaydigan); shablon — noma'lum `{xato}` bilan xato xabari, tuzatib saqlash ("Klub matni"), standartga qaytarish; 375 px da gorizontal aylantirish yo'q.
+
+### Qoldi
+
+- A'zo kartasida yuborilgan xabarlar ro'yxati (API bor: `GET /notifications?memberId=`) — kerak bo'lsa keyin.
 
 ## 2026-11-22 — M7a: xabarnomalar va kunlik hisobot (API)
 
