@@ -195,12 +195,24 @@ export type AccessSyncInput = z.infer<typeof accessSyncSchema>;
 
 // --- responses ---
 
+/** How many codes after the current one /me/qr hands out, for a phone that loses signal. */
+export const QR_UPCOMING = 4;
+
+export interface UpcomingQrDto {
+  token: string;
+  /** Show it from this moment (the previous one's refresh time). */
+  validFrom: string;
+  expiresAt: string;
+}
+
 export interface QrTokenDto {
   token: string;
   /** When the app should show the next code. */
   refreshAt: string;
   /** When this code stops working. */
   expiresAt: string;
+  /** The next codes, in order: the app shows them without a network (about 2.5 minutes). */
+  upcoming: UpcomingQrDto[];
 }
 
 export interface AccessMemberDto {
