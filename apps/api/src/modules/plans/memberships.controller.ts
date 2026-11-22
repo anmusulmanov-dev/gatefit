@@ -25,11 +25,12 @@ import {
 } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { AppRequest } from '../../common/http/app-request';
+import { memberUser } from '../../common/http/member-request';
 import { staffCaller } from '../../common/http/staff-request';
 import { Idempotent } from '../../common/idempotency/idempotency.interceptor';
 import { TenantDb } from '../../common/tenancy/tenant-db.service';
 import { ZodPipe, zodBody } from '../../common/validation/zod';
-import { RequirePermission } from '../auth/auth.decorators';
+import { AnyAuthenticated, RequirePermission } from '../auth/auth.decorators';
 import { RequireModule } from '../entitlements/entitlements.service';
 import { MembershipsService } from './memberships.service';
 
@@ -116,5 +117,26 @@ export class MembershipsController {
     @Req() req: AppRequest,
   ): Promise<MembershipDto> {
     return this.memberships.cancel(this.tenantDb.tx, staffCaller(req), id, body);
+  }
+}
+
+/** The member app's list of the signed-in member's memberships (docs/TZ.md F-9.1). */
+@ApiTags('member app')
+@Controller('me/memberships')
+@RequireModule('memberships')
+export class MeMembershipsController {
+  constructor(
+    private readonly memberships: MembershipsService,
+    private readonly tenantDb: TenantDb,
+  ) {}
+
+  @Get()
+  @AnyAuthenticated()
+  @ApiOperation({ summary: "The signed-in member's memberships, newest first (member app only)" })
+  list(
+    @Query(new ZodPipe(pageQuerySchema)) query: PageQuery,
+    @Req() req: AppRequest,
+  ): Promise<Page<MembershipDto>> {
+    return this.memberships.listOwn(this.tenantDb.tx, memberUser(req).userId, query);
   }
 }

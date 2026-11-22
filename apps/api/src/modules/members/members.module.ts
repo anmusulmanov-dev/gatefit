@@ -3,6 +3,7 @@ import { MemberExportService } from './import/member-export.service';
 import { MemberImportsController } from './import/member-imports.controller';
 import { MemberImportsService } from './import/member-imports.service';
 import { MemberAccountsService } from './member-accounts.service';
+import { MeMemberController } from './me-member.controller';
 import { MembersController } from './members.controller';
 import { MembersService } from './members.service';
 
@@ -10,7 +11,7 @@ import { MembersService } from './members.service';
 // services exported here (CLAUDE.md rule 7).
 @Module({
   // The imports controller comes first: its fixed paths must win over /members/:id.
-  controllers: [MemberImportsController, MembersController],
+  controllers: [MemberImportsController, MembersController, MeMemberController],
   providers: [MembersService, MemberAccountsService, MemberImportsService, MemberExportService],
   exports: [MembersService, MemberAccountsService],
 })

@@ -13,6 +13,7 @@ import {
   base64Url,
   parseAccessToken,
   QR_REFRESH_SECONDS,
+  QR_UPCOMING,
   QR_VALID_SECONDS,
   type QrTokenDto,
 } from '@gatefit/shared';
@@ -48,18 +49,35 @@ export class AccessTokensService {
 
   constructor(private readonly crypto: CryptoService) {}
 
+  /**
+   * The current code and the next ones. Codes are issued on 30-second steps, like TOTP:
+   * asking again within a step gives the same code. A code made for a later step is valid
+   * only from that step on, so handing them out early lets a phone without signal keep
+   * showing a working code for a while, and nothing more.
+   */
   issue(organizationId: string, memberId: string, now: Date): QrTokenDto {
-    const key = this.keyOf(organizationId);
-    // Codes are issued on 30-second steps, like TOTP: refreshing within a step gives the same code.
     const step = Math.floor(now.getTime() / 1000 / QR_REFRESH_SECONDS) * QR_REFRESH_SECONDS;
-    const payload: AccessTokenPayload = { o: organizationId, m: memberId, i: step, k: key.id };
-    const input = accessTokenSigningInput(payload);
-    const signature = sign(null, Buffer.from(input), key.privateKey);
+    const at = (seconds: number) => new Date(seconds * 1000).toISOString();
     return {
-      token: `${input}.${base64Url.encode(signature)}`,
-      refreshAt: new Date((step + QR_REFRESH_SECONDS) * 1000).toISOString(),
-      expiresAt: new Date((step + QR_VALID_SECONDS) * 1000).toISOString(),
+      token: this.sign(organizationId, memberId, step),
+      refreshAt: at(step + QR_REFRESH_SECONDS),
+      expiresAt: at(step + QR_VALID_SECONDS),
+      upcoming: Array.from({ length: QR_UPCOMING }, (_, index) => {
+        const next = step + (index + 1) * QR_REFRESH_SECONDS;
+        return {
+          token: this.sign(organizationId, memberId, next),
+          validFrom: at(next),
+          expiresAt: at(next + QR_VALID_SECONDS),
+        };
+      }),
     };
+  }
+
+  private sign(organizationId: string, memberId: string, issuedAt: number): string {
+    const key = this.keyOf(organizationId);
+    const payload: AccessTokenPayload = { o: organizationId, m: memberId, i: issuedAt, k: key.id };
+    const input = accessTokenSigningInput(payload);
+    return `${input}.${base64Url.encode(sign(null, Buffer.from(input), key.privateKey))}`;
   }
 
   check(organizationId: string, token: string, now: Date): TokenCheck {
