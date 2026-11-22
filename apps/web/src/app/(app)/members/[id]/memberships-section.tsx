@@ -3,19 +3,19 @@
 import {
   addDays,
   daysBetween,
+  type DeskPaymentMethod,
   FREEZE_SOURCES,
   type FreezeSource,
   localDate,
   type MembershipDto,
   type MembershipStatus,
+  newIdempotencyKey,
   type Page,
-  type PlanDto,
-  termEndDate,
 } from '@gatefit/shared';
 import { useTranslations } from 'next-intl';
 import { type SubmitEvent, useState } from 'react';
 
-import { Field, FormActions, FormMessage } from '@/components/form';
+import { CheckboxRow, Field, FormActions, FormMessage } from '@/components/form';
 import { Empty, LoadFailed, Loading } from '@/components/page-states';
 import { useCan } from '@/components/staff-session';
 import { Badge } from '@/components/ui/badge';
@@ -26,9 +26,10 @@ import { Select } from '@/components/ui/select';
 import { api } from '@/lib/api';
 import { useApiAction, useApiGet } from '@/lib/use-api';
 
-import { PlanTypeBadge, useCalendarDate, useMoney, usePlanSummary } from '../../plans/plan-ui';
+import { PaymentMethodSelect } from '../../billing/billing-ui';
+import { PlanTypeBadge, useCalendarDate, useMoney } from '../../plans/plan-ui';
 import type { MemberScope } from '../member-scope';
-import { useMemberLocations } from '../member-ui';
+import { SellDialog } from './sell-dialog';
 
 const statusTone: Record<MembershipStatus, 'neutral' | 'positive' | 'warning' | 'muted'> = {
   scheduled: 'neutral',
@@ -235,148 +236,6 @@ function todayAt(membership: Pick<MembershipDto, 'location'>): string {
   return localDate(new Date(), membership.location.timezone);
 }
 
-function SellDialog({
-  memberId,
-  homeLocationId,
-  scope,
-  onClose,
-  onDone,
-}: {
-  memberId: string;
-  homeLocationId: string;
-  scope: MemberScope;
-  onClose: () => void;
-  onDone: () => void;
-}) {
-  const t = useTranslations();
-  const action = useApiAction();
-  const plans = useApiGet<Page<PlanDto>>('/plans?active=true&limit=100');
-  const locations = useMemberLocations(scope);
-  const date = useCalendarDate();
-  const summary = usePlanSummary();
-  const [planId, setPlanId] = useState('');
-  const [locationId, setLocationId] = useState(
-    scope.organizationWide || scope.locationIds.includes(homeLocationId)
-      ? homeLocationId
-      : (scope.locationIds[0] ?? homeLocationId),
-  );
-  const location = locations.data?.find((item) => item.id === locationId);
-  const today = location ? localDate(new Date(), location.timezone) : null;
-  const [startsOn, setStartsOn] = useState('');
-  const start = startsOn || today;
-
-  const available = (plans.data?.items ?? []).filter(
-    (plan) =>
-      plan.restrictions.locationIds.length === 0 ||
-      plan.restrictions.locationIds.includes(locationId),
-  );
-  const plan = available.find((item) => item.id === planId) ?? available[0] ?? null;
-  const endsOn = plan && start ? termEndDate(start, plan.durationValue, plan.durationUnit) : null;
-
-  function onSubmit(event: SubmitEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!plan) {
-      action.fail();
-      return;
-    }
-    action.run(
-      () =>
-        api.post(`/members/${memberId}/memberships`, {
-          planId: plan.id,
-          locationId,
-          ...(startsOn ? { startsOn } : {}),
-        }),
-      onDone,
-    );
-  }
-
-  return (
-    <Dialog
-      open
-      onOpenChange={(open) => {
-        if (!open) onClose();
-      }}
-      title={t('memberships.sell.title')}
-    >
-      {plans.error ? (
-        <LoadFailed onRetry={plans.reload} />
-      ) : !plans.data || !locations.data ? (
-        <Loading />
-      ) : (
-        <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
-          {locations.data.length > 1 && (
-            <Field id="sell-location" label={t('memberships.sell.location')}>
-              <Select
-                id="sell-location"
-                value={locationId}
-                onChange={(event) => {
-                  setLocationId(event.target.value);
-                  setPlanId('');
-                }}
-              >
-                {locations.data.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.name}
-                  </option>
-                ))}
-              </Select>
-            </Field>
-          )}
-          {available.length === 0 ? (
-            <Empty>{t('memberships.sell.noPlans')}</Empty>
-          ) : (
-            <>
-              <Field id="sell-plan" label={t('memberships.sell.plan')}>
-                <Select
-                  id="sell-plan"
-                  value={plan?.id ?? ''}
-                  autoFocus
-                  onChange={(event) => {
-                    setPlanId(event.target.value);
-                  }}
-                >
-                  {available.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.name}
-                    </option>
-                  ))}
-                </Select>
-              </Field>
-              {plan && <p className="text-sm text-muted-foreground">{summary(plan)}</p>}
-              <Field
-                id="sell-start"
-                label={t('memberships.sell.startsOn')}
-                hint={endsOn ? t('memberships.sell.endsOn', { date: date(endsOn) }) : undefined}
-              >
-                <Input
-                  id="sell-start"
-                  type="date"
-                  className="w-48"
-                  value={start ?? ''}
-                  min={today ? addDays(today, -31) : undefined}
-                  max={today ? addDays(today, 90) : undefined}
-                  onChange={(event) => {
-                    setStartsOn(event.target.value);
-                  }}
-                />
-              </Field>
-            </>
-          )}
-          <FormMessage error={action.error} />
-          <FormActions>
-            <Button type="button" variant="outline" onClick={onClose}>
-              {t('common.cancel')}
-            </Button>
-            <Button type="submit" disabled={action.pending || !plan}>
-              {t('memberships.sell.confirm')}
-            </Button>
-          </FormActions>
-        </form>
-      )}
-    </Dialog>
-  );
-}
-
 function FreezeDialog({
   membership,
   onClose,
@@ -400,6 +259,11 @@ function FreezeDialog({
   const [days, setDays] = useState(String(Math.max(limits.minDays, Math.min(7, daysLeft))));
   const [reason, setReason] = useState('');
   const [source, setSource] = useState<FreezeSource>('staff');
+  const canTakePayment = useCan('payments.accept');
+  const hasFee = limits.feeMinor !== '0';
+  const [payFee, setPayFee] = useState(true);
+  const [method, setMethod] = useState<DeskPaymentMethod>('cash');
+  const [idempotencyKey] = useState(newIdempotencyKey);
   const dayCount = /^\d+$/.test(days) ? Number.parseInt(days, 10) : 0;
   const newEnd = dayCount > 0 ? addDays(membership.endsOn, dayCount) : null;
 
@@ -411,12 +275,19 @@ function FreezeDialog({
     }
     action.run(
       () =>
-        api.post(`/memberships/${membership.id}/freeze`, {
-          startsOn,
-          days: dayCount,
-          reason: reason.trim(),
-          source,
-        }),
+        api.post(
+          `/memberships/${membership.id}/freeze`,
+          {
+            startsOn,
+            days: dayCount,
+            reason: reason.trim(),
+            source,
+            ...(hasFee && canTakePayment && payFee
+              ? { payment: { method, amountMinor: limits.feeMinor } }
+              : {}),
+          },
+          { idempotencyKey },
+        ),
       onDone,
     );
   }
@@ -497,10 +368,26 @@ function FreezeDialog({
             })}
           </p>
         )}
-        {limits.feeMinor !== '0' && (
+        {hasFee && (
           <p className="text-sm text-muted-foreground">
             {t('memberships.freeze.fee', { amount: money(limits.feeMinor, membership.currency) })}
           </p>
+        )}
+        {hasFee && canTakePayment && (
+          <div className="flex flex-wrap items-center gap-3">
+            <CheckboxRow
+              label={t('billing.freeze.payNow')}
+              checked={payFee}
+              onChange={(event) => {
+                setPayFee(event.target.checked);
+              }}
+            />
+            {payFee && (
+              <div className="w-48">
+                <PaymentMethodSelect id="freeze-method" value={method} onChange={setMethod} />
+              </div>
+            )}
+          </div>
         )}
         <FormMessage error={action.error} />
         <FormActions>

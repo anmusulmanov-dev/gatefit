@@ -146,7 +146,9 @@
     "home": "Home",
     "settings": "Settings",
     "members": "Members",
-    "plans": "Plans"
+    "plans": "Plans",
+    "payments": "Payments",
+    "cashShift": "Cash desk"
   },
   "settings": {
     "title": "Settings",
@@ -706,6 +708,106 @@
       "reason": "Reason",
       "confirm": "Cancel membership",
       "reasonShown": "Cancelled: {reason}"
+    }
+  },
+  "billing": {
+    "method": "Payment method",
+    "methods": {
+      "cash": "Cash",
+      "card_terminal": "Card terminal",
+      "transfer": "Bank transfer",
+      "online": "Online"
+    },
+    "amount": "Amount",
+    "amountHint": "In {currency}",
+    "invalidAmount": "Enter a valid amount.",
+    "dueOn": "Pay the rest by",
+    "dueOnHint": "Without a date the rest is owed at once and the member is a debtor.",
+    "invoiceNumber": "Invoice {number}",
+    "invoiceStatus": {
+      "open": "Unpaid",
+      "partially_paid": "Partly paid",
+      "paid": "Paid",
+      "void": "Written off"
+    },
+    "overdue": "Overdue",
+    "refunded": "refunded {amount}",
+    "sale": {
+      "payment": "Payment",
+      "debt": "{amount} will be owed.",
+      "sellAndPay": "Sell and take {amount}",
+      "doneTitle": "Sold",
+      "sold": "{plan}: {from} – {to}.",
+      "paid": "Paid {paid} of {total}",
+      "owes": "owes {amount}"
+    },
+    "freeze": {
+      "payNow": "Take the fee now"
+    },
+    "receipt": {
+      "print": "Print receipt",
+      "sms": "Send by SMS",
+      "smsSent": "Receipt sent by SMS.",
+      "number": "Invoice",
+      "date": "Date",
+      "member": "Member",
+      "total": "Total",
+      "paid": "Paid ({method})",
+      "balance": "Still owed",
+      "thanks": "Thank you!"
+    },
+    "member": {
+      "title": "Invoices and payments",
+      "owes": "Owes {amount}",
+      "noInvoices": "No invoices yet.",
+      "amounts": "{paid} paid of {total}",
+      "dueOn": "pay by {date}",
+      "voided": "Written off: {reason}",
+      "payments": "Payments"
+    },
+    "pay": {
+      "action": "Pay {amount}",
+      "title": "Payment for invoice {number}",
+      "description": "Owed: {amount}. A part may be paid.",
+      "confirm": "Take payment"
+    },
+    "refund": {
+      "action": "Refund",
+      "title": "Refund",
+      "description": "Up to {left} can be given back, by the same method ({method}).",
+      "reason": "Reason",
+      "membershipHint": "The membership stays as it is; cancel it separately if needed.",
+      "confirm": "Refund"
+    },
+    "journal": {
+      "title": "Payments",
+      "from": "From",
+      "to": "To",
+      "allMethods": "All methods",
+      "empty": "No payments for these days.",
+      "total": "{count, plural, one {# payment} other {# payments}}, net {amount}"
+    },
+    "shift": {
+      "title": "Cash desk",
+      "open": "Shift open",
+      "openedAt": "since {time}",
+      "opening": "Cash at the start",
+      "cashIn": "Cash taken",
+      "cashRefunds": "Cash given back",
+      "expected": "Should be in the drawer",
+      "card": "Card terminal",
+      "transfer": "Transfers",
+      "count": "Payments",
+      "counted": "Cash counted",
+      "note": "Note",
+      "difference": "Difference: {amount}",
+      "close": "Close shift",
+      "none": "No shift is open. Cash cannot be taken until one is.",
+      "openAction": "Open shift",
+      "history": "Recent shifts",
+      "noHistory": "No closed shifts yet.",
+      "expectedShort": "expected {amount}",
+      "countedShort": "counted {amount}"
     }
   }
 }

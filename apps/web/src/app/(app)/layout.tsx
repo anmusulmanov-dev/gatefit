@@ -42,7 +42,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   return (
     <StaffSessionProvider staffId={me.staff.id} permissions={me.staff.permissions}>
       <div className="mx-auto flex min-h-dvh max-w-5xl flex-col px-4">
-        <header className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-b py-3">
+        <header className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-b py-3 print:hidden">
           <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
             <div className="flex items-baseline gap-3">
               <span className="text-lg font-semibold">{t('common.appName')}</span>

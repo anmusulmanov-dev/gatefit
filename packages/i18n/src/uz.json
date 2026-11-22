@@ -146,7 +146,9 @@
     "home": "Bosh sahifa",
     "settings": "Sozlamalar",
     "members": "A'zolar",
-    "plans": "Tariflar"
+    "plans": "Tariflar",
+    "payments": "To'lovlar",
+    "cashShift": "Kassa"
   },
   "settings": {
     "title": "Sozlamalar",
@@ -706,6 +708,106 @@
       "reason": "Sabab",
       "confirm": "Abonementni bekor qilish",
       "reasonShown": "Bekor qilingan: {reason}"
+    }
+  },
+  "billing": {
+    "method": "To'lov usuli",
+    "methods": {
+      "cash": "Naqd",
+      "card_terminal": "Karta terminali",
+      "transfer": "O'tkazma",
+      "online": "Onlayn"
+    },
+    "amount": "Summa",
+    "amountHint": "{currency} da",
+    "invalidAmount": "To'g'ri summa kiriting.",
+    "dueOn": "Qoldiqni to'lash muddati",
+    "dueOnHint": "Sana bo'lmasa qoldiq darhol to'lanishi kerak va a'zo qarzdor bo'ladi.",
+    "invoiceNumber": "Hisob {number}",
+    "invoiceStatus": {
+      "open": "To'lanmagan",
+      "partially_paid": "Qisman to'langan",
+      "paid": "To'langan",
+      "void": "Bekor qilingan"
+    },
+    "overdue": "Muddati o'tgan",
+    "refunded": "{amount} qaytarilgan",
+    "sale": {
+      "payment": "To'lov",
+      "debt": "{amount} qarz qoladi.",
+      "sellAndPay": "Sotish va {amount} qabul qilish",
+      "doneTitle": "Sotildi",
+      "sold": "{plan}: {from} – {to}.",
+      "paid": "{total} dan {paid} to'landi",
+      "owes": "qarz {amount}"
+    },
+    "freeze": {
+      "payNow": "Narxni hozir qabul qilish"
+    },
+    "receipt": {
+      "print": "Chekni chop etish",
+      "sms": "SMS bilan yuborish",
+      "smsSent": "Chek SMS bilan yuborildi.",
+      "number": "Hisob",
+      "date": "Sana",
+      "member": "A'zo",
+      "total": "Jami",
+      "paid": "To'landi ({method})",
+      "balance": "Qoldiq",
+      "thanks": "Rahmat!"
+    },
+    "member": {
+      "title": "Hisoblar va to'lovlar",
+      "owes": "Qarz {amount}",
+      "noInvoices": "Hozircha hisoblar yo'q.",
+      "amounts": "{total} dan {paid} to'langan",
+      "dueOn": "{date} gacha to'lash",
+      "voided": "Bekor qilingan: {reason}",
+      "payments": "To'lovlar"
+    },
+    "pay": {
+      "action": "{amount} to'lash",
+      "title": "{number} hisobi bo'yicha to'lov",
+      "description": "To'lanishi kerak: {amount}. Qisman to'lash mumkin.",
+      "confirm": "To'lovni qabul qilish"
+    },
+    "refund": {
+      "action": "Qaytarish",
+      "title": "Pulni qaytarish",
+      "description": "{left} gacha qaytarish mumkin, xuddi shu usulda ({method}).",
+      "reason": "Sabab",
+      "membershipHint": "Abonement o'zgarmaydi; kerak bo'lsa uni alohida bekor qiling.",
+      "confirm": "Qaytarish"
+    },
+    "journal": {
+      "title": "To'lovlar",
+      "from": "Dan",
+      "to": "Gacha",
+      "allMethods": "Barcha usullar",
+      "empty": "Bu kunlarda to'lov yo'q.",
+      "total": "{count} ta to'lov, jami {amount}"
+    },
+    "shift": {
+      "title": "Kassa",
+      "open": "Smena ochiq",
+      "openedAt": "{time} dan",
+      "opening": "Boshlang'ich naqd",
+      "cashIn": "Naqd qabul qilingan",
+      "cashRefunds": "Naqd qaytarilgan",
+      "expected": "Kassada bo'lishi kerak",
+      "card": "Karta terminali",
+      "transfer": "O'tkazmalar",
+      "count": "To'lovlar soni",
+      "counted": "Sanalgan naqd",
+      "note": "Izoh",
+      "difference": "Farq: {amount}",
+      "close": "Smenani yopish",
+      "none": "Smena ochilmagan. Smena ochilmaguncha naqd qabul qilib bo'lmaydi.",
+      "openAction": "Smenani ochish",
+      "history": "Oxirgi smenalar",
+      "noHistory": "Yopilgan smenalar hali yo'q.",
+      "expectedShort": "kutilgan {amount}",
+      "countedShort": "sanalgan {amount}"
     }
   }
 }
