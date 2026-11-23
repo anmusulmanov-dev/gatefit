@@ -7,14 +7,20 @@ import { completeTotpSetup, submitCredentials } from '../../support/sign-in.ts';
 // up within 30 minutes, with plans, staff and 500 members imported. Starts as the operator
 // signed in by platform-auth.spec.ts, then continues as the new organization's owner.
 
-const CLUB = {
-  name: 'E2E Fitness',
-  slug: 'e2e-fitness',
-  location: 'Markaz',
-  owner: { phone: '+998900009902', firstName: 'Jasur', lastName: 'Egamov' },
-  ownerPassword: 'e2e-fitness-owner',
-  staff: { phone: '+998900009903', firstName: 'Malika', lastName: 'Karimova' },
-};
+/**
+ * The club of one attempt. A retry (CI retries once) opens a club of its own: the failed
+ * attempt may already have created the first one, and slugs and staff phones are taken.
+ */
+function clubFor(attempt: number) {
+  return {
+    name: `E2E Fitness ${String(attempt + 1)}`,
+    slug: `e2e-fitness-${String(attempt + 1)}`,
+    location: 'Markaz',
+    owner: { phone: `+998900${String(attempt)}09902`, firstName: 'Jasur', lastName: 'Egamov' },
+    ownerPassword: 'e2e-fitness-owner',
+    staff: { phone: `+998900${String(attempt)}09903`, firstName: 'Malika', lastName: 'Karimova' },
+  };
+}
 const MEMBERS = 500;
 
 test('a new organization is set up with plans, staff and 500 members in 30 minutes', async ({
@@ -22,6 +28,7 @@ test('a new organization is set up with plans, staff and 500 members in 30 minut
   browser,
 }) => {
   test.setTimeout(5 * 60 * 1000);
+  const CLUB = clubFor(test.info().retry);
   const started = Date.now();
 
   // The operator opens the organization with its first location and owner.
@@ -92,8 +99,11 @@ test('a new organization is set up with plans, staff and 500 members in 30 minut
     buffer: Buffer.from(membersCsv(MEMBERS), 'utf8'),
   });
   await owner.getByRole('button', { name: t('members.importWizard.upload') }).click();
-  // The columns are recognized from their headers.
-  await owner.getByRole('button', { name: t('members.importWizard.validate') }).click();
+  // The columns are recognized from their headers. A failed upload shows its error instead:
+  // fail on it here rather than wait out the test timeout.
+  const validate = owner.getByRole('button', { name: t('members.importWizard.validate') });
+  await expect(validate).toBeVisible({ timeout: 30_000 });
+  await validate.click();
   await expect(owner.getByText(t('members.importWizard.valid', { count: MEMBERS }))).toBeVisible();
   await owner
     .getByRole('button', { name: t('members.importWizard.start', { count: MEMBERS }) })

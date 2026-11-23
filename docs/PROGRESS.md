@@ -45,6 +45,7 @@ Branch: `feat/m8d-e2e`. Yangi paket yo'q.
   - `member-app.spec.ts` — mezon 3: a'zo ilovasida SMS-kod bilan kirish va QR kodi.
   - `offline/reception-offline.spec.ts` — mezon 11: qabulxona internetsiz, brauzer soati 10 daqiqa suriladi, QR oflayn tekshiriladi va internet qaytgach jurnalga "QR, oflayn" bo'lib tushadi. Soat haqiqiy vaqtdan 10 daqiqa orqadan boshlanadi: API kelajakdagi kirishni rad etadi.
 - A'zo ilovasi e2e ga qo'shildi (:3101, `NEXT_DIST_DIR` qo'llab-quvvatlanadi). API chiqishi `apps/e2e/.output/api.log` ga (gitignore): konsol SMS drayveri kodni shu yerga yozadi, `support/sms.ts` o'qiydi. Mahsulot kodi o'zgarmadi.
+- E2e API fayllarni xotirada saqlaydi (`STORAGE_DRIVER=memory`): CI e2e job'ida MinIO yo'q. Birinchi CI ishga tushishida import yuklash shu sababli o'tmadi (lokalda MinIO bor edi), qayta urinish esa birinchi urinish ochgan tashkilot slug'iga urildi — endi har urinish o'z tashkilotini ochadi.
 - `platform-auth.spec.ts` operator sessiyasini saqlaydi (`operator` loyihasi uchun). `support/i18n.ts` dagi `t()` `{nom}` o'rinlarini to'ldiradi.
 - `docs/ACCEPTANCE.md`: 1, 2, 3, 11 — "Bor". 14 mezondan 13 tasi to'liq; 12 (WAL-G bilan vaqtga tiklash) prod serverda sinaladi.
 

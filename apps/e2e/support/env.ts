@@ -81,6 +81,9 @@ export function apiEnv(): Record<string, string> {
     APP_BASE_DOMAIN: 'localhost',
     TRUST_PROXY: 'true',
     SMS_DRIVER: 'console',
+    // Files (member imports, photos) in the API's memory: the suite needs no MinIO, and CI
+    // runs only PostgreSQL and Redis.
+    STORAGE_DRIVER: 'memory',
     LOG_LEVEL: 'warn',
     // Every request comes from one IP.
     RATE_LIMIT_PER_MINUTE: '1000000',
