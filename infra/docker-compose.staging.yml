@@ -142,7 +142,9 @@ services:
       - '443:443'
       - '443:443/udp'
     volumes:
-      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      # The directory, not the file: git replaces the Caddyfile on deploy, and a single-file
+      # bind mount would keep showing the old one to Caddy (reload would change nothing).
+      - ./caddy:/etc/caddy:ro
       # Certificates and the ACME account: losing them means re-issuing every certificate.
       - caddy-data:/data
       - caddy-config:/config
