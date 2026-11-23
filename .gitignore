@@ -22,6 +22,12 @@ Thumbs.db
 .deploy-failed
 .deploy.lock
 
+# Playwright (apps/e2e)
+.next-e2e
+.auth
+test-results
+playwright-report
+
 # Load test codes (pnpm --filter api load:tokens)
 infra/load/.tokens.json
 infra/load/results/

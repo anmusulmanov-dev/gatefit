@@ -15,6 +15,9 @@ const apiUrl = process.env.API_INTERNAL_URL;
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  // The e2e suite builds into its own directory (apps/e2e/support/env.ts): the API address
+  // below is fixed at build time, and the e2e API listens on a port of its own.
+  ...(process.env.NEXT_DIST_DIR ? { distDir: process.env.NEXT_DIST_DIR } : {}),
   // Container images (Dockerfile) set NEXT_OUTPUT=standalone: a self-contained server with
   // only the files it needs, traced from the monorepo root.
   ...(process.env.NEXT_OUTPUT === 'standalone'
