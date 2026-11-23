@@ -311,6 +311,22 @@ export class AccessService {
     return { recorded, duplicates: input.checkIns.length - recorded };
   }
 
+  /** Entries at a location in a time range, for the daily report. */
+  async dayVisits(
+    tx: TenantTransaction,
+    locationId: string,
+    from: Date,
+    to: Date,
+  ): Promise<{ entries: number; members: number; refused: number }> {
+    const where = { locationId, direction: 'in' as const, at: { gte: from, lt: to } };
+    const [entries, members, refused] = await Promise.all([
+      tx.checkIn.count({ where: { ...where, result: 'allowed' } }),
+      tx.checkIn.groupBy({ by: ['memberId'], where: { ...where, result: 'allowed' } }),
+      tx.checkIn.count({ where: { ...where, result: 'denied' } }),
+    ]);
+    return { entries, members: members.length, refused };
+  }
+
   // --- helpers ---
 
   private async decide(

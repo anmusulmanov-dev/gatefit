@@ -155,30 +155,32 @@ model Organization {
   updatedAt   DateTime           @updatedAt @map("updated_at") @db.Timestamptz(3)
   deletedAt   DateTime?          @map("deleted_at") @db.Timestamptz(3)
 
-  locations       Location[]
-  staff           Staff[]
-  staffLocations  StaffLocation[]
-  roles           Role[]
-  rolePermissions RolePermission[]
-  auditLogs       AuditLog[]
-  consents        Consent[]
-  sessions        Session[]
-  otpCodes        OtpCode[]
-  saasPlan        SaasPlan?          @relation(fields: [saasPlanId], references: [id])
-  subscriptions   SaasSubscription[]
-  members         Member[]
-  memberImports   MemberImport[]
-  plans           Plan[]
-  memberships     Membership[]
-  freezes         MembershipFreeze[]
-  idempotencyKeys IdempotencyKey[]
-  invoiceCounters InvoiceCounter[]
-  invoices        Invoice[]
-  invoiceItems    InvoiceItem[]
-  payments        Payment[]
-  refunds         Refund[]
-  cashShifts      CashShift[]
-  checkIns        CheckIn[]
+  locations             Location[]
+  staff                 Staff[]
+  staffLocations        StaffLocation[]
+  roles                 Role[]
+  rolePermissions       RolePermission[]
+  auditLogs             AuditLog[]
+  consents              Consent[]
+  sessions              Session[]
+  otpCodes              OtpCode[]
+  saasPlan              SaasPlan?              @relation(fields: [saasPlanId], references: [id])
+  subscriptions         SaasSubscription[]
+  members               Member[]
+  memberImports         MemberImport[]
+  plans                 Plan[]
+  memberships           Membership[]
+  freezes               MembershipFreeze[]
+  idempotencyKeys       IdempotencyKey[]
+  invoiceCounters       InvoiceCounter[]
+  invoices              Invoice[]
+  invoiceItems          InvoiceItem[]
+  payments              Payment[]
+  refunds               Refund[]
+  cashShifts            CashShift[]
+  checkIns              CheckIn[]
+  notificationTemplates NotificationTemplate[]
+  notifications         Notification[]
 
   @@map("organizations")
 }
@@ -338,15 +340,16 @@ model Member {
   updatedAt             DateTime     @updatedAt @map("updated_at") @db.Timestamptz(3)
   deletedAt             DateTime?    @map("deleted_at") @db.Timestamptz(3)
 
-  organization Organization  @relation(fields: [organizationId], references: [id])
-  user         User?         @relation(fields: [userId], references: [id])
-  homeLocation Location      @relation(fields: [organizationId, homeLocationId], references: [organizationId, id])
-  import       MemberImport? @relation(fields: [organizationId, importId], references: [organizationId, id])
-  consents     Consent[]
-  memberships  Membership[]
-  invoices     Invoice[]
-  payments     Payment[]
-  checkIns     CheckIn[]
+  organization  Organization   @relation(fields: [organizationId], references: [id])
+  user          User?          @relation(fields: [userId], references: [id])
+  homeLocation  Location       @relation(fields: [organizationId, homeLocationId], references: [organizationId, id])
+  import        MemberImport?  @relation(fields: [organizationId, importId], references: [organizationId, id])
+  consents      Consent[]
+  memberships   Membership[]
+  invoices      Invoice[]
+  payments      Payment[]
+  checkIns      CheckIn[]
+  notifications Notification[]
 
   @@unique([organizationId, id])
   @@unique([organizationId, phone])
@@ -938,4 +941,64 @@ model CheckIn {
   @@index([organizationId, locationId, at])
   @@index([organizationId, memberId, at])
   @@map("check_ins")
+}
+
+// --- Notifications (docs/TZ.md F-4.2, F-7.2 MVP part, docs/ADR/0011-notifications.md) ---
+
+// A club's own wording of a message in one language; without a row (or with a null body)
+// the standard text of packages/i18n is used.
+model NotificationTemplate {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  // packages/shared/src/notifications.ts NOTIFICATION_TEMPLATE_KEYS
+  key            String
+  // uz, ru, en
+  locale         String
+  // null: back to the standard wording.
+  body           String?
+  // users.id of who changed it last.
+  updatedBy      String   @map("updated_by") @db.Uuid
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@unique([organizationId, key, locale])
+  @@map("notification_templates")
+}
+
+enum NotificationStatus {
+  queued
+  sent
+  failed
+}
+
+// Every message sent or tried, with its text as sent. Rows change status only.
+model Notification {
+  id             String             @id @default(uuid(7)) @db.Uuid
+  organizationId String             @map("organization_id") @db.Uuid
+  memberId       String?            @map("member_id") @db.Uuid
+  // packages/shared/src/notifications.ts NOTIFICATION_KINDS
+  kind           String
+  channel        String             @default("sms")
+  // E.164 phone the message went to.
+  to             String
+  body           String
+  status         NotificationStatus @default(queued)
+  attempts       Int                @default(0)
+  // Short provider error of the last failed attempt; never the message or the phone.
+  lastError      String?            @map("last_error")
+  // Makes a message once only, e.g. expiry:<membership>:<last day>.
+  dedupeKey      String?            @map("dedupe_key")
+  sentAt         DateTime?          @map("sent_at") @db.Timestamptz(3)
+  createdAt      DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime           @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  member       Member?      @relation(fields: [organizationId, memberId], references: [organizationId, id])
+
+  @@unique([organizationId, id])
+  @@unique([organizationId, dedupeKey])
+  @@index([organizationId, memberId, createdAt])
+  @@map("notifications")
 }

@@ -9,7 +9,7 @@ Har sessiya oxirida yangilanadi: nima qilindi, nima qoldi, ma'lum muammolar.
 | 0.1 Loyiha karkasi                | Tayyor (2026-11-11)              |
 | 0.2 Ko'p mijozlilik va RLS        | Tayyor (2026-11-11)              |
 | 0.3 Autentifikatsiya va ruxsatlar | Tayyor (2026-11-17)              |
-| MVP (M1–M8)                       | Jarayonda (M1–M5 tayyor)         |
+| MVP (M1–M8)                       | Jarayonda (M1–M7 tayyor)         |
 | M1a Tashkilot ichki API           | Tayyor (2026-11-17)              |
 | M1b Platforma API                 | Tayyor (2026-11-17)              |
 | M1c Sozlamalar UI                 | Tayyor (2026-11-17)              |
@@ -25,6 +25,151 @@ Har sessiya oxirida yangilanadi: nima qilindi, nima qoldi, ma'lum muammolar.
 | M5b Qabulxona ekrani va jurnal    | Tayyor (2026-11-22)              |
 | M5c Oflayn qabulxona              | Tayyor (2026-11-22) — M5 yopildi |
 | M6a A'zo ilovasi API              | Tayyor (2026-11-22)              |
+| M6b A'zo PWA                      | Tayyor (2026-11-22)              |
+| M7a Xabarnomalar va hisobot API   | Tayyor (2026-11-22)              |
+| M7b Bosh sahifa va shablonlar UI  | Tayyor (2026-11-22) — M7 yopildi |
+| M8a Mezonlar, tarjima, xavfsizlik | Tayyor (2026-11-22)              |
+| M8b Prod infra, zaxira, tiklash   | Tayyor (2026-11-22)              |
+| M8c Demo ma'lumot, yuklama testi  | Tayyor (2026-11-23)              |
+
+## 2026-11-23 — M8c: demo ma'lumot va yuklama testi
+
+Branch: `feat/m8-demo-load` (`feat/m8-prod-infra` ustiga). Yangi npm paket yo'q; k6 Docker image'i (`grafana/k6:2.3.0`).
+
+### Qilindi
+
+- **`pnpm --filter api seed:demo`** (`prisma/seed-demo.ts`): asosiy seed'dan keyin; 300 a'zo (`+99890002xxxx`), ~85 % ga oxirgi 30 kunda sotilgan abonement (Oylik, Ertalabki oylik, 12 tashrif, Yillik) to'liq to'lov bilan (naqd/karta/o'tkazma), har kuni tashriflar (tashrifli tarifda limitdan keyin rad). Har a'zo uchun alohida tasodif generatori: takror ishga tushirish hech narsa qo'shmaydi.
+- **`pnpm --filter api load:tokens [daqiqa]`** (`prisma/load-tokens.ts`): faol abonementli 200 a'zo uchun keyingi daqiqalarning QR kodlari (bazaga yozmaydi), `infra/load/.tokens.json` (gitignore).
+- **`infra/load/k6.js`** va yo'riqnoma `infra/load/README.md`: 100 virtual foydalanuvchi (30 s o'sish, 2 daqiqa, 15 s pasayish), 70 % xodim sahifalari (a'zolar, qidiruv, kirishlar, to'lovlar, kunlik hisobot, tariflar, /me), 30 % QR tekshiruvi; har foydalanuvchi o'z `X-Forwarded-For` manzili bilan (IP cheklovi 100 kishini ko'rsin). Chegaralar: API p95 < 300 ms, QR p95 < 500 ms, xato < 1 %.
+- `.env.example`: `LOAD_STAFF_PHONE`, `LOAD_STAFF_PASSWORD` (TOTP'siz menejer).
+
+### Tekshirildi
+
+- `seed:demo` dev bazada: 300 a'zo, 254 abonement, ~1 750 tashrif; takror — 0 yangi. Birinchi variantda takror ishga tushirish 45 ta ortiqcha abonement yaratardi (umumiy tasodif ketma-ketligi siljirdi) — tuzatildi.
+- **Yuklama testi (lokal dev, bitta kompyuter, 2026-11-23)**: 9 436 so'rov, xato 0 %, tekshiruvlar 100 %; API p95 **28 ms**, QR p95 **35 ms**, eng sekin 220 ms. Birinchi urinishda QR so'rovlarining 48 % 403 qaytdi: ssenariy a'zoni uning filialida tekshirardi, menejer esa bitta filialga biriktirilgan — ssenariy xodim filialida tekshiradigan qilindi (haqiqiy qabulxona kabi).
+- `pnpm format:check`, `pnpm i18n:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` — yashil. **COUNTS**
+
+### Ma'lum
+
+- Natija bitta kompyuterda (API, baza va k6 birga) olingan: staging serverda takrorlash kerak (`infra/load/README.md`).
+
+## 2026-11-22 — M8b: production infratuzilma, zaxira va tiklash
+
+Branch: `feat/m8-prod-infra` (`feat/m8-acceptance` ustiga). Yangi paket yo'q; Postgres image'iga WAL-G v3.0.9 binari (sha256 bilan tekshiriladi).
+
+### Qilindi
+
+- **`infra/docker-compose.prod.yml`**: staging asosida; fayllar tashqi S3 da (MinIO yo'q), Postgres o'z image'i (`infra/postgres/Dockerfile`: postgres:16-bookworm + WAL-G) bilan `archive_mode=on`, `archive_timeout=60`; seed faqat platforma (`SEED_DEMO=false`); ACME sertifikatlar; faqat Caddy portlari ochiq.
+- **Seed**: `SEED_DEMO=false` — faqat SaaS tariflari va birinchi operator (demo tashkilotsiz).
+- **Zaxira** `infra/prod/backup.sh` (kunlik cron): WAL-G base backup (14 ta saqlanadi = 2 hafta istalgan vaqtga tiklash) va `pg_dump` tashqi S3 ga (`dumps/`, 30 kun), serverda nusxa qolmaydi. Uzluksiz WAL arxivi: ko'pi bilan ~1 daqiqa ma'lumot xavfda.
+- **Tiklash** `infra/prod/restore.sh pitr [vaqt]` (WAL-G: base backup + WAL qaytadan) va `restore.sh dump <obyekt>` (pg_restore).
+- **Tiklash mashqi** `infra/restore-drill.sh dev|staging|prod`: jonli bazadan dump → alohida bazaga tiklash → har jadval qatorlari soni solishtiriladi → alohida baza o'chiriladi. Prod'da haftalik cron.
+- **`docs/RUNBOOK.md`**: birinchi ishga tushirish, yangilash, zaxira, tiklash (vaqtga, dump'dan, yangi serverga), nosozliklar jadvali. `.env.example`: `SEED_DEMO`, `BACKUP_S3_*`.
+
+### Tekshirildi
+
+- `infra/restore-drill.sh dev` — o'tdi: 60 jadval, 312 qator bir xil tiklandi, 37 s. Birinchi urinishda xato topildi va tuzatildi (sikl ichidagi `docker exec` qolgan qatorlarni o'qib yuborardi — "1 jadval" degan noto'g'ri natija).
+- `docker compose -f infra/docker-compose.prod.yml config` — to'g'ri; barcha skriptlar `bash -n` dan o'tdi.
+- `pnpm format:check`, `pnpm i18n:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` — yashil. **COUNTS**
+
+### Sinalmagan (server kerak)
+
+- WAL-G bilan haqiqiy S3 ga arxiv va vaqtga tiklash (PITR): staging yoki prod serverda bir marta qo'lda (`docs/RUNBOOK.md` → Restoring), bucket va kalitlar kerak.
+- Prod image'larining to'liq build'i va ACME sertifikat olish: haqiqiy domen va ochiq IP kerak.
+
+## 2026-11-22 — M8a: qabul mezonlari, tarjima tekshiruvi, xavfsizlik ko'rigi
+
+Branch: `feat/m8-acceptance` (`feat/m7-dashboard-ui` ustiga). Anvar tasdiqlagan M8 javoblari: WAL-G + kunlik pg_dump, tashqi S3 env orqali; yuklama testi k6 (Docker); staging'da bir martalik yuklama va tiklash mashqi; demo seed alohida buyruq; e2e `feat/e2e-playwright` birlashgach. Yangi paket yo'q.
+
+### Qilindi
+
+- **`docs/ACCEPTANCE.md`**: 14 mezon → test fayli va bloki yoki "yo'q". Bor: 2, 4–10, 13. Qisman: 1, 3, 11 (e2e kerak). Yo'q: 12 (tiklash, M8b), 14 (yuklama, M8c).
+- **Tarjima tekshiruvi** `pnpm i18n:check` (`packages/i18n/scripts/check-translations.mjs`) va CI qadami: kalitlar bir xil, bo'sh matn yo'q, o'zgaruvchilar inglizchadagi bilan bir xil, inglizcha qolgan matn yo'q (ataylab bir xillar ro'yxati bilan). 770 matn. Buzilgan holat bilan sinab ko'rildi: ikkala xato topildi.
+- **Xavfsizlik tuzatishlari**: so'rov logida query qatori va qiymatlari yo'q (`requestForLog`; a'zo qidiruvida telefon logga tushardi — CLAUDE.md qoida 9); Caddy: HSTS, nosniff, `X-Frame-Options: DENY`, Referrer-Policy, Permissions-Policy (kamera faqat o'z sayti), `Server` sarlavhasi olib tashlandi; Swagger production'da o'chiq (`SWAGGER_ENABLED` bilan yoqiladi).
+
+### OWASP Top 10 ko'rigi
+
+- **A01 Ruxsatlar**: har endpointda bitta belgi (`endpoint-protection.int-spec.ts`), har jadvalda RLS (`rls-coverage.int-spec.ts`), filial cheklovi va "A B ni ko'rmaydi" testlari. Topilma yo'q.
+- **A02 Kriptografiya**: parol Argon2id (19 MiB, 2 iteratsiya), TOTP shifrlangan (AES-256-GCM, HKDF), cookie `httpOnly` + `sameSite=lax` + prod'da `secure`, QR Ed25519. Topilma yo'q.
+- **A03 Injection**: faqat Prisma va teglangan `$queryRaw` (`Unsafe` chaqiriqlari yo'q), kirish zod bilan. Topilma yo'q.
+- **A04 Dizayn**: pul amallarida idempotentlik, so'rov tezligi cheklovi, OTP urinishlari cheklovi, QR 60 soniya + 5 daqiqalik takror skan qoidasi. QR 60 soniya ichida skrinshot bilan ishlashi mumkin — qabul qilingan xavf (ADR 0010).
+- **A05 Sozlamalar**: xavfsizlik sarlavhalari va Swagger tuzatildi. **Qoldi**: web va member uchun Content-Security-Policy (Next inline skriptlari bilan ehtiyotkor sozlash kerak).
+- **A06 Komponentlar**: CI'da `pnpm audit` (prod high, hammasi critical). Topilma yo'q.
+- **A07 Autentifikatsiya**: kirishda tezlik cheklovi, owner/accountant uchun TOTP, sessiya har so'rovda bazadan tekshiriladi, chiqish va hamma qurilmadan chiqish. Topilma yo'q.
+- **A08 Yaxlitlik**: `--frozen-lockfile`, service worker API javoblarini keshlamaydi. Topilma yo'q.
+- **A09 Log**: telefon query orqali logga tushardi — tuzatildi; `last_error` da telefon va matn yo'q. Topilma yopildi.
+- **A10 SSRF**: foydalanuvchi bergan URL'ga so'rov yo'q (S3, Eskiz manzillari faqat env'dan). Topilma yo'q.
+
+### Tekshirildi
+
+- `pnpm format:check`, `pnpm i18n:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` — yashil. **COUNTS**
+- `request-log.spec.ts`: query va telefon logda yo'q.
+- Caddyfile o'zgarishi lokal Docker bilan tekshirilmadi (image yuklanmadi): staging deploy'da `caddy validate` bilan tekshiriladi.
+
+## 2026-11-22 — M7b: bosh sahifa va xabar shablonlari (web)
+
+Branch: `feat/m7-dashboard-ui` (`feat/m7-notifications-api` ustiga). Yangi paket yo'q.
+
+### Qilindi
+
+- **Bosh sahifa** (`reports.daily` bo'lsa): kun xulosasi — filial va kun tanlash, sof tushum (qaytarilgani bilan), yangi a'zolar, tashriflar (a'zolar, rad), bir haftada tugaydiganlar; usullar bo'yicha tushum; tugaydigan abonementlar ro'yxati (a'zo kartasiga havola, telefon).
+- **Sozlamalar → Xabarlar** (`notifications.manage`): til bo'yicha chek va muddat eslatmasi matnlari, o'zgaruvchilar, belgilar soni, namuna ko'rinishi, saqlash va standartga qaytarish; noma'lum o'zgaruvchi xatosi.
+- Tarjimalar uz/ru/en (`dashboard.*`, `messages.*`, `permissionAreas.notifications`).
+
+### Tekshirildi
+
+- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` — yashil. **COUNTS**
+- Brauzerda (`demo.localhost`, owner): Chilonzor bugungi xulosa M4–M5 sinov ma'lumotiga mos (sof 900 000, qaytarilgan 50 000; karta 250 000, naqd 550 000, o'tkazma 150 000; tashriflar 3, 2 a'zo, 1 rad; 2 ta tugaydigan); shablon — noma'lum `{xato}` bilan xato xabari, tuzatib saqlash ("Klub matni"), standartga qaytarish; 375 px da gorizontal aylantirish yo'q.
+
+### Qoldi
+
+- A'zo kartasida yuborilgan xabarlar ro'yxati (API bor: `GET /notifications?memberId=`) — kerak bo'lsa keyin.
+
+## 2026-11-22 — M7a: xabarnomalar va kunlik hisobot (API)
+
+Branch: `feat/m7-notifications-api` (`feat/m6-member-pwa` ustiga). Qaror: `docs/ADR/0011-notifications.md`. Anvar tasdiqlagan javoblar: Eskiz drayveri soxta HTTP bilan, haqiqiy hisob keyin; eslatma tugashiga 3 kun qolganda soat 10:00 da (filial vaqti); tahrirlanadigan shablonlar — muddat eslatmasi va chek (OTP emas); qayta urinish 1, 5, 30 daqiqa; kunlik hisobot faqat web'da. Yangi paket yo'q.
+
+### Qilindi
+
+- **Jadvallar** (RLS): `notification_templates` (body null = standart), `notifications` (matn, holat, urinishlar, `dedupe_key`). `notifications.manage` yangi ruxsat — mavjud owner/manager rollariga migratsiya bilan qo'shildi.
+- **`NotificationsService`**: shablon + tashkilot tili, jurnal, commit'dan keyin BullMQ navbati, 3 qayta urinish, keyin `failed`. Chek SMS'i endi shu orqali (klub matni bilan).
+- **Eskiz** SMS drayveri (`SMS_DRIVER=eskiz`, `ESKIZ_EMAIL/PASSWORD/FROM`), `.env.example` yangilandi.
+- **`ExpiryReminderJob`** (soatlik): oxirgi kunga 3 kun qolganda, 10:00 dan keyin, bir marta.
+- **API**: `GET /notification-templates`, `PUT /notification-templates/{key}/{locale}` (audit), `GET /notifications?memberId=`, `GET /reports/daily?locationId=&date=` (tushum usullar bo'yicha, qaytarish, sof; yangi a'zolar; kirishlar, a'zolar, rad; 7 kunda tugaydiganlar).
+
+### Tekshirildi
+
+- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` — yashil. **COUNTS**
+- `test/notifications.int-spec.ts` (6): chek navbat orqali yuboriladi va `sent` bo'ladi, a'zo kartasida ro'yxat; klub shabloni ishlatiladi, noma'lum o'zgaruvchi 422, ruxsatsiz 403, standartga qaytish, audit; qayta urinish (yiqilgan → `queued`, keyin `sent`, qayta yuborilmaydi; oxirgi urinish → `failed`); eslatma 09:30 da yo'q, 10:30 da bir marta (takror ishga tushganda ham); kunlik hisobot (usullar, qaytarish, sof, yangi a'zolar, kirishlar, tugaydiganlar, boshqa sana); filial va tashkilot ajratilgan.
+- Birlik: Eskiz drayveri (kirish, token, 401 da qayta kirish, xatoda telefon va matn yo'q).
+
+### Ma'lum muammolar
+
+- Haqiqiy Eskiz bilan yuborish sinalmagan: hisob va tasdiqlangan shablonlar kerak.
+- Chek SMS'i endi navbat orqali: tugma bosilganda "yuborildi" degani "navbatga qo'yildi" degani.
+
+## 2026-11-22 — M6b: a'zo PWA
+
+Branch: `feat/m6-member-pwa` (`feat/m6-member-api` ustiga). Yangi paket: `qrcode` (+ `@types/qrcode`) — QR rasmini SVG sifatida chizish uchun (Anvar tasdiqlagan).
+
+### Qilindi
+
+- **Bosh sahifa**: QR kod (har 30 soniyada yangi, ortga sanash), abonement holati (tarif, holat, davr, qolgan kun yoki tashrif), qarz bo'lsa ogohlantirish.
+- **Oflayn QR**: `/me/qr` dagi hozirgi va keyingi 4 kod `localStorage` da saqlanadi; tarmoq bo'lmasa navbatdagi saqlangan kod ko'rsatiladi (~2,5 daqiqa) va "Internet yo'q" xabari chiqadi.
+- **Sahifalar**: abonementlar tarixi, to'lovlar (usul, filial, hisob, qaytarilgan; qarz), profil (ism, telefon, asosiy filial, til, chiqish). Pastki menyu.
+- **PWA**: service worker (`public/sw.js`, faqat production'da): sahifalar network-first, `_next/static` cache-first, `/api` keshlanmaydi. Manifest avvaldan bor.
+- Tarjimalar uz/ru/en (`member.*`). Sanalar raqamli (brauzerlarda o'zbekcha oy nomlari yo'q).
+
+### Tekshirildi
+
+- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` — yashil. **COUNTS**
+- Brauzerda, 360 px (`demo.localhost:3001`, demo a'zo SMS-kod bilan): QR va ortga sanash, "Oylik · Faol · 30 kun qoldi"; abonementlar, to'lovlar (qaytarilgan summa bilan), profil; gorizontal aylantirish yo'q. `/me/qr` so'rovi sun'iy uzilganda saqlangan keyingi kod va "Internet yo'q" xabari ko'rsatildi.
+- Tekshiruvda tuzatildi: o'zbekcha sanalar "2026 M11 22" bo'lib chiqardi.
+
+### Ma'lum muammolar
+
+- Service worker faqat production build'da ishlaydi: dev'da sinalmagan; staging'da tekshirish kerak (ilovani o'rnatish, samolyot rejimida ochish).
+- Mezon 3 uchun e2e test hali yo'q: `feat/e2e-playwright` birlashgach qo'shiladi.
 
 ## 2026-11-22 — M6a: a'zo ilovasi uchun API
 
@@ -42,7 +187,7 @@ Branch: `feat/m6-member-api` (`feat/m5-access-offline` ustiga). Anvar tasdiqlaga
 
 ### Qoldi
 
-- M6b: PWA sahifalari (QR, abonement, tarixlar, profil, til), service worker, oflayn QR, 360 px.
+- M6b: yuqoridagi yozuv.
 - Mezon 3 e2e — Playwright birlashgach.
 
 ## 2026-11-22 — M5c: oflayn qabulxona (web)

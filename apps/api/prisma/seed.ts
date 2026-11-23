@@ -171,6 +171,25 @@ async function seed(prisma: PrismaClient): Promise<void> {
     });
     planIds.set(key, row.id);
   }
+  // The platform operator. An existing one keeps their password and authenticator.
+  const operatorPhone = phoneSchema.parse(requireEnv('SEED_PLATFORM_ADMIN_PHONE'));
+  await prisma.platformAdmin.upsert({
+    where: { phone: operatorPhone },
+    update: {},
+    create: {
+      phone: operatorPhone,
+      name: 'Platform operator',
+      passwordHash: await new PasswordService().hash(requireEnv('SEED_PLATFORM_ADMIN_PASSWORD')),
+    },
+  });
+
+  // Production seeds the platform only (SEED_DEMO=false): SaaS plans and the first
+  // operator. Organizations are then created in the platform panel.
+  if (process.env.SEED_DEMO === 'false') {
+    console.log('Seeded the platform: 3 SaaS plans, 1 platform operator (no demo organization).');
+    return;
+  }
+
   const demoPlanId = planIds.get('standard');
   if (!demoPlanId) {
     throw new Error('The standard plan was not created');
@@ -466,18 +485,6 @@ async function seed(prisma: PrismaClient): Promise<void> {
       data: { status: memberStatusFrom(member.status, [status], debtor) },
     });
   }
-
-  // The platform operator. An existing one keeps their password and authenticator.
-  const operatorPhone = phoneSchema.parse(requireEnv('SEED_PLATFORM_ADMIN_PHONE'));
-  await prisma.platformAdmin.upsert({
-    where: { phone: operatorPhone },
-    update: {},
-    create: {
-      phone: operatorPhone,
-      name: 'Demo Operator',
-      passwordHash: await new PasswordService().hash(requireEnv('SEED_PLATFORM_ADMIN_PASSWORD')),
-    },
-  });
 
   console.log(
     `Seeded organization "${organization.slug}": ${locations.length} locations, ${SYSTEM_ROLES.length} roles, 1 owner, ${DEMO_MEMBER_COUNT} members, ${CLUB_PLANS.length} club plans, demo memberships, 3 SaaS plans, 1 platform operator (credentials: SEED_* in .env).`,

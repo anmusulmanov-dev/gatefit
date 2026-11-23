@@ -21,3 +21,7 @@ Thumbs.db
 .deployed
 .deploy-failed
 .deploy.lock
+
+# Load test codes (pnpm --filter api load:tokens)
+infra/load/.tokens.json
+infra/load/results/

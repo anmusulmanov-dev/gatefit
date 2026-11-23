@@ -1,0 +1,160 @@
+# Production: the whole platform on one server behind Caddy (docs/RUNBOOK.md). From the
+# repository root:
+#   docker compose --project-name gatefit --env-file .env -f infra/docker-compose.prod.yml up -d
+# Differs from staging: files in an external S3 bucket (no MinIO), PostgreSQL archives
+# every WAL segment and a nightly base backup to an external S3 bucket through WAL-G, the
+# seed creates the platform only (no demo organization), public certificates (ACME).
+# Only Caddy publishes ports.
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: 20m
+    max-file: '10'
+
+x-app-env: &app-env
+  env_file: ../.env
+  restart: unless-stopped
+  logging: *logging
+
+services:
+  postgres:
+    build:
+      context: ./postgres
+    image: gatefit-postgres
+    restart: unless-stopped
+    logging: *logging
+    shm_size: 256mb
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      DB_APP_PASSWORD: ${DB_APP_PASSWORD}
+      DB_MIGRATOR_PASSWORD: ${DB_MIGRATOR_PASSWORD}
+      # Off-site backups (docs/RUNBOOK.md): a bucket in another provider or region.
+      WALG_S3_PREFIX: ${BACKUP_S3_PREFIX}
+      AWS_ENDPOINT: ${BACKUP_S3_ENDPOINT}
+      AWS_REGION: ${BACKUP_S3_REGION}
+      AWS_ACCESS_KEY_ID: ${BACKUP_S3_ACCESS_KEY}
+      AWS_SECRET_ACCESS_KEY: ${BACKUP_S3_SECRET_KEY}
+      AWS_S3_FORCE_PATH_STYLE: ${BACKUP_S3_FORCE_PATH_STYLE:-true}
+      WALG_COMPRESSION_METHOD: brotli
+    command:
+      - postgres
+      - -c
+      - wal_level=replica
+      - -c
+      - archive_mode=on
+      - -c
+      - archive_command=/usr/local/bin/wal-g.sh wal-push %p
+      # A segment at least every minute even when quiet: at most a minute of data at risk.
+      - -c
+      - archive_timeout=60
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./postgres/init.sh:/docker-entrypoint-initdb.d/10-init.sh:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    logging: *logging
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # One-shot: migrations, then the platform seed (SaaS plans and the first operator only).
+  migrate:
+    build: &api-build
+      context: ..
+      target: api
+    image: gatefit-api
+    env_file: ../.env
+    environment:
+      SEED_DEMO: 'false'
+    logging: *logging
+    user: root
+    command: ['sh', '-c', 'pnpm prisma migrate deploy && pnpm seed']
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: 'no'
+
+  api:
+    <<: *app-env
+    build: *api-build
+    image: gatefit-api
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://localhost:8000/api/v1/health').then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+
+  web:
+    <<: *app-env
+    build:
+      context: ..
+      target: web
+    image: gatefit-web
+    environment:
+      API_INTERNAL_URL: http://api:8000
+    depends_on:
+      - api
+
+  member:
+    <<: *app-env
+    build:
+      context: ..
+      target: member
+    image: gatefit-member
+    environment:
+      API_INTERNAL_URL: http://api:8000
+    depends_on:
+      - api
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    logging: *logging
+    environment:
+      APP_BASE_DOMAIN: ${APP_BASE_DOMAIN}
+      CADDY_TLS_ISSUER: acme
+    ports:
+      - '80:80'
+      - '443:443'
+      - '443:443/udp'
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - api
+      - web
+      - member
+
+volumes:
+  postgres-data:
+  redis-data:
+  caddy-data:
+  caddy-config:

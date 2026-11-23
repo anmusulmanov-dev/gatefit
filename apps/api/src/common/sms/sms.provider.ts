@@ -1,8 +1,9 @@
 import { Global, Injectable, Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { Env } from '../../config/env';
+import { EskizSmsProvider } from './eskiz-sms.provider';
 
-/** Port for sending SMS. Real drivers (Eskiz, Play Mobile) are added in stage M7. */
+/** Port for sending SMS. Drivers: console (development) and Eskiz. */
 export interface SmsProvider {
   send(to: string, text: string): Promise<void>;
 }
@@ -23,8 +24,15 @@ export class ConsoleSmsProvider implements SmsProvider {
 }
 
 // A new driver is added here and to the SMS_DRIVER enum in src/config/env.ts.
-const drivers: Record<Env['SMS_DRIVER'], () => SmsProvider> = {
+const drivers: Record<Env['SMS_DRIVER'], (config: ConfigService<Env, true>) => SmsProvider> = {
   console: () => new ConsoleSmsProvider(),
+  eskiz: (config) =>
+    new EskizSmsProvider({
+      baseUrl: config.get('ESKIZ_BASE_URL', { infer: true }),
+      email: config.get('ESKIZ_EMAIL', { infer: true }),
+      password: config.get('ESKIZ_PASSWORD', { infer: true }),
+      from: config.get('ESKIZ_FROM', { infer: true }),
+    }),
 };
 
 @Global()
@@ -34,7 +42,7 @@ const drivers: Record<Env['SMS_DRIVER'], () => SmsProvider> = {
       provide: SMS_PROVIDER,
       inject: [ConfigService],
       useFactory: (config: ConfigService<Env, true>): SmsProvider =>
-        drivers[config.get('SMS_DRIVER', { infer: true })](),
+        drivers[config.get('SMS_DRIVER', { infer: true })](config),
     },
   ],
   exports: [SMS_PROVIDER],

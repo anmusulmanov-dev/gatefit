@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { LoggerModule } from 'nestjs-pino';
 import type { AppConfigService } from '../../config/config.module';
 import { resolveRequestId } from './request-id';
+import { requestForLog, type SerializedRequest } from './request-log';
 
 // Never log credentials or personal data (CLAUDE.md rule 9).
 const redactedPaths = [
@@ -26,6 +27,8 @@ const redactedPaths = [
             level: nodeEnv === 'test' ? 'silent' : config.get('LOG_LEVEL', { infer: true }),
             genReqId: resolveRequestId,
             redact: { paths: redactedPaths, censor: '[redacted]' },
+            // Query strings carry search terms (phones) and must not reach the logs.
+            serializers: { req: (req: SerializedRequest) => requestForLog(req) },
             // JSON lines everywhere except local development.
             transport:
               nodeEnv === 'development'

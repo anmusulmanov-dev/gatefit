@@ -106,6 +106,7 @@
     "CASH_SHIFT_ALREADY_OPEN": "A cash shift is already open at this location.",
     "CASH_SHIFT_CLOSED": "This cash shift is already closed.",
     "INVALID_DUE_DATE": "The due date cannot be in the past.",
+    "INVALID_TEMPLATE": "The text uses a placeholder this message does not have.",
     "FILE_REQUIRED": "Choose a file.",
     "FILE_TOO_LARGE": "The file is too large (up to 5 MB).",
     "UNSUPPORTED_FILE_TYPE": "Use a JPEG, PNG or WebP image.",
@@ -124,7 +125,8 @@
   },
   "sms": {
     "otp": "Gatefit: your sign-in code is {code}. Do not share it.",
-    "receipt": "{organization}: payment of {amount} received. Invoice {number}, still owed {balance}."
+    "receipt": "{organization}: payment of {amount} received. Invoice {number}, still owed {balance}.",
+    "expiryReminder": "{organization}: {name}, your {plan} membership ends on {date} ({days} days left). Renew it at the front desk."
   },
   "web": {
     "home": {
@@ -139,7 +141,42 @@
   "member": {
     "home": {
       "title": "Member app",
-      "subtitle": "Your membership and entry code will live here."
+      "subtitle": "Your membership and entry code will live here.",
+      "membership": "Membership",
+      "noMembership": "No membership in force. Ask at the front desk."
+    },
+    "loading": "Loading…",
+    "loadFailed": "Could not load. Check the connection and try again.",
+    "nav": {
+      "label": "Sections",
+      "home": "Home",
+      "memberships": "Memberships",
+      "payments": "Payments",
+      "profile": "Profile"
+    },
+    "qr": {
+      "title": "Entry code",
+      "alt": "Your entry QR code",
+      "loading": "Getting your code…",
+      "noCode": "No working code. Connect to the internet.",
+      "refreshIn": "New code in {seconds} s",
+      "offline": "No internet: showing a saved code. It works for a couple of minutes.",
+      "hint": "Show this code at the front desk scanner."
+    },
+    "memberships": {
+      "title": "Memberships",
+      "empty": "No memberships yet."
+    },
+    "payments": {
+      "title": "Payments",
+      "empty": "No payments yet.",
+      "owed": "You owe {amount}"
+    },
+    "profile": {
+      "title": "Profile",
+      "phone": "Phone",
+      "location": "Home location",
+      "changeHint": "To change your details, ask at the front desk."
     }
   },
   "nav": {
@@ -160,6 +197,7 @@
       "locations": "Locations",
       "staff": "Staff",
       "roles": "Roles",
+      "messages": "Messages",
       "account": "My account"
     }
   },
@@ -282,6 +320,7 @@
     "payments": "Payments",
     "cash_shifts": "Cash desk",
     "reports": "Reports",
+    "notifications": "Messages",
     "audit": "Audit"
   },
   "permissions": {
@@ -333,6 +372,9 @@
     "reports": {
       "daily": "Daily report",
       "financial": "Financial reports"
+    },
+    "notifications": {
+      "manage": "Message templates"
     },
     "audit": {
       "read": "View audit log"
@@ -891,5 +933,42 @@
       "decided": "Checked offline: it will be sent when the internet is back.",
       "noSnapshot": "No internet and no saved member list for this location yet. Let the member in by hand when the internet is back."
     }
+  },
+  "dashboard": {
+    "title": "Day at a glance",
+    "location": "Location",
+    "date": "Day",
+    "noLocation": "You are not assigned to any location.",
+    "net": "Takings (net)",
+    "refunds": "refunded {amount}",
+    "newMembers": "New members",
+    "visits": "Visits",
+    "visitsHint": "{members} members · {refused} refused",
+    "expiring": "Ending within a week",
+    "byMethod": "Takings by method",
+    "count": "{count, plural, one {# payment} other {# payments}}",
+    "noPayments": "No payments that day.",
+    "expiringTitle": "Memberships ending within a week",
+    "noExpiring": "None end within a week."
+  },
+  "messages": {
+    "intro": "Texts of the SMS the club sends. Placeholders in braces are filled in for each member. Eskiz must approve every new text before it can be sent.",
+    "language": "Language",
+    "locales": {
+      "uz": "O'zbekcha",
+      "ru": "Русский",
+      "en": "English"
+    },
+    "keys": {
+      "payment_receipt": "Payment receipt",
+      "expiry_reminder": "Membership ending reminder (3 days before)"
+    },
+    "standard": "Standard",
+    "custom": "Club text",
+    "variables": "Placeholders:",
+    "length": "{count} characters",
+    "preview": "Preview",
+    "reset": "Back to standard",
+    "save": "Save"
   }
 }
