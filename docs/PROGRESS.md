@@ -29,6 +29,31 @@ Har sessiya oxirida yangilanadi: nima qilindi, nima qoldi, ma'lum muammolar.
 | M7a Xabarnomalar va hisobot API   | Tayyor (2026-11-22)              |
 | M7b Bosh sahifa va shablonlar UI  | Tayyor (2026-11-22) — M7 yopildi |
 | M8a Mezonlar, tarjima, xavfsizlik | Tayyor (2026-11-22)              |
+| M8b Prod infra, zaxira, tiklash   | Tayyor (2026-11-22)              |
+
+## 2026-11-22 — M8b: production infratuzilma, zaxira va tiklash
+
+Branch: `feat/m8-prod-infra` (`feat/m8-acceptance` ustiga). Yangi paket yo'q; Postgres image'iga WAL-G v3.0.9 binari (sha256 bilan tekshiriladi).
+
+### Qilindi
+
+- **`infra/docker-compose.prod.yml`**: staging asosida; fayllar tashqi S3 da (MinIO yo'q), Postgres o'z image'i (`infra/postgres/Dockerfile`: postgres:16-bookworm + WAL-G) bilan `archive_mode=on`, `archive_timeout=60`; seed faqat platforma (`SEED_DEMO=false`); ACME sertifikatlar; faqat Caddy portlari ochiq.
+- **Seed**: `SEED_DEMO=false` — faqat SaaS tariflari va birinchi operator (demo tashkilotsiz).
+- **Zaxira** `infra/prod/backup.sh` (kunlik cron): WAL-G base backup (14 ta saqlanadi = 2 hafta istalgan vaqtga tiklash) va `pg_dump` tashqi S3 ga (`dumps/`, 30 kun), serverda nusxa qolmaydi. Uzluksiz WAL arxivi: ko'pi bilan ~1 daqiqa ma'lumot xavfda.
+- **Tiklash** `infra/prod/restore.sh pitr [vaqt]` (WAL-G: base backup + WAL qaytadan) va `restore.sh dump <obyekt>` (pg_restore).
+- **Tiklash mashqi** `infra/restore-drill.sh dev|staging|prod`: jonli bazadan dump → alohida bazaga tiklash → har jadval qatorlari soni solishtiriladi → alohida baza o'chiriladi. Prod'da haftalik cron.
+- **`docs/RUNBOOK.md`**: birinchi ishga tushirish, yangilash, zaxira, tiklash (vaqtga, dump'dan, yangi serverga), nosozliklar jadvali. `.env.example`: `SEED_DEMO`, `BACKUP_S3_*`.
+
+### Tekshirildi
+
+- `infra/restore-drill.sh dev` — o'tdi: 60 jadval, 312 qator bir xil tiklandi, 37 s. Birinchi urinishda xato topildi va tuzatildi (sikl ichidagi `docker exec` qolgan qatorlarni o'qib yuborardi — "1 jadval" degan noto'g'ri natija).
+- `docker compose -f infra/docker-compose.prod.yml config` — to'g'ri; barcha skriptlar `bash -n` dan o'tdi.
+- `pnpm format:check`, `pnpm i18n:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` — yashil. **COUNTS**
+
+### Sinalmagan (server kerak)
+
+- WAL-G bilan haqiqiy S3 ga arxiv va vaqtga tiklash (PITR): staging yoki prod serverda bir marta qo'lda (`docs/RUNBOOK.md` → Restoring), bucket va kalitlar kerak.
+- Prod image'larining to'liq build'i va ACME sertifikat olish: haqiqiy domen va ochiq IP kerak.
 
 ## 2026-11-22 — M8a: qabul mezonlari, tarjima tekshiruvi, xavfsizlik ko'rigi
 
