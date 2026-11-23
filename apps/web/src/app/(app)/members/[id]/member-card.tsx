@@ -18,6 +18,7 @@ import { useApiAction, useApiGet } from '@/lib/use-api';
 import { MemberForm } from '../member-form';
 import type { MemberScope } from '../member-scope';
 import { fullName, MemberAvatar, MemberStatusBadge } from '../member-ui';
+import { BillingSection } from './billing-section';
 import { MembershipsSection } from './memberships-section';
 
 export function MemberCard({ id, scope }: { id: string; scope: MemberScope }) {
@@ -25,6 +26,9 @@ export function MemberCard({ id, scope }: { id: string; scope: MemberScope }) {
   const format = useFormatter();
   const canManage = useCan('members.manage');
   const canArchive = useCan('members.archive');
+  const canSeePayments = useCan('payments.read');
+  // Bumped when a sale or freeze may have billed something, so the billing lists reload.
+  const [billingVersion, setBillingVersion] = useState(0);
   const member = useApiGet<MemberDto>(`/members/${id}`);
   const action = useApiAction();
   const [editing, setEditing] = useState(false);
@@ -220,8 +224,19 @@ export function MemberCard({ id, scope }: { id: string; scope: MemberScope }) {
             homeLocationId={data.homeLocation.id}
             archived={data.archived}
             scope={scope}
-            onChanged={member.reload}
+            onChanged={() => {
+              member.reload();
+              setBillingVersion((current) => current + 1);
+            }}
           />
+          {canSeePayments && (
+            <BillingSection
+              memberId={id}
+              archived={data.archived}
+              version={billingVersion}
+              onChanged={member.reload}
+            />
+          )}
         </>
       )}
 

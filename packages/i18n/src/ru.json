@@ -146,7 +146,9 @@
     "home": "Главная",
     "settings": "Настройки",
     "members": "Клиенты",
-    "plans": "Тарифы"
+    "plans": "Тарифы",
+    "payments": "Оплаты",
+    "cashShift": "Касса"
   },
   "settings": {
     "title": "Настройки",
@@ -706,6 +708,109 @@
       "reason": "Причина",
       "confirm": "Отменить абонемент",
       "reasonShown": "Отменён: {reason}"
+    }
+  },
+  "billing": {
+    "method": "Способ оплаты",
+    "methods": {
+      "cash": "Наличные",
+      "card_terminal": "Терминал",
+      "transfer": "Перевод",
+      "online": "Онлайн"
+    },
+    "amount": "Сумма",
+    "amountHint": "В {currency}",
+    "invalidAmount": "Введите корректную сумму.",
+    "dueOn": "Оплатить остаток до",
+    "dueOnHint": "Без даты остаток должен быть оплачен сразу, клиент станет должником.",
+    "invoiceNumber": "Счёт {number}",
+    "invoiceStatus": {
+      "open": "Не оплачен",
+      "partially_paid": "Оплачен частично",
+      "paid": "Оплачен",
+      "void": "Списан"
+    },
+    "items": {
+      "freezeFee": "Плата за заморозку: {plan}"
+    },
+    "overdue": "Просрочен",
+    "refunded": "возвращено {amount}",
+    "sale": {
+      "payment": "Оплата",
+      "debt": "Останется долг {amount}.",
+      "sellAndPay": "Продать и принять {amount}",
+      "doneTitle": "Продано",
+      "sold": "{plan}: {from} – {to}.",
+      "paid": "Оплачено {paid} из {total}",
+      "owes": "долг {amount}"
+    },
+    "freeze": {
+      "payNow": "Принять плату сейчас"
+    },
+    "receipt": {
+      "print": "Печать чека",
+      "sms": "Отправить по SMS",
+      "smsSent": "Чек отправлен по SMS.",
+      "number": "Счёт",
+      "date": "Дата",
+      "member": "Клиент",
+      "total": "Итого",
+      "paid": "Оплачено ({method})",
+      "balance": "Остаток",
+      "thanks": "Спасибо!"
+    },
+    "member": {
+      "title": "Счета и оплаты",
+      "owes": "Долг {amount}",
+      "noInvoices": "Счетов пока нет.",
+      "amounts": "оплачено {paid} из {total}",
+      "dueOn": "оплатить до {date}",
+      "voided": "Списан: {reason}",
+      "payments": "Оплаты"
+    },
+    "pay": {
+      "action": "Оплатить {amount}",
+      "title": "Оплата счёта {number}",
+      "description": "К оплате: {amount}. Можно оплатить частично.",
+      "confirm": "Принять оплату"
+    },
+    "refund": {
+      "action": "Возврат",
+      "title": "Возврат",
+      "description": "Можно вернуть до {left}, тем же способом ({method}).",
+      "reason": "Причина",
+      "membershipHint": "Абонемент не меняется; при необходимости отмените его отдельно.",
+      "confirm": "Вернуть"
+    },
+    "journal": {
+      "title": "Оплаты",
+      "from": "С",
+      "to": "По",
+      "allMethods": "Все способы",
+      "empty": "За эти дни оплат нет.",
+      "total": "{count, plural, one {# оплата} few {# оплаты} many {# оплат} other {# оплаты}}, итого {amount}"
+    },
+    "shift": {
+      "title": "Касса",
+      "open": "Смена открыта",
+      "openedAt": "с {time}",
+      "opening": "Наличные на начало",
+      "cashIn": "Принято наличными",
+      "cashRefunds": "Возвращено наличными",
+      "expected": "Должно быть в кассе",
+      "card": "Терминал",
+      "transfer": "Переводы",
+      "count": "Оплат",
+      "counted": "Пересчитано наличных",
+      "note": "Примечание",
+      "difference": "Разница: {amount}",
+      "close": "Закрыть смену",
+      "none": "Смена не открыта. Наличные принимать нельзя, пока её не открыть.",
+      "openAction": "Открыть смену",
+      "history": "Последние смены",
+      "noHistory": "Закрытых смен пока нет.",
+      "expectedShort": "ожидалось {amount}",
+      "countedShort": "пересчитано {amount}"
     }
   }
 }

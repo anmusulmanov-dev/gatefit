@@ -203,7 +203,7 @@ export interface ReceiptDto {
   amountMinor: string;
   currency: string;
   member: { firstName: string; lastName: string; phone: string };
-  items: { description: string; quantity: number; totalMinor: string }[];
+  items: { kind: InvoiceItemKind; description: string; quantity: number; totalMinor: string }[];
   invoiceTotalMinor: string;
   balanceMinor: string;
 }

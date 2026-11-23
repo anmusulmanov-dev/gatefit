@@ -10,13 +10,15 @@ import { cn } from '@/lib/utils';
 
 const items: {
   href: string;
-  key: 'home' | 'members' | 'plans' | 'settings';
+  key: 'home' | 'members' | 'plans' | 'payments' | 'cashShift' | 'settings';
   exact: boolean;
   permission?: Permission;
 }[] = [
   { href: '/', key: 'home', exact: true },
   { href: '/members', key: 'members', exact: false, permission: 'members.read' },
   { href: '/plans', key: 'plans', exact: false, permission: 'plans.read' },
+  { href: '/payments', key: 'payments', exact: false, permission: 'payments.read' },
+  { href: '/cash-shift', key: 'cashShift', exact: false, permission: 'cash_shifts.manage' },
   { href: '/settings', key: 'settings', exact: false },
 ];
 

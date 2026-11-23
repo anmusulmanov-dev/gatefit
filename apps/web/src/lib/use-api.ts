@@ -15,14 +15,18 @@ interface Loaded<T> {
 
 /**
  * Loads `path` from the API and reloads it on demand. While a reload runs, the previous
- * data stays on screen so lists do not flicker.
+ * data stays on screen so lists do not flicker. A `null` path waits: nothing is requested
+ * until the caller knows what to ask for.
  */
-export function useApiGet<T>(path: string, client: Pick<ApiClient, 'get'> = api) {
+export function useApiGet<T>(path: string | null, client: Pick<ApiClient, 'get'> = api) {
   const [version, setVersion] = useState(0);
   const [loaded, setLoaded] = useState<Loaded<T> | null>(null);
-  const key = `${String(version)}:${path}`;
+  const key = `${String(version)}:${path ?? ''}`;
 
   useEffect(() => {
+    if (path === null) {
+      return;
+    }
     let cancelled = false;
     void client.get<T>(path).then((result) => {
       if (!cancelled) {
