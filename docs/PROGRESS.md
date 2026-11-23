@@ -4,33 +4,47 @@ Har sessiya oxirida yangilanadi: nima qilindi, nima qoldi, ma'lum muammolar.
 
 ## Holat
 
-| Bosqich                           | Holat                            |
-| --------------------------------- | -------------------------------- |
-| 0.1 Loyiha karkasi                | Tayyor (2026-11-11)              |
-| 0.2 Ko'p mijozlilik va RLS        | Tayyor (2026-11-11)              |
-| 0.3 Autentifikatsiya va ruxsatlar | Tayyor (2026-11-17)              |
-| MVP (M1–M8)                       | Jarayonda (M1–M7 tayyor)         |
-| M1a Tashkilot ichki API           | Tayyor (2026-11-17)              |
-| M1b Platforma API                 | Tayyor (2026-11-17)              |
-| M1c Sozlamalar UI                 | Tayyor (2026-11-17)              |
-| M1d Super-admin UI                | Tayyor (2026-11-17) — M1 yopildi |
-| M2a A'zolar API                   | Tayyor (2026-11-21)              |
-| M2b Foto, import, eksport         | Tayyor (2026-11-21)              |
-| M2c A'zolar UI                    | Tayyor (2026-11-21) — M2 yopildi |
-| M3a Tariflar va abonementlar API  | Tayyor (2026-11-22)              |
-| M3b Tariflar va abonementlar UI   | Tayyor (2026-11-22) — M3 yopildi |
-| M4a To'lovlar va kassa API        | Tayyor (2026-11-22)              |
-| M4b To'lovlar va kassa UI         | Tayyor (2026-11-22) — M4 yopildi |
-| M5a Kirish nazorati API           | Tayyor (2026-11-22)              |
-| M5b Qabulxona ekrani va jurnal    | Tayyor (2026-11-22)              |
-| M5c Oflayn qabulxona              | Tayyor (2026-11-22) — M5 yopildi |
-| M6a A'zo ilovasi API              | Tayyor (2026-11-22)              |
-| M6b A'zo PWA                      | Tayyor (2026-11-22)              |
-| M7a Xabarnomalar va hisobot API   | Tayyor (2026-11-22)              |
-| M7b Bosh sahifa va shablonlar UI  | Tayyor (2026-11-22) — M7 yopildi |
-| M8a Mezonlar, tarjima, xavfsizlik | Tayyor (2026-11-22)              |
-| M8b Prod infra, zaxira, tiklash   | Tayyor (2026-11-22)              |
-| M8c Demo ma'lumot, yuklama testi  | Tayyor (2026-11-23)              |
+| Bosqich                           | Holat                                              |
+| --------------------------------- | -------------------------------------------------- |
+| 0.1 Loyiha karkasi                | Tayyor (2026-11-11)                                |
+| 0.2 Ko'p mijozlilik va RLS        | Tayyor (2026-11-11)                                |
+| 0.3 Autentifikatsiya va ruxsatlar | Tayyor (2026-11-17)                                |
+| MVP (M1–M8)                       | Kod tayyor (M1–M8c); M8d va server sinovlari qoldi |
+| M1a Tashkilot ichki API           | Tayyor (2026-11-17)                                |
+| M1b Platforma API                 | Tayyor (2026-11-17)                                |
+| M1c Sozlamalar UI                 | Tayyor (2026-11-17)                                |
+| M1d Super-admin UI                | Tayyor (2026-11-17) — M1 yopildi                   |
+| M2a A'zolar API                   | Tayyor (2026-11-21)                                |
+| M2b Foto, import, eksport         | Tayyor (2026-11-21)                                |
+| M2c A'zolar UI                    | Tayyor (2026-11-21) — M2 yopildi                   |
+| M3a Tariflar va abonementlar API  | Tayyor (2026-11-22)                                |
+| M3b Tariflar va abonementlar UI   | Tayyor (2026-11-22) — M3 yopildi                   |
+| M4a To'lovlar va kassa API        | Tayyor (2026-11-22)                                |
+| M4b To'lovlar va kassa UI         | Tayyor (2026-11-22) — M4 yopildi                   |
+| M5a Kirish nazorati API           | Tayyor (2026-11-22)                                |
+| M5b Qabulxona ekrani va jurnal    | Tayyor (2026-11-22)                                |
+| M5c Oflayn qabulxona              | Tayyor (2026-11-22) — M5 yopildi                   |
+| M6a A'zo ilovasi API              | Tayyor (2026-11-22)                                |
+| M6b A'zo PWA                      | Tayyor (2026-11-22)                                |
+| M7a Xabarnomalar va hisobot API   | Tayyor (2026-11-22)                                |
+| M7b Bosh sahifa va shablonlar UI  | Tayyor (2026-11-22) — M7 yopildi                   |
+| M8a Mezonlar, tarjima, xavfsizlik | Tayyor (2026-11-22)                                |
+| M8b Prod infra, zaxira, tiklash   | Tayyor (2026-11-22)                                |
+| M8c Demo ma'lumot, yuklama testi  | Tayyor (2026-11-23)                                |
+
+## 2026-11-23 — MVP kodi main da, staging tuzatildi
+
+### Qilindi
+
+- M4b–M8c ning hammasi `main` ga kirdi (#18–#22 to'g'ridan-to'g'ri, qolganlari #29 orqali; #25, #26 yopildi). `main` CI yashil, staging yangi kodda.
+- **Caddy konfiguratsiyasi (#30):** staging javoblarida M8a xavfsizlik sarlavhalari yo'q edi. Sabab: Caddyfile bitta fayl sifatida ulangan, deploy'da git faylni almashtiradi va Linux'da konteyner eski faylni ko'raveradi. Staging va prod compose endi `./caddy` papkasini ulaydi. Deploy'dan keyin staging'da HSTS, nosniff, `X-Frame-Options: DENY`, Referrer-Policy, Permissions-Policy bor, `Server` yo'q.
+
+### Qoldi (MVP yopilishi uchun)
+
+- M8d: e2e testlar (mezonlar 1, 3, 11) — `feat/e2e-playwright` birlashgach.
+- Serverda bir martalik: WAL-G bilan vaqtga tiklash (mezon 12, `BACKUP_S3_*` kerak), yuklama testini staging'da takrorlash (mezon 14), service worker'ni staging'da sinash, haqiqiy Eskiz hisobi va tasdiqlangan shablonlar.
+- Staging'da asosiy oqimlarni (sotish, qabulxona, a'zo ilovasi, bosh sahifa) qo'lda bosib ko'rish.
+- Keyinroq: web va member uchun Content-Security-Policy, a'zo kartasida xabarnomalar ro'yxati, hisobni bekor qilish tugmasi, haqiqiy kamera bilan sinov.
 
 ## 2026-11-23 — M8c: demo ma'lumot va yuklama testi
 
