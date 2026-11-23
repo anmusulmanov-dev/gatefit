@@ -54,37 +54,44 @@ export function setup() {
   const cookie = Object.entries(response.cookies)
     .map(([name, values]) => `${name}=${values[0].value}`)
     .join('; ');
+  // The desk is at a location the staff member works at; members may come to any
+  // location their membership allows.
+  const me = JSON.parse(
+    http.get(`${BASE_URL}/api/v1/me`, { headers: headers(cookie), tags: { kind: 'setup' } }).body,
+  );
   const locations = JSON.parse(
     http.get(`${BASE_URL}/api/v1/locations`, { headers: headers(cookie), tags: { kind: 'setup' } })
       .body,
   );
-  return { cookie, locationId: locations[0].id };
+  const locationId = me.staff.locations[0]?.id ?? locations[0].id;
+  return { cookie, locationId };
 }
 
 /** The code of a member valid right now. */
 function currentCode() {
   const member = codes.members[Math.floor(Math.random() * codes.members.length)];
   const step = Math.floor((Date.now() / 1000 - codes.firstStep) / codes.stepSeconds);
-  return {
-    token: member.codes[Math.min(Math.max(step, 0), member.codes.length - 1)],
-    locationId: member.locationId,
-  };
+  return member.codes[Math.min(Math.max(step, 0), member.codes.length - 1)];
 }
 
 export default function (data) {
   const h = headers(data.cookie);
   if (Math.random() < 0.3) {
-    const { token, locationId } = currentCode();
     const response = http.post(
       `${BASE_URL}/api/v1/access/verify`,
-      JSON.stringify({ token, locationId }),
+      JSON.stringify({ token: currentCode(), locationId: data.locationId }),
       {
         headers: h,
         tags: { kind: 'qr', name: 'POST /access/verify' },
       },
     );
     check(response, {
-      'qr answered': (r) => r.status === 200,
+      'qr answered': (r) => {
+        if (r.status !== 200) {
+          console.warn(`verify HTTP ${r.status}: ${r.body}`);
+        }
+        return r.status === 200;
+      },
       'qr decided': (r) => r.status === 200 && JSON.parse(r.body).member !== null,
     });
   } else {
