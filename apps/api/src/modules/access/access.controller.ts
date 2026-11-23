@@ -13,7 +13,6 @@ import {
   type CheckInDto,
   type CheckInListQuery,
   checkInListQuerySchema,
-  ErrorCode,
   type LocationQuery,
   locationQuerySchema,
   type OccupancyDto,
@@ -37,8 +36,8 @@ import {
 import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 import type { AppRequest } from '../../common/http/app-request';
+import { memberUser } from '../../common/http/member-request';
 import { staffCaller } from '../../common/http/staff-request';
-import { forbidden } from '../../common/errors/domain-errors';
 import { TenantDb } from '../../common/tenancy/tenant-db.service';
 import { ZodPipe, zodBody } from '../../common/validation/zod';
 import { AnyAuthenticated, RequirePermission } from '../auth/auth.decorators';
@@ -65,11 +64,8 @@ export class AccessController {
   @AnyAuthenticated()
   @ApiOperation({ summary: "The signed-in member's entry code; a new one every 30 seconds" })
   qr(@Req() req: AppRequest): Promise<QrTokenDto> {
-    const { auth, organizationId } = req;
-    if (auth?.audience !== 'member' || !organizationId) {
-      throw forbidden(ErrorCode.PERMISSION_DENIED, 'Only members have an entry code');
-    }
-    return this.access.qr(this.tenantDb.tx, organizationId, auth.userId);
+    const { organizationId, userId } = memberUser(req);
+    return this.access.qr(this.tenantDb.tx, organizationId, userId);
   }
 
   @Post('access/verify')

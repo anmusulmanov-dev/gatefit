@@ -5,6 +5,7 @@ import { MembersModule } from '../members/members.module';
 import { OrganizationModule } from '../tenancy/organization.module';
 import {
   CashShiftsController,
+  MePaymentsController,
   InvoicesController,
   PaymentsController,
 } from './billing.controllers';
@@ -17,7 +18,7 @@ import { PaymentsService } from './payments.service';
 // Other modules reach them only through the services exported here (CLAUDE.md rule 7).
 @Module({
   imports: [MembersModule, OrganizationModule],
-  controllers: [InvoicesController, PaymentsController, CashShiftsController],
+  controllers: [InvoicesController, PaymentsController, CashShiftsController, MePaymentsController],
   providers: [
     InvoicesService,
     PaymentsService,

@@ -49,4 +49,18 @@ describe('AccessTokensService', () => {
     expect(service(secret).publicKey(ORG_A)).toEqual(service(secret).publicKey(ORG_A));
     expect(parseAccessToken(code.token)?.payload.k).toBe(service(secret).publicKey(ORG_A).keyId);
   });
+
+  it('hands out the next four codes, each valid only from its own step', () => {
+    const tokens = service();
+    const code = tokens.issue(ORG_A, MEMBER, NOW);
+    expect(code.upcoming.map((next) => next.validFrom)).toEqual([
+      '2026-11-25T05:30:30.000Z',
+      '2026-11-25T05:31:00.000Z',
+      '2026-11-25T05:31:30.000Z',
+      '2026-11-25T05:32:00.000Z',
+    ]);
+    const last = code.upcoming[3];
+    expect(tokens.check(ORG_A, last?.token ?? '', NOW).ok).toBe(false);
+    expect(tokens.check(ORG_A, last?.token ?? '', new Date(last?.validFrom ?? 0)).ok).toBe(true);
+  });
 });

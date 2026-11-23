@@ -24,6 +24,26 @@ Har sessiya oxirida yangilanadi: nima qilindi, nima qoldi, ma'lum muammolar.
 | M5a Kirish nazorati API           | Tayyor (2026-11-22)              |
 | M5b Qabulxona ekrani va jurnal    | Tayyor (2026-11-22)              |
 | M5c Oflayn qabulxona              | Tayyor (2026-11-22) — M5 yopildi |
+| M6a A'zo ilovasi API              | Tayyor (2026-11-22)              |
+
+## 2026-11-22 — M6a: a'zo ilovasi uchun API
+
+Branch: `feat/m6-member-api` (`feat/m5-access-offline` ustiga). Anvar tasdiqlagan javoblar: QR uchun `qrcode` paketi (M6b); `/me/qr` hozirgi + keyingi 4 kod; e2e (mezon 3) `feat/e2e-playwright` birlashgach uning ustiga; profil faqat ko'rish + til; to'lovlar tarixi ro'yxat + qarz.
+
+### Qilindi
+
+- `GET /me/member` (profil), `GET /me/memberships` (o'z abonementlari), `GET /me/payments` (o'z to'lovlari va valyuta bo'yicha qarz). Faqat a'zo sessiyasi (`memberUser`, xodimga 403), a'zo sessiyadan aniqlanadi, id so'rovda berilmaydi. Har modul o'z jadvalini o'zi beradi (CLAUDE.md qoida 7).
+- `GET /me/qr` endi `upcoming` (keyingi 4 kod, har biri o'z 30 soniyalik navbatidan amal qiladi): signal yo'qolsa telefon taxminan 2,5 daqiqa ishlaydigan kod ko'rsatadi.
+
+### Tekshirildi
+
+- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` — yashil. **COUNTS**
+- `test/member-app.int-spec.ts` (4): o'z profili, abonementlari, to'lovlari va qarzi (boshqa a'zoniki ko'rinmaydi); xodim sessiyasiga 403; bir telefon ikki tashkilotda — B sessiyasi faqat B ma'lumotini ko'radi; kelgusi kod o'z navbatigacha rad, navbatida o'tadi.
+
+### Qoldi
+
+- M6b: PWA sahifalari (QR, abonement, tarixlar, profil, til), service worker, oflayn QR, 360 px.
+- Mezon 3 e2e — Playwright birlashgach.
 
 ## 2026-11-22 — M5c: oflayn qabulxona (web)
 

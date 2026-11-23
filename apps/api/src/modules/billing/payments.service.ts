@@ -2,7 +2,9 @@ import { messages, resolveLocale } from '@gatefit/i18n';
 import {
   ErrorCode,
   formatMinor,
+  type MemberPaymentsDto,
   type Page,
+  type PageQuery,
   type PaymentDto,
   type PaymentListQuery,
   type ReceiptDto,
@@ -71,6 +73,50 @@ export class PaymentsService {
       include: paymentInclude,
     });
     return toPage(rows, query, toPaymentDto);
+  }
+
+  /** The signed-in member's own payments, newest first, and what they still owe (member app). */
+  async listOwn(
+    tx: TenantTransaction,
+    userId: string,
+    query: PageQuery,
+  ): Promise<MemberPaymentsDto> {
+    const memberId = await this.members.requireMemberIdOfUser(tx, userId);
+    const page = pageArgs(query, 'desc');
+    const [rows, unpaid] = await Promise.all([
+      tx.payment.findMany({
+        ...page,
+        where: { ...page.where, memberId },
+        include: paymentInclude,
+      }),
+      tx.invoice.findMany({
+        where: { memberId, status: { in: ['open', 'partially_paid'] }, deletedAt: null },
+        select: { totalMinor: true, paidMinor: true, currency: true },
+      }),
+    ]);
+    const owed = new Map<string, bigint>();
+    for (const invoice of unpaid) {
+      const balance = invoice.totalMinor - invoice.paidMinor;
+      owed.set(invoice.currency, (owed.get(invoice.currency) ?? 0n) + balance);
+    }
+    return {
+      ...toPage(rows, query, (row) => {
+        const payment = toPaymentDto(row);
+        return {
+          id: payment.id,
+          createdAt: payment.createdAt,
+          amountMinor: payment.amountMinor,
+          refundedMinor: payment.refundedMinor,
+          currency: payment.currency,
+          method: payment.method,
+          invoiceNumber: payment.invoice.number,
+          location: payment.location,
+        };
+      }),
+      owed: [...owed]
+        .filter(([, amount]) => amount > 0n)
+        .map(([currency, amount]) => ({ amountMinor: amount.toString(), currency })),
+    };
   }
 
   async get(tx: TenantTransaction, caller: StaffCaller, id: string): Promise<PaymentDto> {

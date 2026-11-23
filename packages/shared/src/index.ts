@@ -6,6 +6,7 @@ export * from './auth';
 export * from './billing';
 export * from './dates';
 export * from './errors';
+export * from './member-app';
 export * from './member-imports';
 export * from './members';
 export * from './modules';

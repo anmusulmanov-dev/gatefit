@@ -116,6 +116,23 @@ export class MembershipsService implements MembershipFacts {
     return toPage(rows, query, (row) => toMembershipDto(row, now));
   }
 
+  /** The signed-in member's own memberships, newest first (member app). */
+  async listOwn(
+    tx: TenantTransaction,
+    userId: string,
+    query: PageQuery,
+  ): Promise<Page<MembershipDto>> {
+    const memberId = await this.members.requireMemberIdOfUser(tx, userId);
+    const page = pageArgs(query, 'desc');
+    const rows = await tx.membership.findMany({
+      ...page,
+      where: { ...page.where, memberId, deletedAt: null },
+      include: membershipInclude,
+    });
+    const now = this.clock.now();
+    return toPage(rows, query, (row) => toMembershipDto(row, now));
+  }
+
   async get(tx: TenantTransaction, caller: StaffCaller, id: string): Promise<MembershipDto> {
     return toMembershipDto(await this.findVisible(tx, caller, id), this.clock.now());
   }

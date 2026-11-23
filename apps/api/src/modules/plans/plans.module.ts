@@ -4,7 +4,11 @@ import { MEMBERSHIP_FACTS } from '../members/member-status';
 import { MembersModule } from '../members/members.module';
 import { OrganizationModule } from '../tenancy/organization.module';
 import { MembershipStatusJob } from './membership-status.job';
-import { MembershipsController, MemberMembershipsController } from './memberships.controller';
+import {
+  MeMembershipsController,
+  MembershipsController,
+  MemberMembershipsController,
+} from './memberships.controller';
 import { MembershipsService } from './memberships.service';
 import { PlansController } from './plans.controller';
 import { PlansService } from './plans.service';
@@ -13,7 +17,12 @@ import { PlansService } from './plans.service';
 // modules reach them only through the services exported here (CLAUDE.md rule 7).
 @Module({
   imports: [MembersModule, OrganizationModule, BillingModule],
-  controllers: [PlansController, MemberMembershipsController, MembershipsController],
+  controllers: [
+    PlansController,
+    MemberMembershipsController,
+    MembershipsController,
+    MeMembershipsController,
+  ],
   providers: [
     PlansService,
     MembershipsService,

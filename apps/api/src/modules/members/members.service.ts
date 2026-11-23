@@ -8,6 +8,7 @@ import {
   type MemberFilter,
   type MemberListItemDto,
   type MemberListQuery,
+  type MemberProfileDto,
   type MemberSource,
   type MemberStatus,
   type MemberSummaryDto,
@@ -448,6 +449,35 @@ export class MembersService {
       select: { id: true },
     });
     return row?.id ?? null;
+  }
+
+  /** Like memberIdOfUser, for /me/* endpoints: 404 when the user is not a member here. */
+  async requireMemberIdOfUser(tx: TenantTransaction, userId: string): Promise<string> {
+    const id = await this.memberIdOfUser(tx, userId);
+    if (!id) {
+      throw notFound('Member');
+    }
+    return id;
+  }
+
+  /** The signed-in member's own profile, for the member app. */
+  async ownProfile(tx: TenantTransaction, userId: string): Promise<MemberProfileDto> {
+    const row = await tx.member.findFirst({
+      where: { userId, deletedAt: null },
+      include: memberInclude,
+    });
+    if (!row) {
+      throw notFound('Member');
+    }
+    return {
+      id: row.id,
+      firstName: row.firstName,
+      lastName: row.lastName,
+      phone: row.phone,
+      status: row.status,
+      homeLocation: row.homeLocation,
+      photoUrl: row.photoKey ? this.links.link(row.photoKey) : null,
+    };
   }
 
   toDto(row: MemberRow): MemberDto {
