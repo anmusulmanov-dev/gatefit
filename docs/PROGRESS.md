@@ -22,6 +22,28 @@ Har sessiya oxirida yangilanadi: nima qilindi, nima qoldi, ma'lum muammolar.
 | M4a To'lovlar va kassa API        | Tayyor (2026-11-22)              |
 | M4b To'lovlar va kassa UI         | Tayyor (2026-11-22) — M4 yopildi |
 | M5a Kirish nazorati API           | Tayyor (2026-11-22)              |
+| M5b Qabulxona ekrani va jurnal    | Tayyor (2026-11-22)              |
+
+## 2026-11-22 — M5b: qabulxona ekrani va kirish jurnali (web)
+
+Branch: `feat/m5-access-ui` (`feat/m5-access-api` ustiga). Yangi paket: `jsqr` (kamera kadrlaridan QR o'qish; Windows Chrome'da BarcodeDetector yo'q) — Anvar tasdiqlagan.
+
+### Qilindi
+
+- **`/reception`** (`access.verify`): USB skaner uchun doim fokusdagi maydon (kod + Enter), kamera (`jsqr`, 250 ms), katta yashil yoki qizil natija (foto yoki bosh harflar, ism, tarif, qolgan kun yoki tashrif, rad sababi, takror skan belgisi), zaldagilar soni, bugungi kirishlar (jonli, SSE), "Chiqdi", qo'lda kiritish (telefon yoki ism bo'yicha qidiruv, sabab majburiy). Kamera bir xil kodni 5 soniyada bir marta yuboradi.
+- **`/check-ins`** (`access.read`): filial, kunlar (filial vaqt mintaqasida), natija filtri; usul va qo'lda kiritish sababi.
+- Menyu: "Qabulxona", "Kirishlar". Tarjimalar uz/ru/en (`access.*`), barcha rad sabablari.
+
+### Tekshirildi
+
+- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` — yashil. **COUNTS**
+- Brauzerda (`demo.localhost`, owner; kod demo a'zo SMS-kodi bilan olingan): skaner kabi kiritish — "Kirish mumkin", foto o'rnida bosh harflar, tarif va 30 kun; jonli oqim "Zalda: 1" va ro'yxat; 56 soniyada qayta skan — "Hozirgina kirgan"; 60 soniyadan keyin — qizil "Kod eskirgan"; qo'lda kiritish (qidiruv, sabab) — "Zalda: 2"; "Chiqdi" — "Zalda: 1"; jurnal (4 yozuv, sabab ko'rinadi); 375 px da gorizontal aylantirish yo'q, xato so'rov yo'q.
+- Tekshiruvda tuzatildi: rad etilgan skan a'zoning "Chiqdi" tugmasini yashirib qo'yardi.
+
+### Ma'lum muammolar
+
+- **Kamera** brauzer panelida bloklangan: "ruxsat berilmadi" xabari to'g'ri chiqadi, lekin haqiqiy kamera bilan skan sinalmagan. Haqiqiy qurilmada tekshirish kerak.
+- Qo'lda kiritish qidiruvi faqat xodim ko'radigan a'zolarni topadi (ADR 0006); boshqa filial a'zosi QR bilan kiradi.
 
 ## 2026-11-22 — M5a: kirish nazorati (API)
 
@@ -49,7 +71,7 @@ Branch: `feat/m5-access-api` (`feat/m4-billing-ui` ustiga). Qaror: `docs/ADR/001
 
 ### Qoldi
 
-- M5b: qabulxona ekrani (USB skaner, kamera — `jsqr`), kirish jurnali sahifasi, qo'lda kiritish va "chiqdi".
+- M5b: yuqoridagi yozuv.
 - M5c: oflayn rejim (IndexedDB, navbat, sinxron) — mezon 11 web qismi.
 
 ## 2026-11-22 — M4b: to'lovlar va kassa (web)

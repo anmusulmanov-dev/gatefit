@@ -145,7 +145,9 @@
   "nav": {
     "home": "Home",
     "settings": "Settings",
+    "reception": "Reception",
     "members": "Members",
+    "checkIns": "Entries",
     "plans": "Plans",
     "payments": "Payments",
     "cashShift": "Cash desk"
@@ -811,6 +813,77 @@
       "noHistory": "No closed shifts yet.",
       "expectedShort": "expected {amount}",
       "countedShort": "counted {amount}"
+    }
+  },
+  "access": {
+    "title": "Reception",
+    "location": "Location",
+    "noLocation": "You are not assigned to any location.",
+    "occupancy": "{count, plural, one {# person inside} other {# people inside}}",
+    "offlineFeed": "Live updates paused",
+    "scanLabel": "Member code",
+    "scanPlaceholder": "Scan the code or type it and press Enter",
+    "waiting": "Waiting for a code",
+    "checking": "Checking…",
+    "allowed": "Come in",
+    "denied": "Not allowed",
+    "repeat": "Already let in a moment ago: no new visit counted.",
+    "until": "until {date}",
+    "daysLeft": "{count, plural, one {# day left} other {# days left}}",
+    "visitsLeft": "{count, plural, one {# visit left} other {# visits left}}",
+    "in": "In",
+    "out": "Left",
+    "exit": "Left",
+    "recent": "Today at this location",
+    "noEntries": "Nobody has come in today yet.",
+    "camera": {
+      "start": "Use camera",
+      "stop": "Stop camera",
+      "label": "Camera",
+      "denied": "Camera access was refused. Allow it in the browser settings.",
+      "unavailable": "No camera available. Use the scanner."
+    },
+    "manual": {
+      "action": "Let in by hand",
+      "title": "Let a member in by hand",
+      "description": "Find the member and say why. The entry is recorded and audited.",
+      "search": "Phone or name",
+      "results": "Members found",
+      "notFound": "No member found.",
+      "reason": "Reason",
+      "required": "Choose a member and give a reason.",
+      "confirm": "Let in"
+    },
+    "methods": {
+      "qr": "QR",
+      "manual": "By hand",
+      "qr_offline": "QR, offline"
+    },
+    "reasons": {
+      "invalid_code": "Not a valid code",
+      "expired_code": "Code is out of date: ask to refresh it",
+      "member_not_found": "Member not found",
+      "member_blocked": "Member is blocked",
+      "debt": "Has a debt",
+      "no_membership": "No membership",
+      "membership_expired": "Membership has expired",
+      "membership_not_started": "Membership has not started yet",
+      "membership_frozen": "Membership is frozen",
+      "wrong_location": "Not valid at this location",
+      "wrong_day": "Not valid today",
+      "outside_hours": "Not valid at this hour",
+      "daily_limit": "Daily visit limit reached"
+    },
+    "journal": {
+      "title": "Entries",
+      "from": "From",
+      "to": "To",
+      "result": "Result",
+      "all": "All",
+      "allowed": "Allowed",
+      "denied": "Refused",
+      "empty": "No entries for these days.",
+      "count": "{count, plural, one {# entry} other {# entries}}"
     }
   }
 }
