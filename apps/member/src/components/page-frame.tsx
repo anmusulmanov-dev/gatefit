@@ -3,8 +3,17 @@ import type { ReactNode } from 'react';
 
 import { LocaleSwitcher } from '@/components/locale-switcher';
 
-/** The single-column phone layout shared by every screen. */
-export async function PageFrame({ children }: { children: ReactNode }) {
+/**
+ * The single-column phone layout shared by every screen. Sign-in and notices sit in the
+ * middle; the screens of a signed-in member start at the top, above the tab bar.
+ */
+export async function PageFrame({
+  children,
+  align = 'center',
+}: {
+  children: ReactNode;
+  align?: 'center' | 'top';
+}) {
   const t = await getTranslations();
 
   return (
@@ -13,7 +22,11 @@ export async function PageFrame({ children }: { children: ReactNode }) {
         <span className="text-lg font-semibold">{t('common.appName')}</span>
         <LocaleSwitcher />
       </header>
-      <main className="flex flex-1 flex-col justify-center gap-6 pb-24">{children}</main>
+      <main
+        className={`flex flex-1 flex-col gap-6 pb-24 ${align === 'center' ? 'justify-center' : ''}`}
+      >
+        {children}
+      </main>
     </div>
   );
 }

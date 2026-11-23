@@ -25,6 +25,30 @@ Har sessiya oxirida yangilanadi: nima qilindi, nima qoldi, ma'lum muammolar.
 | M5b Qabulxona ekrani va jurnal    | Tayyor (2026-11-22)              |
 | M5c Oflayn qabulxona              | Tayyor (2026-11-22) — M5 yopildi |
 | M6a A'zo ilovasi API              | Tayyor (2026-11-22)              |
+| M6b A'zo PWA                      | Tayyor (2026-11-22)              |
+
+## 2026-11-22 — M6b: a'zo PWA
+
+Branch: `feat/m6-member-pwa` (`feat/m6-member-api` ustiga). Yangi paket: `qrcode` (+ `@types/qrcode`) — QR rasmini SVG sifatida chizish uchun (Anvar tasdiqlagan).
+
+### Qilindi
+
+- **Bosh sahifa**: QR kod (har 30 soniyada yangi, ortga sanash), abonement holati (tarif, holat, davr, qolgan kun yoki tashrif), qarz bo'lsa ogohlantirish.
+- **Oflayn QR**: `/me/qr` dagi hozirgi va keyingi 4 kod `localStorage` da saqlanadi; tarmoq bo'lmasa navbatdagi saqlangan kod ko'rsatiladi (~2,5 daqiqa) va "Internet yo'q" xabari chiqadi.
+- **Sahifalar**: abonementlar tarixi, to'lovlar (usul, filial, hisob, qaytarilgan; qarz), profil (ism, telefon, asosiy filial, til, chiqish). Pastki menyu.
+- **PWA**: service worker (`public/sw.js`, faqat production'da): sahifalar network-first, `_next/static` cache-first, `/api` keshlanmaydi. Manifest avvaldan bor.
+- Tarjimalar uz/ru/en (`member.*`). Sanalar raqamli (brauzerlarda o'zbekcha oy nomlari yo'q).
+
+### Tekshirildi
+
+- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` — yashil. **COUNTS**
+- Brauzerda, 360 px (`demo.localhost:3001`, demo a'zo SMS-kod bilan): QR va ortga sanash, "Oylik · Faol · 30 kun qoldi"; abonementlar, to'lovlar (qaytarilgan summa bilan), profil; gorizontal aylantirish yo'q. `/me/qr` so'rovi sun'iy uzilganda saqlangan keyingi kod va "Internet yo'q" xabari ko'rsatildi.
+- Tekshiruvda tuzatildi: o'zbekcha sanalar "2026 M11 22" bo'lib chiqardi.
+
+### Ma'lum muammolar
+
+- Service worker faqat production build'da ishlaydi: dev'da sinalmagan; staging'da tekshirish kerak (ilovani o'rnatish, samolyot rejimida ochish).
+- Mezon 3 uchun e2e test hali yo'q: `feat/e2e-playwright` birlashgach qo'shiladi.
 
 ## 2026-11-22 — M6a: a'zo ilovasi uchun API
 
@@ -42,7 +66,7 @@ Branch: `feat/m6-member-api` (`feat/m5-access-offline` ustiga). Anvar tasdiqlaga
 
 ### Qoldi
 
-- M6b: PWA sahifalari (QR, abonement, tarixlar, profil, til), service worker, oflayn QR, 360 px.
+- M6b: yuqoridagi yozuv.
 - Mezon 3 e2e — Playwright birlashgach.
 
 ## 2026-11-22 — M5c: oflayn qabulxona (web)

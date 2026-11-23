@@ -3,6 +3,8 @@ import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getTranslations } from 'next-intl/server';
 import type { ReactNode } from 'react';
 
+import { ServiceWorker } from '@/components/service-worker';
+
 import './globals.css';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -27,6 +29,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
     <html lang={locale}>
       <body className="min-h-dvh antialiased">
         <NextIntlClientProvider>{children}</NextIntlClientProvider>
+        <ServiceWorker />
       </body>
     </html>
   );

@@ -139,7 +139,42 @@
   "member": {
     "home": {
       "title": "Member app",
-      "subtitle": "Your membership and entry code will live here."
+      "subtitle": "Your membership and entry code will live here.",
+      "membership": "Membership",
+      "noMembership": "No membership in force. Ask at the front desk."
+    },
+    "loading": "Loading…",
+    "loadFailed": "Could not load. Check the connection and try again.",
+    "nav": {
+      "label": "Sections",
+      "home": "Home",
+      "memberships": "Memberships",
+      "payments": "Payments",
+      "profile": "Profile"
+    },
+    "qr": {
+      "title": "Entry code",
+      "alt": "Your entry QR code",
+      "loading": "Getting your code…",
+      "noCode": "No working code. Connect to the internet.",
+      "refreshIn": "New code in {seconds} s",
+      "offline": "No internet: showing a saved code. It works for a couple of minutes.",
+      "hint": "Show this code at the front desk scanner."
+    },
+    "memberships": {
+      "title": "Memberships",
+      "empty": "No memberships yet."
+    },
+    "payments": {
+      "title": "Payments",
+      "empty": "No payments yet.",
+      "owed": "You owe {amount}"
+    },
+    "profile": {
+      "title": "Profile",
+      "phone": "Phone",
+      "location": "Home location",
+      "changeHint": "To change your details, ask at the front desk."
     }
   },
   "nav": {

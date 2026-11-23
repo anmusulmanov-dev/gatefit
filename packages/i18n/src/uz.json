@@ -139,7 +139,42 @@
   "member": {
     "home": {
       "title": "A'zo ilovasi",
-      "subtitle": "Abonementingiz va kirish kodingiz shu yerda bo'ladi."
+      "subtitle": "Abonementingiz va kirish kodingiz shu yerda bo'ladi.",
+      "membership": "Abonement",
+      "noMembership": "Amaldagi abonement yo'q. Qabulxonaga murojaat qiling."
+    },
+    "loading": "Yuklanmoqda…",
+    "loadFailed": "Yuklab bo'lmadi. Internetni tekshirib, qayta urinib ko'ring.",
+    "nav": {
+      "label": "Bo'limlar",
+      "home": "Bosh sahifa",
+      "memberships": "Abonementlar",
+      "payments": "To'lovlar",
+      "profile": "Profil"
+    },
+    "qr": {
+      "title": "Kirish kodi",
+      "alt": "Kirish uchun QR kodingiz",
+      "loading": "Kod olinmoqda…",
+      "noCode": "Ishlaydigan kod yo'q. Internetga ulaning.",
+      "refreshIn": "Yangi kod {seconds} soniyadan keyin",
+      "offline": "Internet yo'q: saqlangan kod ko'rsatilmoqda. U bir-ikki daqiqa ishlaydi.",
+      "hint": "Bu kodni qabulxonadagi skanerga ko'rsating."
+    },
+    "memberships": {
+      "title": "Abonementlar",
+      "empty": "Hozircha abonementlar yo'q."
+    },
+    "payments": {
+      "title": "To'lovlar",
+      "empty": "Hozircha to'lovlar yo'q.",
+      "owed": "Qarzingiz: {amount}"
+    },
+    "profile": {
+      "title": "Profil",
+      "phone": "Telefon",
+      "location": "Asosiy filial",
+      "changeHint": "Ma'lumotlarni o'zgartirish uchun qabulxonaga murojaat qiling."
     }
   },
   "nav": {

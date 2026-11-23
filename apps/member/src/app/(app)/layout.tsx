@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 
+import { AppNav } from '@/components/app-nav';
 import { OrganizationNotice, SessionExpired } from '@/components/session-gate';
 import { getSession } from '@/lib/session';
 
@@ -14,5 +15,10 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   if (session.kind !== 'authenticated') {
     return <OrganizationNotice kind={session.kind} />;
   }
-  return children;
+  return (
+    <>
+      {children}
+      <AppNav />
+    </>
+  );
 }
