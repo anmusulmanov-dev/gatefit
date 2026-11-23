@@ -180,15 +180,17 @@ Barcha biznes jadvallarida: `id` (UUID v7), `organization_id`, `created_at`, `up
 | users | phone (E.164), email | — | M |
 | staff | first_name, last_name, position, status, password_hash, totp_secret, must_change_password | user, organization, role, locations (M:N) | M |
 | roles, role_permissions | name, permissions | organization | M |
-| members | first_name, last_name, phone, birth_date, gender, photo_key, status, source, notes | organization, user?, home_location | M |
-| plans | name, type, duration, visit_limit, price_minor, currency, restrictions (JSONB), is_active | organization | M |
-| memberships | starts_at, ends_at, visits_left, status, auto_renew | member, plan | M |
-| membership_freezes | starts_on, ends_on, reason | membership | M |
+| members | first_name, last_name, phone, birth_date, gender, photo_key, status, blocked_reason, source, notes, emergency_contact_name, emergency_contact_phone | organization, user?, home_location | M |
+| member_imports | file_key, file_name, status, headers, mapping, total_rows, valid_rows, errors, created_count, skipped_count | organization, home_location?, members | M |
+| plans | name, description, type (duration, visits, single, trial), duration_value, duration_unit (day, month, year), visit_limit, price_minor, currency, restrictions (JSONB: time_windows, weekdays, daily_visit_limit, location_ids), freeze_max_days, freeze_max_times, freeze_min_days, freeze_fee_minor, is_active | organization | M |
+| memberships | tarif shartlari nusxasi (plan_name, plan_type, visit_limit, price_minor, currency, restrictions, freeze_*), starts_on, ends_on, starts_at, ends_at, visits_left, status (scheduled, active, frozen, expired, cancelled), status_changes_at, auto_renew, sold_by, cancelled_at, cancel_reason | member, plan, location (sotilgan filial) | M |
+| membership_freezes | starts_on, ends_on, starts_at, ends_at, days, reason, source (staff, member_request), fee_minor, currency, ended_early_at, cancelled_at | membership | M |
 | check_ins | at, direction, method, result, deny_reason | member, location, device?, staff? | M |
-| invoices, invoice_items | number, total_minor, tax_minor, status, due_at | member | M |
-| payments | amount_minor, currency, method, provider, external_id, status, idempotency_key | invoice, cash_shift | M |
-| refunds | amount_minor, reason | payment, staff | M |
-| cash_shifts | opened_at, closed_at, opening_minor, closing_minor | location, staff | M |
+| invoices, invoice_items | number (tashkilot va yil bo'yicha), total_minor, paid_minor, currency, status (open, partially_paid, paid, void), due_on, due_at, void_reason; qatorlar: kind (membership, freeze_fee, other), quantity, unit_minor, total_minor, membership_id | member, location | M |
+| payments | amount_minor, currency, method (cash, card_terminal, transfer; online — v1), provider, external_id, status; faqat qo'shiladi | invoice, member, location, cash_shift? | M |
+| refunds | amount_minor, currency, method, reason; faqat qo'shiladi | payment, invoice, cash_shift? | M |
+| cash_shifts | status, opened_at, closed_at, opening_minor, counted_minor, expected_minor, difference_minor, note; filialda bitta ochiq | location | M |
+| idempotency_keys | key, request_hash, status_code, response | organization | M |
 | otp_codes, sessions | code_hash, expires_at, attempts; refresh_token_hash, user_agent | user | M |
 | notification_templates, notifications | channel, body, status, sent_at | organization, member | M |
 | consents | type, version, at, ip | member yoki organization | M |
@@ -204,8 +206,10 @@ Barcha biznes jadvallarida: `id` (UUID v7), `organization_id`, `created_at`, `up
 
 Qoidalar:
 - Bitta a'zoda bir nechta faol abonement bo'lishi mumkin; kirishda ustuvorlik: avval muddati ertaroq tugaydigani.
+- Abonement sanalari sotilgan filialning vaqt mintaqasida; tarif shartlari sotilganda nusxalanadi, tarif keyin o'zgarsa sotilgan abonement o'zgarmaydi. Muzlatish tugash sanasini suradi (`docs/ADR/0008-memberships.md`).
 - `check_ins` va `audit_logs` faqat qo'shiladi; oy bo'yicha partition.
-- Telefon tashkilot ichida yagona.
+- Telefon tashkilot ichida yagona (arxivlangan a'zo ham telefonini saqlaydi: qaytgan a'zo tiklanadi). A'zo holati `inactive` (abonement yo'q) bilan boshlanadi.
+- Filialga bog'langan rol faqat o'z filiallari a'zolarini ko'radi; owner va accountant butun tashkilotni (`docs/ADR/0006-member-visibility.md`).
 - Xodimning paroli va TOTP si `staff` da, ya'ni har tashkilot uchun alohida (`docs/ADR/0003-staff-credentials.md`).
 - To'lov yozuvlari o'chirilmaydi.
 
@@ -224,12 +228,15 @@ Qoidalar:
 | Auth | POST /auth/login, /auth/otp/request, /auth/otp/verify, /auth/refresh, /auth/logout, /auth/logout-all, /auth/totp/setup, /auth/totp/confirm, /auth/password/set, /auth/password/change | M |
 | Tashkilot | GET/PATCH /organization, GET/POST/PATCH /locations | M |
 | Xodimlar | GET/POST/PATCH /staff, POST /staff/{id}/reset-password, POST /staff/{id}/reset-totp, GET/POST/PATCH /roles | M |
-| A'zolar | GET/POST /members, GET/PATCH /members/{id}, POST /members/import, GET /members/export | M |
-| Tariflar | GET/POST /plans, PATCH /plans/{id} | M |
-| Abonementlar | POST /members/{id}/memberships, POST /memberships/{id}/freeze, /unfreeze, /cancel | M |
-| Kirish | GET /me/qr, POST /access/verify, POST /access/manual, GET /check-ins, GET /locations/{id}/occupancy | M |
-| To'lovlar | POST /invoices, POST /invoices/{id}/payments, POST /payments/{id}/refund, GET /payments | M |
-| Kassa | POST /cash-shifts/open, POST /cash-shifts/{id}/close, GET /cash-shifts/current | M |
+| A'zolar | GET/POST /members, GET /members/duplicates, GET/PATCH /members/{id}, POST /members/{id}/block, /unblock, /archive, /restore, PUT/DELETE /members/{id}/photo, POST /members/imports, GET /members/imports/{id}, POST /members/imports/{id}/validate, /commit, GET /members/imports/template, GET /members/export; GET /files/{token} (imzolangan havola) | M |
+| Tariflar | GET/POST /plans, GET/PATCH /plans/{id} | M |
+| Abonementlar | GET/POST /members/{id}/memberships, GET /memberships/{id}, POST /memberships/{id}/freeze, /unfreeze, /cancel | M |
+| Xabarlar | GET /notification-templates, PUT /notification-templates/{key}/{locale}, GET /notifications?memberId= | M |
+| Hisobotlar | GET /reports/daily?locationId=&date= | M |
+| A'zo ilovasi | GET /me/member, GET /me/memberships, GET /me/payments (faqat a'zo sessiyasi, o'z ma'lumoti) | M |
+| Kirish | GET /me/qr, POST /access/verify, POST /access/manual, POST /access/exit, GET /check-ins, GET /locations/{id}/occupancy, GET /access/events (SSE), GET /access/offline, POST /access/sync | M |
+| To'lovlar | GET/POST /invoices, GET /invoices/{id}, POST /invoices/{id}/payments, /void, GET /payments, GET /payments/{id}, POST /payments/{id}/refund, GET /payments/{id}/receipt, POST /payments/{id}/receipt/sms; abonement sotish to'lov bilan (`POST /members/{id}/memberships`) | M |
+| Kassa | POST /cash-shifts/open, POST /cash-shifts/{id}/close, GET /cash-shifts/current?locationId=, GET /cash-shifts, GET /cash-shifts/{id} | M |
 | Hisobotlar | GET /reports/daily | M |
 | A'zo | GET /me, GET /me/memberships, GET /me/payments | M |
 | Platforma | POST /platform/auth/login, /platform/auth/totp/setup, /platform/auth/totp/confirm, /platform/auth/logout, GET /platform/me; GET/POST /platform/organizations, GET/PATCH /platform/organizations/{id}, POST /platform/organizations/{id}/staff/{staffId}/reset-password, .../reset-totp; GET/POST /platform/saas-plans, PATCH /platform/saas-plans/{id} | M |

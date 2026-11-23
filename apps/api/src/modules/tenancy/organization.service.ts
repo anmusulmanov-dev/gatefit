@@ -105,6 +105,33 @@ export class OrganizationService {
     return toOrganizationDto(updated, before.plan);
   }
 
+  /** The organization's currency (ISO 4217), which its prices are in. */
+  async currency(tx: TenantTransaction, organizationId: string): Promise<string> {
+    const row = await tx.organization.findUniqueOrThrow({
+      where: { id: organizationId },
+      select: { currency: true },
+    });
+    return row.currency;
+  }
+
+  /** A location that is not archived, or null. */
+  async findLocation(tx: TenantTransaction, id: string): Promise<LocationDto | null> {
+    const row = await tx.location.findFirst({ where: { id, deletedAt: null } });
+    return row ? toLocationDto(row) : null;
+  }
+
+  /** Ids of the given locations that exist and are not archived. */
+  async existingLocationIds(tx: TenantTransaction, ids: readonly string[]): Promise<string[]> {
+    if (ids.length === 0) {
+      return [];
+    }
+    const rows = await tx.location.findMany({
+      where: { id: { in: [...ids] }, deletedAt: null },
+      select: { id: true },
+    });
+    return rows.map((row) => row.id);
+  }
+
   async listLocations(tx: TenantTransaction, includeArchived: boolean): Promise<LocationDto[]> {
     const rows = await tx.location.findMany({
       where: includeArchived ? {} : { deletedAt: null },

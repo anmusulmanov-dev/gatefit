@@ -17,6 +17,7 @@ export const PERMISSIONS = [
   'members.manage',
   'members.import',
   'members.export',
+  'members.archive',
   'plans.read',
   'plans.manage',
   'memberships.sell',
@@ -31,6 +32,7 @@ export const PERMISSIONS = [
   'cash_shifts.manage',
   'reports.daily',
   'reports.financial',
+  'notifications.manage',
   'audit.read',
 ] as const;
 
@@ -52,6 +54,7 @@ export const SYSTEM_ROLE_PERMISSIONS: Record<SystemRole, readonly Permission[]> 
     'members.manage',
     'members.import',
     'members.export',
+    'members.archive',
     'plans.read',
     'memberships.sell',
     'memberships.freeze',
@@ -63,6 +66,7 @@ export const SYSTEM_ROLE_PERMISSIONS: Record<SystemRole, readonly Permission[]> 
     'payments.accept',
     'cash_shifts.manage',
     'reports.daily',
+    'notifications.manage',
   ],
   receptionist: [
     'organization.read',

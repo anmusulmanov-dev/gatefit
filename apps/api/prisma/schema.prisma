@@ -34,6 +34,112 @@ enum StaffStatus {
   @@map("staff_status")
 }
 
+// docs/TZ.md F-1.3. "inactive": no membership yet. active, frozen and expired follow the
+// member's memberships (stage M3), debtor their invoices (M4); blocked is set by staff.
+enum MemberStatus {
+  inactive
+  active
+  frozen
+  expired
+  debtor
+  blocked
+
+  @@map("member_status")
+}
+
+enum Gender {
+  male
+  female
+
+  @@map("gender")
+}
+
+enum ImportStatus {
+  uploaded
+  validated
+  queued
+  running
+  done
+  failed
+
+  @@map("import_status")
+}
+
+enum PlanType {
+  duration
+  visits
+  single
+  trial
+
+  @@map("plan_type")
+}
+
+enum DurationUnit {
+  day
+  month
+  year
+
+  @@map("duration_unit")
+}
+
+enum MembershipStatus {
+  scheduled
+  active
+  frozen
+  expired
+  cancelled
+
+  @@map("membership_status")
+}
+
+enum FreezeSource {
+  staff
+  member_request
+
+  @@map("freeze_source")
+}
+
+enum InvoiceStatus {
+  open
+  partially_paid
+  paid
+  void
+
+  @@map("invoice_status")
+}
+
+enum InvoiceItemKind {
+  membership
+  freeze_fee
+  other
+
+  @@map("invoice_item_kind")
+}
+
+enum PaymentMethod {
+  cash
+  card_terminal
+  transfer
+  online
+
+  @@map("payment_method")
+}
+
+enum PaymentStatus {
+  succeeded
+  pending
+  failed
+
+  @@map("payment_status")
+}
+
+enum CashShiftStatus {
+  open
+  closed
+
+  @@map("cash_shift_status")
+}
+
 model Organization {
   id          String             @id @default(uuid(7)) @db.Uuid
   name        String
@@ -49,17 +155,32 @@ model Organization {
   updatedAt   DateTime           @updatedAt @map("updated_at") @db.Timestamptz(3)
   deletedAt   DateTime?          @map("deleted_at") @db.Timestamptz(3)
 
-  locations       Location[]
-  staff           Staff[]
-  staffLocations  StaffLocation[]
-  roles           Role[]
-  rolePermissions RolePermission[]
-  auditLogs       AuditLog[]
-  consents        Consent[]
-  sessions        Session[]
-  otpCodes        OtpCode[]
-  saasPlan        SaasPlan?          @relation(fields: [saasPlanId], references: [id])
-  subscriptions   SaasSubscription[]
+  locations             Location[]
+  staff                 Staff[]
+  staffLocations        StaffLocation[]
+  roles                 Role[]
+  rolePermissions       RolePermission[]
+  auditLogs             AuditLog[]
+  consents              Consent[]
+  sessions              Session[]
+  otpCodes              OtpCode[]
+  saasPlan              SaasPlan?              @relation(fields: [saasPlanId], references: [id])
+  subscriptions         SaasSubscription[]
+  members               Member[]
+  memberImports         MemberImport[]
+  plans                 Plan[]
+  memberships           Membership[]
+  freezes               MembershipFreeze[]
+  idempotencyKeys       IdempotencyKey[]
+  invoiceCounters       InvoiceCounter[]
+  invoices              Invoice[]
+  invoiceItems          InvoiceItem[]
+  payments              Payment[]
+  refunds               Refund[]
+  cashShifts            CashShift[]
+  checkIns              CheckIn[]
+  notificationTemplates NotificationTemplate[]
+  notifications         Notification[]
 
   @@map("organizations")
 }
@@ -78,6 +199,14 @@ model Location {
 
   organization   Organization    @relation(fields: [organizationId], references: [id])
   staffLocations StaffLocation[]
+  members        Member[]
+  memberImports  MemberImport[]
+  memberships    Membership[]
+  invoices       Invoice[]
+  payments       Payment[]
+  refunds        Refund[]
+  cashShifts     CashShift[]
+  checkIns       CheckIn[]
 
   @@unique([organizationId, id])
   @@unique([organizationId, name])
@@ -97,6 +226,7 @@ model User {
   deletedAt DateTime? @map("deleted_at") @db.Timestamptz(3)
 
   staff    Staff[]
+  members  Member[]
   consents Consent[]
   sessions Session[]
 
@@ -181,6 +311,403 @@ model StaffLocation {
   @@map("staff_locations")
 }
 
+// A club member (docs/TZ.md F-1.1). The phone identifies them within the organization; an
+// archived member keeps it, so a returning member is restored rather than duplicated.
+model Member {
+  id                    String       @id @default(uuid(7)) @db.Uuid
+  organizationId        String       @map("organization_id") @db.Uuid
+  // Linked at the member's first sign-in to the member app.
+  userId                String?      @map("user_id") @db.Uuid
+  homeLocationId        String       @map("home_location_id") @db.Uuid
+  firstName             String       @map("first_name")
+  lastName              String       @map("last_name")
+  // E.164
+  phone                 String
+  birthDate             DateTime?    @map("birth_date") @db.Date
+  gender                Gender?
+  // Object key in file storage; served through short-lived signed links only.
+  photoKey              String?      @map("photo_key")
+  status                MemberStatus @default(inactive)
+  blockedReason         String?      @map("blocked_reason")
+  // walk_in, referral, social, website, import, other (packages/shared/src/members.ts)
+  source                String?
+  notes                 String?
+  emergencyContactName  String?      @map("emergency_contact_name")
+  emergencyContactPhone String?      @map("emergency_contact_phone")
+  // The import that created the member, if any.
+  importId              String?      @map("import_id") @db.Uuid
+  createdAt             DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt             DateTime     @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt             DateTime?    @map("deleted_at") @db.Timestamptz(3)
+
+  organization  Organization   @relation(fields: [organizationId], references: [id])
+  user          User?          @relation(fields: [userId], references: [id])
+  homeLocation  Location       @relation(fields: [organizationId, homeLocationId], references: [organizationId, id])
+  import        MemberImport?  @relation(fields: [organizationId, importId], references: [organizationId, id])
+  consents      Consent[]
+  memberships   Membership[]
+  invoices      Invoice[]
+  payments      Payment[]
+  checkIns      CheckIn[]
+  notifications Notification[]
+
+  @@unique([organizationId, id])
+  @@unique([organizationId, phone])
+  @@unique([organizationId, userId])
+  @@index([organizationId, homeLocationId, status])
+  @@index([organizationId, importId])
+  // Search by any part of a name or phone (pg_trgm).
+  @@index([firstName(ops: raw("gin_trgm_ops"))], type: Gin, map: "members_first_name_trgm_idx")
+  @@index([lastName(ops: raw("gin_trgm_ops"))], type: Gin, map: "members_last_name_trgm_idx")
+  @@index([phone(ops: raw("gin_trgm_ops"))], type: Gin, map: "members_phone_trgm_idx")
+  @@map("members")
+}
+
+// A member file being imported (docs/TZ.md F-1.4): uploaded, checked, then written by a
+// background job. The file itself is in file storage.
+model MemberImport {
+  id             String       @id @default(uuid(7)) @db.Uuid
+  organizationId String       @map("organization_id") @db.Uuid
+  // users.id of who uploaded it.
+  createdBy      String       @map("created_by") @db.Uuid
+  homeLocationId String?      @map("home_location_id") @db.Uuid
+  status         ImportStatus @default(uploaded)
+  fileKey        String       @map("file_key")
+  fileName       String       @map("file_name")
+  headers        Json
+  // { field: columnIndex }
+  mapping        Json
+  sampleRows     Json         @map("sample_rows")
+  totalRows      Int          @map("total_rows")
+  validRows      Int?         @map("valid_rows")
+  errorCount     Int          @default(0) @map("error_count")
+  // [{ row, field, code }], the first 1000
+  errors         Json         @default("[]")
+  createdCount   Int?         @map("created_count")
+  skippedCount   Int?         @map("skipped_count")
+  finishedAt     DateTime?    @map("finished_at") @db.Timestamptz(3)
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime     @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt      DateTime?    @map("deleted_at") @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  homeLocation Location?    @relation(fields: [organizationId, homeLocationId], references: [organizationId, id])
+  members      Member[]
+
+  @@unique([organizationId, id])
+  @@index([organizationId, createdAt])
+  @@map("member_imports")
+}
+
+// A tariff the club sells (docs/TZ.md F-2.1, F-2.2). Editing it does not change
+// memberships already sold: they copy its terms.
+model Plan {
+  id             String       @id @default(uuid(7)) @db.Uuid
+  organizationId String       @map("organization_id") @db.Uuid
+  name           String
+  description    String?
+  type           PlanType
+  durationValue  Int          @map("duration_value")
+  durationUnit   DurationUnit @map("duration_unit")
+  // null: unlimited visits within the term.
+  visitLimit     Int?         @map("visit_limit")
+  priceMinor     BigInt       @map("price_minor")
+  currency       String       @db.Char(3)
+  // { timeWindows, weekdays, dailyVisitLimit, locationIds } (packages/shared/src/plans.ts)
+  restrictions   Json
+  // 0: memberships of this plan cannot be frozen.
+  freezeMaxDays  Int          @default(0) @map("freeze_max_days")
+  freezeMaxTimes Int          @default(0) @map("freeze_max_times")
+  freezeMinDays  Int          @default(1) @map("freeze_min_days")
+  freezeFeeMinor BigInt       @default(0) @map("freeze_fee_minor")
+  isActive       Boolean      @default(true) @map("is_active")
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime     @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt      DateTime?    @map("deleted_at") @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  memberships  Membership[]
+
+  @@unique([organizationId, id])
+  @@index([organizationId, isActive])
+  @@map("plans")
+}
+
+// A plan sold to a member (docs/TZ.md F-2.3). Dates are calendar days in the time zone of
+// the location it was sold at; the *_at columns are the matching instants.
+model Membership {
+  id              String           @id @default(uuid(7)) @db.Uuid
+  organizationId  String           @map("organization_id") @db.Uuid
+  memberId        String           @map("member_id") @db.Uuid
+  planId          String           @map("plan_id") @db.Uuid
+  locationId      String           @map("location_id") @db.Uuid
+  // The plan's terms at the time of sale.
+  planName        String           @map("plan_name")
+  planType        PlanType         @map("plan_type")
+  visitLimit      Int?             @map("visit_limit")
+  priceMinor      BigInt           @map("price_minor")
+  currency        String           @db.Char(3)
+  restrictions    Json
+  freezeMaxDays   Int              @map("freeze_max_days")
+  freezeMaxTimes  Int              @map("freeze_max_times")
+  freezeMinDays   Int              @map("freeze_min_days")
+  freezeFeeMinor  BigInt           @map("freeze_fee_minor")
+  startsOn        DateTime         @map("starts_on") @db.Date
+  // Last day, inclusive. Freezes move it later.
+  endsOn          DateTime         @map("ends_on") @db.Date
+  // Midnight at the start of starts_on and after ends_on, in the location's time zone.
+  startsAt        DateTime         @map("starts_at") @db.Timestamptz(3)
+  endsAt          DateTime         @map("ends_at") @db.Timestamptz(3)
+  // Taken by check-ins (stage M5); null for unlimited visits.
+  visitsLeft      Int?             @map("visits_left")
+  status          MembershipStatus
+  // When the status will next change by itself (start, freeze, end); null once final.
+  // The hourly job picks up memberships whose moment has come.
+  statusChangesAt DateTime?        @map("status_changes_at") @db.Timestamptz(3)
+  // Renewal comes in v1 (docs/TZ.md F-2.5).
+  autoRenew       Boolean          @default(false) @map("auto_renew")
+  // users.id of who sold it.
+  soldBy          String           @map("sold_by") @db.Uuid
+  cancelledAt     DateTime?        @map("cancelled_at") @db.Timestamptz(3)
+  cancelledBy     String?          @map("cancelled_by") @db.Uuid
+  cancelReason    String?          @map("cancel_reason")
+  createdAt       DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime         @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt       DateTime?        @map("deleted_at") @db.Timestamptz(3)
+
+  organization Organization       @relation(fields: [organizationId], references: [id])
+  member       Member             @relation(fields: [organizationId, memberId], references: [organizationId, id])
+  plan         Plan               @relation(fields: [organizationId, planId], references: [organizationId, id])
+  location     Location           @relation(fields: [organizationId, locationId], references: [organizationId, id])
+  freezes      MembershipFreeze[]
+
+  @@unique([organizationId, id])
+  @@index([organizationId, memberId])
+  @@index([statusChangesAt])
+  @@map("memberships")
+}
+
+// A pause of a membership (docs/TZ.md F-2.4). It moves the membership's last day later by
+// its length. Ended early, it keeps only the days used; cancelled before it began, none.
+model MembershipFreeze {
+  id             String       @id @default(uuid(7)) @db.Uuid
+  organizationId String       @map("organization_id") @db.Uuid
+  membershipId   String       @map("membership_id") @db.Uuid
+  startsOn       DateTime     @map("starts_on") @db.Date
+  // Last frozen day, inclusive.
+  endsOn         DateTime     @map("ends_on") @db.Date
+  startsAt       DateTime     @map("starts_at") @db.Timestamptz(3)
+  endsAt         DateTime     @map("ends_at") @db.Timestamptz(3)
+  days           Int
+  reason         String
+  source         FreezeSource
+  // Charged in stage M4 (payments).
+  feeMinor       BigInt       @map("fee_minor")
+  currency       String       @db.Char(3)
+  // users.id of who entered it.
+  createdBy      String       @map("created_by") @db.Uuid
+  endedEarlyAt   DateTime?    @map("ended_early_at") @db.Timestamptz(3)
+  cancelledAt    DateTime?    @map("cancelled_at") @db.Timestamptz(3)
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime     @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt      DateTime?    @map("deleted_at") @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  membership   Membership   @relation(fields: [organizationId, membershipId], references: [organizationId, id])
+
+  @@unique([organizationId, id])
+  @@index([organizationId, membershipId])
+  @@map("membership_freezes")
+}
+
+// A response stored under an Idempotency-Key (CLAUDE.md rule 6): a repeated money request
+// gets the first answer instead of running again.
+model IdempotencyKey {
+  organizationId String   @map("organization_id") @db.Uuid
+  key            String
+  // sha256 of method, path and body: the same key with another request is refused.
+  requestHash    String   @map("request_hash")
+  // Filled once the first request has succeeded.
+  statusCode     Int?     @map("status_code")
+  response       Json?
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@id([organizationId, key])
+  @@map("idempotency_keys")
+}
+
+// Next invoice number per organization and year.
+model InvoiceCounter {
+  organizationId String @map("organization_id") @db.Uuid
+  year           Int
+  last           Int
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@id([organizationId, year])
+  @@map("invoice_counters")
+}
+
+// What a member owes (docs/TZ.md F-4.1). paid_minor is payments less refunds.
+model Invoice {
+  id              String        @id @default(uuid(7)) @db.Uuid
+  organizationId  String        @map("organization_id") @db.Uuid
+  // 2026-000001, per organization and year.
+  number          String
+  memberId        String        @map("member_id") @db.Uuid
+  locationId      String        @map("location_id") @db.Uuid
+  currency        String        @db.Char(3)
+  totalMinor      BigInt        @map("total_minor")
+  paidMinor       BigInt        @default(0) @map("paid_minor")
+  status          InvoiceStatus @default(open)
+  // Last day to pay, in the location's time zone; null: owed at once.
+  dueOn           DateTime?     @map("due_on") @db.Date
+  // From this moment an unpaid balance makes the member a debtor.
+  dueAt           DateTime      @map("due_at") @db.Timestamptz(3)
+  // Set by the job once the member's status has been brought in line after due_at.
+  overdueMarkedAt DateTime?     @map("overdue_marked_at") @db.Timestamptz(3)
+  // users.id
+  createdBy       String        @map("created_by") @db.Uuid
+  voidedAt        DateTime?     @map("voided_at") @db.Timestamptz(3)
+  voidedBy        String?       @map("voided_by") @db.Uuid
+  voidReason      String?       @map("void_reason")
+  createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime      @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt       DateTime?     @map("deleted_at") @db.Timestamptz(3)
+
+  organization Organization  @relation(fields: [organizationId], references: [id])
+  member       Member        @relation(fields: [organizationId, memberId], references: [organizationId, id])
+  location     Location      @relation(fields: [organizationId, locationId], references: [organizationId, id])
+  items        InvoiceItem[]
+  payments     Payment[]
+  refunds      Refund[]
+
+  @@unique([organizationId, id])
+  @@unique([organizationId, number])
+  @@index([organizationId, memberId])
+  @@index([dueAt])
+  @@map("invoices")
+}
+
+model InvoiceItem {
+  id             String          @id @default(uuid(7)) @db.Uuid
+  organizationId String          @map("organization_id") @db.Uuid
+  invoiceId      String          @map("invoice_id") @db.Uuid
+  kind           InvoiceItemKind
+  description    String
+  quantity       Int
+  unitMinor      BigInt          @map("unit_minor")
+  totalMinor     BigInt          @map("total_minor")
+  // The plans module's membership or freeze this item charges for, if any.
+  membershipId   String?         @map("membership_id") @db.Uuid
+  freezeId       String?         @map("freeze_id") @db.Uuid
+  createdAt      DateTime        @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  invoice      Invoice      @relation(fields: [organizationId, invoiceId], references: [organizationId, id])
+
+  @@unique([organizationId, id])
+  @@index([organizationId, invoiceId])
+  @@index([organizationId, membershipId])
+  @@map("invoice_items")
+}
+
+// Money received (docs/TZ.md F-4.1). Never changed or deleted: a mistake is put right
+// with a refund (CLAUDE.md rule 2), so the API may only insert and read.
+model Payment {
+  id             String        @id @default(uuid(7)) @db.Uuid
+  organizationId String        @map("organization_id") @db.Uuid
+  invoiceId      String        @map("invoice_id") @db.Uuid
+  memberId       String        @map("member_id") @db.Uuid
+  locationId     String        @map("location_id") @db.Uuid
+  cashShiftId    String?       @map("cash_shift_id") @db.Uuid
+  method         PaymentMethod
+  // manual: recorded by staff. Online providers come in v1.
+  provider       String        @default("manual")
+  externalId     String?       @map("external_id")
+  amountMinor    BigInt        @map("amount_minor")
+  currency       String        @db.Char(3)
+  status         PaymentStatus @default(succeeded)
+  // users.id
+  receivedBy     String        @map("received_by") @db.Uuid
+  createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  invoice      Invoice      @relation(fields: [organizationId, invoiceId], references: [organizationId, id])
+  member       Member       @relation(fields: [organizationId, memberId], references: [organizationId, id])
+  location     Location     @relation(fields: [organizationId, locationId], references: [organizationId, id])
+  cashShift    CashShift?   @relation(fields: [organizationId, cashShiftId], references: [organizationId, id])
+  refunds      Refund[]
+
+  @@unique([organizationId, id])
+  @@index([organizationId, createdAt])
+  @@index([organizationId, invoiceId])
+  @@index([organizationId, cashShiftId])
+  @@map("payments")
+}
+
+// Money given back (docs/TZ.md F-4.3). Insert and read only, like payments.
+model Refund {
+  id             String        @id @default(uuid(7)) @db.Uuid
+  organizationId String        @map("organization_id") @db.Uuid
+  paymentId      String        @map("payment_id") @db.Uuid
+  invoiceId      String        @map("invoice_id") @db.Uuid
+  locationId     String        @map("location_id") @db.Uuid
+  cashShiftId    String?       @map("cash_shift_id") @db.Uuid
+  method         PaymentMethod
+  amountMinor    BigInt        @map("amount_minor")
+  currency       String        @db.Char(3)
+  reason         String
+  // users.id
+  refundedBy     String        @map("refunded_by") @db.Uuid
+  createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  payment      Payment      @relation(fields: [organizationId, paymentId], references: [organizationId, id])
+  invoice      Invoice      @relation(fields: [organizationId, invoiceId], references: [organizationId, id])
+  location     Location     @relation(fields: [organizationId, locationId], references: [organizationId, id])
+  cashShift    CashShift?   @relation(fields: [organizationId, cashShiftId], references: [organizationId, id])
+
+  @@unique([organizationId, id])
+  @@index([organizationId, paymentId])
+  @@index([organizationId, cashShiftId])
+  @@map("refunds")
+}
+
+// A cash desk session at a location (docs/TZ.md F-4.4). One open at a time per location.
+model CashShift {
+  id              String          @id @default(uuid(7)) @db.Uuid
+  organizationId  String          @map("organization_id") @db.Uuid
+  locationId      String          @map("location_id") @db.Uuid
+  status          CashShiftStatus @default(open)
+  openingMinor    BigInt          @map("opening_minor")
+  currency        String          @db.Char(3)
+  // users.id
+  openedBy        String          @map("opened_by") @db.Uuid
+  openedAt        DateTime        @map("opened_at") @db.Timestamptz(3)
+  closedBy        String?         @map("closed_by") @db.Uuid
+  closedAt        DateTime?       @map("closed_at") @db.Timestamptz(3)
+  countedMinor    BigInt?         @map("counted_minor")
+  expectedMinor   BigInt?         @map("expected_minor")
+  // counted - expected; negative when cash is missing.
+  differenceMinor BigInt?         @map("difference_minor")
+  note            String?
+  createdAt       DateTime        @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime        @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt       DateTime?       @map("deleted_at") @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  location     Location     @relation(fields: [organizationId, locationId], references: [organizationId, id])
+  payments     Payment[]
+  refunds      Refund[]
+
+  @@unique([organizationId, id])
+  @@index([organizationId, locationId, openedAt])
+  @@map("cash_shifts")
+}
+
 // Append-only and partitioned by month on "at" (the partition key must be part of the
 // primary key). The API role may only INSERT and SELECT.
 model AuditLog {
@@ -253,11 +780,12 @@ model OtpCode {
   @@map("otp_codes")
 }
 
-// Append-only record of an accepted agreement. member_id is added with the members table.
+// Append-only record of an accepted agreement, by a user or about a member.
 model Consent {
   id             String   @id @default(uuid(7)) @db.Uuid
   organizationId String   @map("organization_id") @db.Uuid
   userId         String?  @map("user_id") @db.Uuid
+  memberId       String?  @map("member_id") @db.Uuid
   type           String
   version        String
   ip             String?  @db.Inet
@@ -265,8 +793,10 @@ model Consent {
 
   organization Organization @relation(fields: [organizationId], references: [id])
   user         User?        @relation(fields: [userId], references: [id])
+  member       Member?      @relation(fields: [organizationId, memberId], references: [organizationId, id])
 
   @@index([organizationId, type])
+  @@index([organizationId, memberId])
   @@map("consents")
 }
 
@@ -360,4 +890,115 @@ model PlatformSession {
 
   @@index([adminId])
   @@map("platform_sessions")
+}
+
+// --- Entry control (docs/TZ.md F-3.1 to F-3.4, docs/ADR/0010-access.md) ---
+
+enum CheckInDirection {
+  in
+  out
+}
+
+enum CheckInMethod {
+  qr
+  manual
+  qr_offline
+}
+
+enum CheckInResult {
+  allowed
+  denied
+}
+
+// Append-only (CLAUDE.md rule 5), partitioned by month of `at` in the hand-written SQL of
+// the access migration; the primary key includes `at` for that reason.
+model CheckIn {
+  id             String           @db.Uuid
+  organizationId String           @map("organization_id") @db.Uuid
+  // When the member came through; for offline entries, as the reception screen saw it.
+  at             DateTime         @db.Timestamptz(3)
+  locationId     String           @map("location_id") @db.Uuid
+  memberId       String           @map("member_id") @db.Uuid
+  // The membership the entry was counted against; null when none applied.
+  membershipId   String?          @map("membership_id") @db.Uuid
+  direction      CheckInDirection
+  method         CheckInMethod
+  result         CheckInResult
+  // packages/shared/src/access.ts ACCESS_DENY_REASONS
+  denyReason     String?          @map("deny_reason")
+  // Why staff let the member in by hand.
+  note           String?
+  // users.id of the staff member who scanned or entered it.
+  recordedBy     String           @map("recorded_by") @db.Uuid
+  // When the server received it (later than `at` for offline entries).
+  createdAt      DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  location     Location     @relation(fields: [organizationId, locationId], references: [organizationId, id])
+  member       Member       @relation(fields: [organizationId, memberId], references: [organizationId, id])
+
+  @@id([id, at])
+  @@index([organizationId, locationId, at])
+  @@index([organizationId, memberId, at])
+  @@map("check_ins")
+}
+
+// --- Notifications (docs/TZ.md F-4.2, F-7.2 MVP part, docs/ADR/0011-notifications.md) ---
+
+// A club's own wording of a message in one language; without a row (or with a null body)
+// the standard text of packages/i18n is used.
+model NotificationTemplate {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  // packages/shared/src/notifications.ts NOTIFICATION_TEMPLATE_KEYS
+  key            String
+  // uz, ru, en
+  locale         String
+  // null: back to the standard wording.
+  body           String?
+  // users.id of who changed it last.
+  updatedBy      String   @map("updated_by") @db.Uuid
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@unique([organizationId, key, locale])
+  @@map("notification_templates")
+}
+
+enum NotificationStatus {
+  queued
+  sent
+  failed
+}
+
+// Every message sent or tried, with its text as sent. Rows change status only.
+model Notification {
+  id             String             @id @default(uuid(7)) @db.Uuid
+  organizationId String             @map("organization_id") @db.Uuid
+  memberId       String?            @map("member_id") @db.Uuid
+  // packages/shared/src/notifications.ts NOTIFICATION_KINDS
+  kind           String
+  channel        String             @default("sms")
+  // E.164 phone the message went to.
+  to             String
+  body           String
+  status         NotificationStatus @default(queued)
+  attempts       Int                @default(0)
+  // Short provider error of the last failed attempt; never the message or the phone.
+  lastError      String?            @map("last_error")
+  // Makes a message once only, e.g. expiry:<membership>:<last day>.
+  dedupeKey      String?            @map("dedupe_key")
+  sentAt         DateTime?          @map("sent_at") @db.Timestamptz(3)
+  createdAt      DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime           @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  member       Member?      @relation(fields: [organizationId, memberId], references: [organizationId, id])
+
+  @@unique([organizationId, id])
+  @@unique([organizationId, dedupeKey])
+  @@index([organizationId, memberId, createdAt])
+  @@map("notifications")
 }

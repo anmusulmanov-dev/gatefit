@@ -83,7 +83,37 @@
     "SLUG_TAKEN": "Bu manzil band.",
     "PLAN_KEY_TAKEN": "Bu kalitli tarif allaqachon bor.",
     "PLAN_INACTIVE": "Bu tarif sotuvda emas.",
-    "TOTP_SETUP_REQUIRED": "Avval ikki bosqichli himoyani sozlang."
+    "TOTP_SETUP_REQUIRED": "Avval ikki bosqichli himoyani sozlang.",
+    "MEMBER_PHONE_TAKEN": "Bu telefon bilan a'zo allaqachon bor.",
+    "MEMBER_ARCHIVED": "A'zo arxivda. Avval uni tiklang.",
+    "LOCATION_NOT_ASSIGNED": "Siz bu filialda ishlamaysiz.",
+    "PLAN_NOT_AT_LOCATION": "Bu tarif tanlangan filialda amal qilmaydi.",
+    "TRIAL_ALREADY_USED": "Bu a'zo sinov abonementidan allaqachon foydalangan.",
+    "INVALID_START_DATE": "Boshlanish sanasi bir oydan oldin yoki uch oydan keyin bo'lmasin.",
+    "MEMBERSHIP_NOT_IN_FORCE": "Bu abonement amalda emas.",
+    "FREEZE_NOT_ALLOWED": "Bu tarifni muzlatib bo'lmaydi.",
+    "FREEZE_LIMIT_EXCEEDED": "Muzlatish tarif limitlaridan oshib ketdi.",
+    "FREEZE_OVERLAP": "Bu kunlarning bir qismi allaqachon muzlatilgan.",
+    "INVALID_FREEZE_DATES": "Muzlatish bugundan yoki keyinroq, abonement tugashidan oldin boshlanadi.",
+    "NO_FREEZE_TO_END": "Tugatiladigan muzlatish yo'q.",
+    "IDEMPOTENCY_KEY_REQUIRED": "So'rovni xavfsiz yuborib bo'lmadi. Qayta urinib ko'ring.",
+    "IDEMPOTENCY_KEY_REUSED": "Bu so'rov boshqa ma'lumot bilan yuborilgan. Sahifani yangilang.",
+    "AMOUNT_EXCEEDS_BALANCE": "Summa qarzdan katta.",
+    "INVOICE_VOID": "Bu hisob bekor qilingan.",
+    "INVOICE_PAID": "Bu hisob to'langan.",
+    "REFUND_EXCEEDS_PAYMENT": "To'langandan ko'p qaytarib bo'lmaydi.",
+    "CASH_SHIFT_NOT_OPEN": "Avval kassa smenasini oching.",
+    "CASH_SHIFT_ALREADY_OPEN": "Bu filialda smena allaqachon ochiq.",
+    "CASH_SHIFT_CLOSED": "Bu smena allaqachon yopilgan.",
+    "INVALID_DUE_DATE": "To'lov muddati o'tgan sana bo'lishi mumkin emas.",
+    "INVALID_TEMPLATE": "Matnda bu xabarda yo'q o'zgaruvchi ishlatilgan.",
+    "FILE_REQUIRED": "Faylni tanlang.",
+    "FILE_TOO_LARGE": "Fayl juda katta (5 MB gacha).",
+    "UNSUPPORTED_FILE_TYPE": "JPEG, PNG yoki WebP rasm yuklang.",
+    "FILE_UNREADABLE": "Faylni o'qib bo'lmadi. XLSX yoki CSV (UTF-8) qilib saqlang.",
+    "IMPORT_TOO_MANY_ROWS": "Qatorlar juda ko'p: bitta faylda 10 000 tagacha a'zo.",
+    "IMPORT_NOT_VALIDATED": "Avval qatorlarni tekshiring.",
+    "IMPORT_ALREADY_STARTED": "Bu import allaqachon boshlangan."
   },
   "organization": {
     "missingTitle": "Tashkilot topilmadi",
@@ -94,7 +124,9 @@
     "unavailableText": "Birozdan keyin sahifani yangilang."
   },
   "sms": {
-    "otp": "Gatefit: kirish kodi {code}. Uni hech kimga aytmang."
+    "otp": "Gatefit: kirish kodi {code}. Uni hech kimga aytmang.",
+    "receipt": "{organization}: {amount} to'lov qabul qilindi. Hisob {number}, qoldiq {balance}.",
+    "expiryReminder": "{organization}: {name}, «{plan}» abonementingiz {date} da tugaydi ({days} kun qoldi). Qabulxonada uzaytiring."
   },
   "web": {
     "home": {
@@ -109,12 +141,53 @@
   "member": {
     "home": {
       "title": "A'zo ilovasi",
-      "subtitle": "Abonementingiz va kirish kodingiz shu yerda bo'ladi."
+      "subtitle": "Abonementingiz va kirish kodingiz shu yerda bo'ladi.",
+      "membership": "Abonement",
+      "noMembership": "Amaldagi abonement yo'q. Qabulxonaga murojaat qiling."
+    },
+    "loading": "Yuklanmoqda…",
+    "loadFailed": "Yuklab bo'lmadi. Internetni tekshirib, qayta urinib ko'ring.",
+    "nav": {
+      "label": "Bo'limlar",
+      "home": "Bosh sahifa",
+      "memberships": "Abonementlar",
+      "payments": "To'lovlar",
+      "profile": "Profil"
+    },
+    "qr": {
+      "title": "Kirish kodi",
+      "alt": "Kirish uchun QR kodingiz",
+      "loading": "Kod olinmoqda…",
+      "noCode": "Ishlaydigan kod yo'q. Internetga ulaning.",
+      "refreshIn": "Yangi kod {seconds} soniyadan keyin",
+      "offline": "Internet yo'q: saqlangan kod ko'rsatilmoqda. U bir-ikki daqiqa ishlaydi.",
+      "hint": "Bu kodni qabulxonadagi skanerga ko'rsating."
+    },
+    "memberships": {
+      "title": "Abonementlar",
+      "empty": "Hozircha abonementlar yo'q."
+    },
+    "payments": {
+      "title": "To'lovlar",
+      "empty": "Hozircha to'lovlar yo'q.",
+      "owed": "Qarzingiz: {amount}"
+    },
+    "profile": {
+      "title": "Profil",
+      "phone": "Telefon",
+      "location": "Asosiy filial",
+      "changeHint": "Ma'lumotlarni o'zgartirish uchun qabulxonaga murojaat qiling."
     }
   },
   "nav": {
     "home": "Bosh sahifa",
-    "settings": "Sozlamalar"
+    "settings": "Sozlamalar",
+    "reception": "Qabulxona",
+    "members": "A'zolar",
+    "checkIns": "Kirishlar",
+    "plans": "Tariflar",
+    "payments": "To'lovlar",
+    "cashShift": "Kassa"
   },
   "settings": {
     "title": "Sozlamalar",
@@ -124,6 +197,7 @@
       "locations": "Filiallar",
       "staff": "Xodimlar",
       "roles": "Rollar",
+      "messages": "Xabarlar",
       "account": "Mening hisobim"
     }
   },
@@ -246,6 +320,7 @@
     "payments": "To'lovlar",
     "cash_shifts": "Kassa",
     "reports": "Hisobotlar",
+    "notifications": "Xabarlar",
     "audit": "Audit"
   },
   "permissions": {
@@ -269,7 +344,8 @@
       "read": "A'zolarni ko'rish",
       "manage": "A'zolarni qo'shish va tahrirlash",
       "import": "A'zolarni import qilish",
-      "export": "A'zolarni eksport qilish"
+      "export": "A'zolarni eksport qilish",
+      "archive": "A'zolarni arxivlash va tiklash"
     },
     "plans": {
       "read": "Tariflarni ko'rish",
@@ -296,6 +372,9 @@
     "reports": {
       "daily": "Kunlik hisobot",
       "financial": "Moliyaviy hisobotlar"
+    },
+    "notifications": {
+      "manage": "Xabar shablonlari"
     },
     "audit": {
       "read": "Audit jurnalini ko'rish"
@@ -393,5 +472,503 @@
     "turnstile": "Turniket",
     "network_membership": "Tarmoq abonementi",
     "api_webhooks": "API va vebhuklar"
+  },
+  "memberFile": {
+    "columns": {
+      "fullName": "F.I.Sh.",
+      "firstName": "Ism",
+      "lastName": "Familiya",
+      "phone": "Telefon",
+      "birthDate": "Tug'ilgan sana",
+      "gender": "Jins",
+      "status": "Holat",
+      "homeLocation": "Filial",
+      "source": "Manba",
+      "notes": "Izoh",
+      "emergencyContactName": "Favqulodda aloqa",
+      "emergencyContactPhone": "Favqulodda telefon",
+      "createdAt": "Qo'shilgan"
+    },
+    "gender": {
+      "male": "Erkak",
+      "female": "Ayol"
+    },
+    "status": {
+      "inactive": "Abonementsiz",
+      "active": "Faol",
+      "frozen": "Muzlatilgan",
+      "expired": "Muddati tugagan",
+      "debtor": "Qarzdor",
+      "blocked": "Bloklangan"
+    },
+    "source": {
+      "walk_in": "O'zi kelgan",
+      "referral": "Tavsiya",
+      "social": "Ijtimoiy tarmoq",
+      "website": "Sayt",
+      "import": "Import",
+      "other": "Boshqa"
+    }
+  },
+  "members": {
+    "title": "A'zolar",
+    "add": "A'zo qo'shish",
+    "import": "Import",
+    "export": "Eksport",
+    "exportCsv": "CSV eksport",
+    "search": "Ism yoki telefon bo'yicha qidirish",
+    "status": "Holat",
+    "allStatuses": "Barcha holatlar",
+    "location": "Filial",
+    "allLocations": "Barcha filiallar",
+    "empty": "Hali a'zolar yo'q.",
+    "notFound": "Qidiruv bo'yicha hech kim topilmadi.",
+    "back": "A'zolarga qaytish",
+    "fields": {
+      "firstName": "Ism",
+      "lastName": "Familiya",
+      "phone": "Telefon",
+      "birthDate": "Tug'ilgan sana",
+      "gender": "Jins",
+      "source": "Bizni qayerdan topdi",
+      "notes": "Izoh",
+      "emergencyContactName": "Favqulodda aloqa",
+      "emergencyContactPhone": "Favqulodda aloqa telefoni",
+      "homeLocation": "Filial",
+      "createdAt": "Qo'shilgan"
+    },
+    "notSpecified": "Ko'rsatilmagan",
+    "new": "Yangi a'zo",
+    "editTitle": "A'zoni tahrirlash",
+    "created": "A'zo qo'shildi.",
+    "duplicates": {
+      "phoneTaken": "Bu telefon {name} ga tegishli.",
+      "phoneTakenArchived": "Bu telefon {name} ga tegishli, u arxivda.",
+      "open": "Ochish",
+      "restore": "Tiklash",
+      "similar": "Shu ismli a'zolar bor. Bu boshqa odam ekaniga ishonch hosil qiling:"
+    },
+    "photo": {
+      "title": "Foto",
+      "upload": "Foto yuklash",
+      "replace": "Fotoni almashtirish",
+      "remove": "Fotoni o'chirish",
+      "hint": "JPEG, PNG yoki WebP, 5 MB gacha.",
+      "alt": "{name} fotosi"
+    },
+    "block": {
+      "action": "Bloklash",
+      "title": "A'zoni bloklash",
+      "description": "Bloklangan a'zo blok olib tashlanmaguncha kira olmaydi.",
+      "reason": "Sabab",
+      "confirm": "Bloklash",
+      "unblock": "Blokdan chiqarish",
+      "reasonShown": "Bloklangan: {reason}"
+    },
+    "archive": {
+      "action": "Arxivlash",
+      "confirmText": "{name} arxivlansinmi? A'zo ro'yxatlardan yo'qoladi, telefoni band qoladi va uni tiklash mumkin.",
+      "restore": "Tiklash",
+      "archived": "Arxivda"
+    },
+    "importWizard": {
+      "title": "A'zolarni import qilish",
+      "steps": {
+        "upload": "Fayl",
+        "mapping": "Ustunlar",
+        "check": "Tekshiruv",
+        "done": "Tayyor"
+      },
+      "uploadHint": "XLSX yoki CSV, 5 MB va 10 000 qatorgacha. Birinchi qatorda ustun nomlari bo'lishi kerak.",
+      "chooseFile": "Fayl",
+      "template": "Namuna faylni yuklab olish",
+      "upload": "Yuklash",
+      "mappingHint": "Qaysi ustunda nima borligini ko'rsating. Telefon va to'liq ism (yoki ism va familiya) majburiy.",
+      "column": "Ustun",
+      "field": "Ma'nosi",
+      "skip": "Import qilinmasin",
+      "sample": "Misol",
+      "location": "A'zolar qaysi filialga",
+      "validate": "Qatorlarni tekshirish",
+      "rowsTotal": "Fayldagi qatorlar: {count}",
+      "valid": "Importga tayyor: {count}",
+      "invalid": "Muammolar: {count}",
+      "errorsShown": "Birinchi {count} ta muammo ko'rsatilgan.",
+      "row": "Qator",
+      "problem": "Muammo",
+      "start": "{count} ta a'zoni import qilish",
+      "running": "Import qilinmoqda… Bir daqiqa vaqt olishi mumkin.",
+      "finished": "Tayyor: {created} ta a'zo qo'shildi.",
+      "skipped": "{count} ta qator o'tkazib yuborildi: telefoni shu orada band bo'ldi.",
+      "failed": "Import muvaffaqiyatsiz tugadi. Boshqa hech narsa qo'shilmadi; qayta urinib ko'ring.",
+      "again": "Boshqa fayl import qilish",
+      "toList": "A'zolarga o'tish",
+      "mappingInvalid": "Telefon uchun, va to'liq ism yoki ism va familiya uchun ustun tanlang. Har ma'noga bitta ustun.",
+      "rowErrors": {
+        "NAME_REQUIRED": "Ism yo'q",
+        "PHONE_REQUIRED": "Telefon yo'q",
+        "PHONE_INVALID": "Telefon raqami noto'g'ri",
+        "PHONE_REPEATED": "Telefon oldingi qatorda bor",
+        "PHONE_EXISTS": "Bu telefon bilan a'zo allaqachon bor",
+        "BIRTH_DATE_INVALID": "Tug'ilgan sana noto'g'ri (masalan 17.05.1990)",
+        "GENDER_INVALID": "Jins tanilmadi",
+        "SOURCE_INVALID": "Manba tanilmadi",
+        "TOO_LONG": "Matn juda uzun"
+      }
+    }
+  },
+  "plans": {
+    "title": "Tariflar",
+    "add": "Tarif qo'shish",
+    "edit": "Tarifni o'zgartirish",
+    "changeWarning": "O'zgarishlar yangi sotuvlarga tegishli. Sotilgan abonementlar o'z shartlarini saqlaydi.",
+    "empty": "Hozircha tariflar yo'q.",
+    "show": "Ko'rsatish",
+    "onSale": "Sotuvda",
+    "withdrawn": "Sotuvdan olinganlar",
+    "all": "Hammasi",
+    "inactive": "Sotuvdan olingan",
+    "invalidPrice": "Summani kiriting, verguldan keyin ko'pi bilan {digits} ta raqam.",
+    "types": {
+      "duration": "Muddatli",
+      "visits": "Tashriflar bo'yicha",
+      "single": "Bir martalik",
+      "trial": "Sinov"
+    },
+    "units": {
+      "day": "{count} kun",
+      "month": "{count} oy",
+      "year": "{count} yil"
+    },
+    "unitNames": {
+      "day": "kun",
+      "month": "oy",
+      "year": "yil"
+    },
+    "weekdays": {
+      "1": "Du",
+      "2": "Se",
+      "3": "Ch",
+      "4": "Pa",
+      "5": "Ju",
+      "6": "Sh",
+      "7": "Ya"
+    },
+    "summary": {
+      "visits": "{count} tashrif",
+      "unlimitedVisits": "cheksiz tashrif",
+      "perDay": "kuniga {count} tagacha",
+      "noFreeze": "muzlatib bo'lmaydi",
+      "freeze": "muzlatish {days} kungacha, {times} marta, narxi {fee}",
+      "freezeFree": "muzlatish {days} kungacha, {times} marta, bepul"
+    },
+    "fields": {
+      "name": "Nomi",
+      "description": "Tavsif",
+      "type": "Turi",
+      "duration": "Amal qilish muddati",
+      "durationUnit": "Birlik",
+      "visitLimit": "Tashriflar soni",
+      "price": "Narxi",
+      "priceHint": "{currency} da, masalan 450000",
+      "restrictions": "Cheklovlar",
+      "timeWindows": "Kirish soatlari",
+      "anyTime": "Istalgan vaqtda",
+      "from": "Dan",
+      "to": "Gacha",
+      "addWindow": "Soat qo'shish",
+      "removeWindow": "O'chirish",
+      "weekdays": "Hafta kunlari",
+      "noneMeansAll": "hech biri belgilanmasa — hammasi",
+      "dailyVisitLimit": "Kuniga tashriflar",
+      "locations": "Filiallar",
+      "freeze": "Muzlatish",
+      "freezeAllowed": "Abonementni muzlatish mumkin",
+      "freezeMaxDays": "Jami kun",
+      "freezeMaxTimes": "Necha marta",
+      "freezeMinDays": "Eng kamida, kun",
+      "freezeFee": "Muzlatish narxi",
+      "freezeFeeHint": "{currency} da; 0 — bepul",
+      "active": "Sotuvda",
+      "activeHint": "Sotuvdan olingan tarif boshqa sotilmaydi; sotilgan abonementlar o'zgarmaydi."
+    }
+  },
+  "memberships": {
+    "title": "Abonementlar",
+    "empty": "Hozircha abonementlar yo'q.",
+    "status": {
+      "scheduled": "Keyinroq boshlanadi",
+      "active": "Faol",
+      "frozen": "Muzlatilgan",
+      "expired": "Muddati tugagan",
+      "cancelled": "Bekor qilingan"
+    },
+    "period": "{from} – {to}",
+    "daysLeft": "{count} kun qoldi",
+    "visitsLeft": "{total} tadan {left} tashrif qoldi",
+    "summary": {
+      "startsLater": "keyinroq boshlanadi",
+      "visits": "{count} tashrif"
+    },
+    "sell": {
+      "action": "Abonement sotish",
+      "title": "Abonement sotish",
+      "location": "Filial",
+      "plan": "Tarif",
+      "startsOn": "Birinchi kun",
+      "endsOn": "Oxirgi kun: {date}",
+      "noPlans": "Bu filialda sotuvdagi tarif yo'q. \"Tariflar\" bo'limida qo'shing.",
+      "confirm": "Sotish"
+    },
+    "freeze": {
+      "action": "Muzlatish",
+      "title": "Abonementni muzlatish",
+      "limits": "Qoldi: {days} kun, {times} marta. Bir martada kamida {min} kun.",
+      "startsOn": "Muzlatishning birinchi kuni",
+      "days": "Kunlar",
+      "reason": "Sabab",
+      "source": "Kimning tashabbusi",
+      "sources": {
+        "staff": "Xodim qarori",
+        "member_request": "A'zo so'rovi"
+      },
+      "newEnd": "{until} gacha muzlatiladi; abonement {date} gacha amal qiladi.",
+      "fee": "Narxi: {amount} (to'lovlar bilan olinadi).",
+      "confirm": "Muzlatish",
+      "row": "Muzlatilgan {from} – {to} ({days} kun): {reason}",
+      "endedEarly": "muddatidan oldin tugatilgan"
+    },
+    "unfreeze": {
+      "action": "Muzlatishni tugatish",
+      "title": "Muzlatishni tugatish",
+      "endCurrent": "{from} dan boshlangan muzlatish bugun tugaydi; ishlatilmagan {days} kun muddatdan ayriladi.",
+      "dropPlanned": "{from} dan rejalashtirilgan muzlatish bekor qilinadi; {days} kun muddatdan ayriladi.",
+      "confirm": "Muzlatishni tugatish"
+    },
+    "cancel": {
+      "action": "Bekor qilish",
+      "title": "Abonementni bekor qilish",
+      "description": "\"{plan}\" hozir tugaydi. Pulni qaytarish to'lovlar bo'limida.",
+      "reason": "Sabab",
+      "confirm": "Abonementni bekor qilish",
+      "reasonShown": "Bekor qilingan: {reason}"
+    }
+  },
+  "billing": {
+    "method": "To'lov usuli",
+    "methods": {
+      "cash": "Naqd",
+      "card_terminal": "Karta terminali",
+      "transfer": "O'tkazma",
+      "online": "Onlayn"
+    },
+    "amount": "Summa",
+    "amountHint": "{currency} da",
+    "invalidAmount": "To'g'ri summa kiriting.",
+    "dueOn": "Qoldiqni to'lash muddati",
+    "dueOnHint": "Sana bo'lmasa qoldiq darhol to'lanishi kerak va a'zo qarzdor bo'ladi.",
+    "invoiceNumber": "Hisob {number}",
+    "invoiceStatus": {
+      "open": "To'lanmagan",
+      "partially_paid": "Qisman to'langan",
+      "paid": "To'langan",
+      "void": "Bekor qilingan"
+    },
+    "items": {
+      "freezeFee": "Muzlatish narxi: {plan}"
+    },
+    "overdue": "Muddati o'tgan",
+    "refunded": "{amount} qaytarilgan",
+    "sale": {
+      "payment": "To'lov",
+      "debt": "{amount} qarz qoladi.",
+      "sellAndPay": "Sotish va {amount} qabul qilish",
+      "doneTitle": "Sotildi",
+      "sold": "{plan}: {from} – {to}.",
+      "paid": "{total} dan {paid} to'landi",
+      "owes": "qarz {amount}"
+    },
+    "freeze": {
+      "payNow": "Narxni hozir qabul qilish"
+    },
+    "receipt": {
+      "print": "Chekni chop etish",
+      "sms": "SMS bilan yuborish",
+      "smsSent": "Chek SMS bilan yuborildi.",
+      "number": "Hisob",
+      "date": "Sana",
+      "member": "A'zo",
+      "total": "Jami",
+      "paid": "To'landi ({method})",
+      "balance": "Qoldiq",
+      "thanks": "Rahmat!"
+    },
+    "member": {
+      "title": "Hisoblar va to'lovlar",
+      "owes": "Qarz {amount}",
+      "noInvoices": "Hozircha hisoblar yo'q.",
+      "amounts": "{total} dan {paid} to'langan",
+      "dueOn": "{date} gacha to'lash",
+      "voided": "Bekor qilingan: {reason}",
+      "payments": "To'lovlar"
+    },
+    "pay": {
+      "action": "{amount} to'lash",
+      "title": "{number} hisobi bo'yicha to'lov",
+      "description": "To'lanishi kerak: {amount}. Qisman to'lash mumkin.",
+      "confirm": "To'lovni qabul qilish"
+    },
+    "refund": {
+      "action": "Qaytarish",
+      "title": "Pulni qaytarish",
+      "description": "{left} gacha qaytarish mumkin, xuddi shu usulda ({method}).",
+      "reason": "Sabab",
+      "membershipHint": "Abonement o'zgarmaydi; kerak bo'lsa uni alohida bekor qiling.",
+      "confirm": "Qaytarish"
+    },
+    "journal": {
+      "title": "To'lovlar",
+      "from": "Dan",
+      "to": "Gacha",
+      "allMethods": "Barcha usullar",
+      "empty": "Bu kunlarda to'lov yo'q.",
+      "total": "{count} ta to'lov, jami {amount}"
+    },
+    "shift": {
+      "title": "Kassa",
+      "open": "Smena ochiq",
+      "openedAt": "{time} dan",
+      "opening": "Boshlang'ich naqd",
+      "cashIn": "Naqd qabul qilingan",
+      "cashRefunds": "Naqd qaytarilgan",
+      "expected": "Kassada bo'lishi kerak",
+      "card": "Karta terminali",
+      "transfer": "O'tkazmalar",
+      "count": "To'lovlar soni",
+      "counted": "Sanalgan naqd",
+      "note": "Izoh",
+      "difference": "Farq: {amount}",
+      "close": "Smenani yopish",
+      "none": "Smena ochilmagan. Smena ochilmaguncha naqd qabul qilib bo'lmaydi.",
+      "openAction": "Smenani ochish",
+      "history": "Oxirgi smenalar",
+      "noHistory": "Yopilgan smenalar hali yo'q.",
+      "expectedShort": "kutilgan {amount}",
+      "countedShort": "sanalgan {amount}"
+    }
+  },
+  "access": {
+    "title": "Qabulxona",
+    "location": "Filial",
+    "noLocation": "Siz hech bir filialga biriktirilmagansiz.",
+    "occupancy": "Zalda: {count}",
+    "offlineFeed": "Jonli yangilanish to'xtagan",
+    "scanLabel": "A'zo kodi",
+    "scanPlaceholder": "Kodni skanerlang yoki kiritib Enter bosing",
+    "waiting": "Kod kutilmoqda",
+    "checking": "Tekshirilmoqda…",
+    "allowed": "Kirish mumkin",
+    "denied": "Kirish mumkin emas",
+    "repeat": "Hozirgina kirgan: yangi tashrif hisoblanmadi.",
+    "until": "{date} gacha",
+    "daysLeft": "{count} kun qoldi",
+    "visitsLeft": "{count} tashrif qoldi",
+    "in": "Kirdi",
+    "out": "Chiqdi",
+    "exit": "Chiqdi",
+    "recent": "Bugun shu filialda",
+    "noEntries": "Bugun hali hech kim kirmagan.",
+    "camera": {
+      "start": "Kamerani yoqish",
+      "stop": "Kamerani o'chirish",
+      "label": "Kamera",
+      "denied": "Kameraga ruxsat berilmadi. Brauzer sozlamalarida ruxsat bering.",
+      "unavailable": "Kamera topilmadi. Skanerdan foydalaning."
+    },
+    "manual": {
+      "action": "Qo'lda kiritish",
+      "title": "A'zoni qo'lda kiritish",
+      "description": "A'zoni toping va sababini yozing. Kirish jurnalga va auditga yoziladi.",
+      "search": "Telefon yoki ism",
+      "results": "Topilgan a'zolar",
+      "notFound": "A'zo topilmadi.",
+      "reason": "Sabab",
+      "required": "A'zoni tanlang va sababini yozing.",
+      "confirm": "Kiritish"
+    },
+    "methods": {
+      "qr": "QR",
+      "manual": "Qo'lda",
+      "qr_offline": "QR, oflayn"
+    },
+    "reasons": {
+      "invalid_code": "Kod yaroqsiz",
+      "expired_code": "Kod eskirgan: yangilashni so'rang",
+      "member_not_found": "A'zo topilmadi",
+      "member_blocked": "A'zo bloklangan",
+      "debt": "Qarzi bor",
+      "no_membership": "Abonement yo'q",
+      "membership_expired": "Abonement muddati tugagan",
+      "membership_not_started": "Abonement hali boshlanmagan",
+      "membership_frozen": "Abonement muzlatilgan",
+      "wrong_location": "Bu filialda amal qilmaydi",
+      "wrong_day": "Bugun amal qilmaydi",
+      "outside_hours": "Bu soatda amal qilmaydi",
+      "daily_limit": "Kunlik tashrif limiti tugagan"
+    },
+    "journal": {
+      "title": "Kirishlar",
+      "from": "Dan",
+      "to": "Gacha",
+      "result": "Natija",
+      "all": "Hammasi",
+      "allowed": "Kirgan",
+      "denied": "Rad etilgan",
+      "empty": "Bu kunlarda kirish yo'q.",
+      "count": "{count} ta yozuv"
+    },
+    "offline": {
+      "mode": "Oflayn: shu yerda tekshirilmoqda · navbatda {count} ta",
+      "sending": "Yuborilishi kutilmoqda: {count} ta",
+      "decided": "Oflayn tekshirildi: internet qaytganda yuboriladi.",
+      "noSnapshot": "Internet yo'q va bu filial uchun saqlangan a'zolar ro'yxati hali yo'q. Internet qaytganda a'zoni qo'lda kiriting."
+    }
+  },
+  "dashboard": {
+    "title": "Kun xulosasi",
+    "location": "Filial",
+    "date": "Kun",
+    "noLocation": "Siz hech bir filialga biriktirilmagansiz.",
+    "net": "Tushum (sof)",
+    "refunds": "{amount} qaytarilgan",
+    "newMembers": "Yangi a'zolar",
+    "visits": "Tashriflar",
+    "visitsHint": "{members} a'zo · {refused} rad",
+    "expiring": "Bir haftada tugaydi",
+    "byMethod": "To'lov usullari bo'yicha",
+    "count": "{count} ta to'lov",
+    "noPayments": "Bu kunda to'lov yo'q.",
+    "expiringTitle": "Bir hafta ichida tugaydigan abonementlar",
+    "noExpiring": "Bir hafta ichida tugaydigan abonement yo'q."
+  },
+  "messages": {
+    "intro": "Klub yuboradigan SMS matnlari. Jingalak qavsdagi o'zgaruvchilar har bir a'zo uchun to'ldiriladi. Har yangi matn Eskiz'da tasdiqlanishi kerak.",
+    "language": "Til",
+    "locales": {
+      "uz": "O'zbekcha",
+      "ru": "Русский",
+      "en": "English"
+    },
+    "keys": {
+      "payment_receipt": "To'lov cheki",
+      "expiry_reminder": "Abonement tugashi haqida eslatma (3 kun oldin)"
+    },
+    "standard": "Standart",
+    "custom": "Klub matni",
+    "variables": "O'zgaruvchilar:",
+    "length": "{count} belgi",
+    "preview": "Namuna",
+    "reset": "Standartga qaytarish",
+    "save": "Saqlash"
   }
 }

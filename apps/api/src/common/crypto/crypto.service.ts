@@ -65,6 +65,11 @@ export class CryptoService {
     return left.length === right.length && timingSafeEqual(left, right);
   }
 
+  /** 32 bytes derived for one purpose, e.g. the seed of a signing key. Same purpose, same bytes. */
+  derive(purpose: string): Buffer {
+    return this.deriveKey(purpose);
+  }
+
   private deriveKey(purpose: string): Buffer {
     return Buffer.from(hkdfSync('sha256', this.masterKey, Buffer.alloc(0), purpose, 32));
   }

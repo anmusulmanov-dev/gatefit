@@ -83,7 +83,37 @@
     "SLUG_TAKEN": "This address is taken.",
     "PLAN_KEY_TAKEN": "A plan with this key already exists.",
     "PLAN_INACTIVE": "This plan is no longer on sale.",
-    "TOTP_SETUP_REQUIRED": "Set up two-step sign-in first."
+    "TOTP_SETUP_REQUIRED": "Set up two-step sign-in first.",
+    "MEMBER_PHONE_TAKEN": "A member with this phone already exists.",
+    "MEMBER_ARCHIVED": "This member is archived. Restore them first.",
+    "LOCATION_NOT_ASSIGNED": "You do not work at this location.",
+    "PLAN_NOT_AT_LOCATION": "This plan is not valid at the selected location.",
+    "TRIAL_ALREADY_USED": "This member has already had a trial.",
+    "INVALID_START_DATE": "Choose a start date no more than a month back or three months ahead.",
+    "MEMBERSHIP_NOT_IN_FORCE": "This membership is not in force.",
+    "FREEZE_NOT_ALLOWED": "This plan cannot be frozen.",
+    "FREEZE_LIMIT_EXCEEDED": "The freeze is outside the plan limits.",
+    "FREEZE_OVERLAP": "Another freeze already covers some of these days.",
+    "INVALID_FREEZE_DATES": "A freeze starts today or later, before the membership ends.",
+    "NO_FREEZE_TO_END": "There is no freeze to end.",
+    "IDEMPOTENCY_KEY_REQUIRED": "The request could not be sent safely. Try again.",
+    "IDEMPOTENCY_KEY_REUSED": "This request was already sent with different data. Refresh the page.",
+    "AMOUNT_EXCEEDS_BALANCE": "The amount is more than is owed.",
+    "INVOICE_VOID": "This invoice was written off.",
+    "INVOICE_PAID": "This invoice is already paid.",
+    "REFUND_EXCEEDS_PAYMENT": "You cannot refund more than was paid.",
+    "CASH_SHIFT_NOT_OPEN": "Open a cash shift first.",
+    "CASH_SHIFT_ALREADY_OPEN": "A cash shift is already open at this location.",
+    "CASH_SHIFT_CLOSED": "This cash shift is already closed.",
+    "INVALID_DUE_DATE": "The due date cannot be in the past.",
+    "INVALID_TEMPLATE": "The text uses a placeholder this message does not have.",
+    "FILE_REQUIRED": "Choose a file.",
+    "FILE_TOO_LARGE": "The file is too large (up to 5 MB).",
+    "UNSUPPORTED_FILE_TYPE": "Use a JPEG, PNG or WebP image.",
+    "FILE_UNREADABLE": "The file cannot be read. Save it as XLSX or CSV (UTF-8).",
+    "IMPORT_TOO_MANY_ROWS": "Too many rows: up to 10,000 members per file.",
+    "IMPORT_NOT_VALIDATED": "Check the rows first.",
+    "IMPORT_ALREADY_STARTED": "This import has already been started."
   },
   "organization": {
     "missingTitle": "Organization not found",
@@ -94,7 +124,9 @@
     "unavailableText": "Refresh the page in a little while."
   },
   "sms": {
-    "otp": "Gatefit: your sign-in code is {code}. Do not share it."
+    "otp": "Gatefit: your sign-in code is {code}. Do not share it.",
+    "receipt": "{organization}: payment of {amount} received. Invoice {number}, still owed {balance}.",
+    "expiryReminder": "{organization}: {name}, your {plan} membership ends on {date} ({days} days left). Renew it at the front desk."
   },
   "web": {
     "home": {
@@ -109,12 +141,53 @@
   "member": {
     "home": {
       "title": "Member app",
-      "subtitle": "Your membership and entry code will live here."
+      "subtitle": "Your membership and entry code will live here.",
+      "membership": "Membership",
+      "noMembership": "No membership in force. Ask at the front desk."
+    },
+    "loading": "Loading…",
+    "loadFailed": "Could not load. Check the connection and try again.",
+    "nav": {
+      "label": "Sections",
+      "home": "Home",
+      "memberships": "Memberships",
+      "payments": "Payments",
+      "profile": "Profile"
+    },
+    "qr": {
+      "title": "Entry code",
+      "alt": "Your entry QR code",
+      "loading": "Getting your code…",
+      "noCode": "No working code. Connect to the internet.",
+      "refreshIn": "New code in {seconds} s",
+      "offline": "No internet: showing a saved code. It works for a couple of minutes.",
+      "hint": "Show this code at the front desk scanner."
+    },
+    "memberships": {
+      "title": "Memberships",
+      "empty": "No memberships yet."
+    },
+    "payments": {
+      "title": "Payments",
+      "empty": "No payments yet.",
+      "owed": "You owe {amount}"
+    },
+    "profile": {
+      "title": "Profile",
+      "phone": "Phone",
+      "location": "Home location",
+      "changeHint": "To change your details, ask at the front desk."
     }
   },
   "nav": {
     "home": "Home",
-    "settings": "Settings"
+    "settings": "Settings",
+    "reception": "Reception",
+    "members": "Members",
+    "checkIns": "Entries",
+    "plans": "Plans",
+    "payments": "Payments",
+    "cashShift": "Cash desk"
   },
   "settings": {
     "title": "Settings",
@@ -124,6 +197,7 @@
       "locations": "Locations",
       "staff": "Staff",
       "roles": "Roles",
+      "messages": "Messages",
       "account": "My account"
     }
   },
@@ -246,6 +320,7 @@
     "payments": "Payments",
     "cash_shifts": "Cash desk",
     "reports": "Reports",
+    "notifications": "Messages",
     "audit": "Audit"
   },
   "permissions": {
@@ -269,7 +344,8 @@
       "read": "View members",
       "manage": "Add and edit members",
       "import": "Import members",
-      "export": "Export members"
+      "export": "Export members",
+      "archive": "Archive and restore members"
     },
     "plans": {
       "read": "View plans",
@@ -296,6 +372,9 @@
     "reports": {
       "daily": "Daily report",
       "financial": "Financial reports"
+    },
+    "notifications": {
+      "manage": "Message templates"
     },
     "audit": {
       "read": "View audit log"
@@ -393,5 +472,503 @@
     "turnstile": "Turnstile",
     "network_membership": "Network membership",
     "api_webhooks": "API and webhooks"
+  },
+  "memberFile": {
+    "columns": {
+      "fullName": "Full name",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "phone": "Phone",
+      "birthDate": "Birth date",
+      "gender": "Gender",
+      "status": "Status",
+      "homeLocation": "Location",
+      "source": "Source",
+      "notes": "Notes",
+      "emergencyContactName": "Emergency contact",
+      "emergencyContactPhone": "Emergency phone",
+      "createdAt": "Added"
+    },
+    "gender": {
+      "male": "Male",
+      "female": "Female"
+    },
+    "status": {
+      "inactive": "No membership",
+      "active": "Active",
+      "frozen": "Frozen",
+      "expired": "Expired",
+      "debtor": "Debtor",
+      "blocked": "Blocked"
+    },
+    "source": {
+      "walk_in": "Walk-in",
+      "referral": "Referral",
+      "social": "Social media",
+      "website": "Website",
+      "import": "Import",
+      "other": "Other"
+    }
+  },
+  "members": {
+    "title": "Members",
+    "add": "Add member",
+    "import": "Import",
+    "export": "Export",
+    "exportCsv": "Export CSV",
+    "search": "Search by name or phone",
+    "status": "Status",
+    "allStatuses": "All statuses",
+    "location": "Location",
+    "allLocations": "All locations",
+    "empty": "No members yet.",
+    "notFound": "Nobody matches the search.",
+    "back": "Back to members",
+    "fields": {
+      "firstName": "First name",
+      "lastName": "Last name",
+      "phone": "Phone",
+      "birthDate": "Birth date",
+      "gender": "Gender",
+      "source": "How they found us",
+      "notes": "Notes",
+      "emergencyContactName": "Emergency contact",
+      "emergencyContactPhone": "Emergency contact phone",
+      "homeLocation": "Location",
+      "createdAt": "Added"
+    },
+    "notSpecified": "Not specified",
+    "new": "New member",
+    "editTitle": "Edit member",
+    "created": "Member added.",
+    "duplicates": {
+      "phoneTaken": "This phone belongs to {name}.",
+      "phoneTakenArchived": "This phone belongs to {name}, who is archived.",
+      "open": "Open",
+      "restore": "Restore",
+      "similar": "Members with the same name already exist. Make sure this is a different person:"
+    },
+    "photo": {
+      "title": "Photo",
+      "upload": "Upload photo",
+      "replace": "Replace photo",
+      "remove": "Remove photo",
+      "hint": "JPEG, PNG or WebP, up to 5 MB.",
+      "alt": "Photo of {name}"
+    },
+    "block": {
+      "action": "Block",
+      "title": "Block member",
+      "description": "A blocked member cannot enter until unblocked.",
+      "reason": "Reason",
+      "confirm": "Block",
+      "unblock": "Unblock",
+      "reasonShown": "Blocked: {reason}"
+    },
+    "archive": {
+      "action": "Archive",
+      "confirmText": "Archive {name}? The member disappears from lists; their phone stays reserved and they can be restored.",
+      "restore": "Restore",
+      "archived": "Archived"
+    },
+    "importWizard": {
+      "title": "Import members",
+      "steps": {
+        "upload": "File",
+        "mapping": "Columns",
+        "check": "Check",
+        "done": "Done"
+      },
+      "uploadHint": "XLSX or CSV, up to 5 MB and 10,000 rows. The first row must hold column names.",
+      "chooseFile": "File",
+      "template": "Download template",
+      "upload": "Upload",
+      "mappingHint": "Say which column holds what. Phone and either the full name or the first and last name are required.",
+      "column": "Column",
+      "field": "Meaning",
+      "skip": "Do not import",
+      "sample": "Example",
+      "location": "Add members to location",
+      "validate": "Check rows",
+      "rowsTotal": "Rows in file: {count}",
+      "valid": "Ready to import: {count}",
+      "invalid": "Problems: {count}",
+      "errorsShown": "Showing the first {count} problems.",
+      "row": "Row",
+      "problem": "Problem",
+      "start": "Import {count} members",
+      "running": "Importing… This may take a minute.",
+      "finished": "Done: {created} members added.",
+      "skipped": "{count} rows skipped: their phone was taken meanwhile.",
+      "failed": "The import failed. Nothing more was added; try again.",
+      "again": "Import another file",
+      "toList": "Go to members",
+      "mappingInvalid": "Choose a column for the phone, and for the full name or the first and last name. One column per meaning.",
+      "rowErrors": {
+        "NAME_REQUIRED": "Name is missing",
+        "PHONE_REQUIRED": "Phone is missing",
+        "PHONE_INVALID": "Phone is not a valid number",
+        "PHONE_REPEATED": "Phone repeats an earlier row",
+        "PHONE_EXISTS": "A member with this phone already exists",
+        "BIRTH_DATE_INVALID": "Birth date is not valid (use 17.05.1990)",
+        "GENDER_INVALID": "Gender is not recognised",
+        "SOURCE_INVALID": "Source is not recognised",
+        "TOO_LONG": "Text is too long"
+      }
+    }
+  },
+  "plans": {
+    "title": "Plans",
+    "add": "Add plan",
+    "edit": "Edit plan",
+    "changeWarning": "Changes apply to new sales. Memberships already sold keep their terms.",
+    "empty": "No plans here yet.",
+    "show": "Show",
+    "onSale": "On sale",
+    "withdrawn": "Withdrawn",
+    "all": "All",
+    "inactive": "Withdrawn",
+    "invalidPrice": "Enter an amount with at most {digits} decimals.",
+    "types": {
+      "duration": "Duration",
+      "visits": "Visits",
+      "single": "Single visit",
+      "trial": "Trial"
+    },
+    "units": {
+      "day": "{count, plural, one {# day} other {# days}}",
+      "month": "{count, plural, one {# month} other {# months}}",
+      "year": "{count, plural, one {# year} other {# years}}"
+    },
+    "unitNames": {
+      "day": "days",
+      "month": "months",
+      "year": "years"
+    },
+    "weekdays": {
+      "1": "Mon",
+      "2": "Tue",
+      "3": "Wed",
+      "4": "Thu",
+      "5": "Fri",
+      "6": "Sat",
+      "7": "Sun"
+    },
+    "summary": {
+      "visits": "{count, plural, one {# visit} other {# visits}}",
+      "unlimitedVisits": "unlimited visits",
+      "perDay": "up to {count} a day",
+      "noFreeze": "cannot be frozen",
+      "freeze": "freeze up to {days} days, {times} times, fee {fee}",
+      "freezeFree": "freeze up to {days} days, {times} times, free"
+    },
+    "fields": {
+      "name": "Name",
+      "description": "Description",
+      "type": "Type",
+      "duration": "Valid for",
+      "durationUnit": "Unit",
+      "visitLimit": "Number of visits",
+      "price": "Price",
+      "priceHint": "In {currency}, e.g. 450000",
+      "restrictions": "Restrictions",
+      "timeWindows": "Entry hours",
+      "anyTime": "Any time",
+      "from": "From",
+      "to": "To",
+      "addWindow": "Add hours",
+      "removeWindow": "Remove",
+      "weekdays": "Days of the week",
+      "noneMeansAll": "none ticked: every one",
+      "dailyVisitLimit": "Visits per day",
+      "locations": "Locations",
+      "freeze": "Freezing",
+      "freezeAllowed": "Memberships can be frozen",
+      "freezeMaxDays": "Days in total",
+      "freezeMaxTimes": "Times",
+      "freezeMinDays": "Shortest freeze, days",
+      "freezeFee": "Fee per freeze",
+      "freezeFeeHint": "In {currency}; 0 for free",
+      "active": "On sale",
+      "activeHint": "A withdrawn plan is no longer sold; memberships already sold are not affected."
+    }
+  },
+  "memberships": {
+    "title": "Memberships",
+    "empty": "No memberships yet.",
+    "status": {
+      "scheduled": "Starts later",
+      "active": "Active",
+      "frozen": "Frozen",
+      "expired": "Expired",
+      "cancelled": "Cancelled"
+    },
+    "period": "{from} – {to}",
+    "daysLeft": "{count, plural, one {# day left} other {# days left}}",
+    "visitsLeft": "{left} of {total} visits left",
+    "summary": {
+      "startsLater": "starts later",
+      "visits": "{count, plural, one {# visit} other {# visits}}"
+    },
+    "sell": {
+      "action": "Sell membership",
+      "title": "Sell a membership",
+      "location": "Location",
+      "plan": "Plan",
+      "startsOn": "First day",
+      "endsOn": "Last day: {date}",
+      "noPlans": "No plans on sale at this location. Add one under Plans.",
+      "confirm": "Sell"
+    },
+    "freeze": {
+      "action": "Freeze",
+      "title": "Freeze the membership",
+      "limits": "Left: {days} days, {times} freezes. At least {min} days at a time.",
+      "startsOn": "First frozen day",
+      "days": "Days",
+      "reason": "Reason",
+      "source": "Who asked",
+      "sources": {
+        "staff": "Staff decision",
+        "member_request": "Member request"
+      },
+      "newEnd": "Frozen until {until}; the membership then runs to {date}.",
+      "fee": "Fee: {amount} (taken with payments).",
+      "confirm": "Freeze",
+      "row": "Frozen {from} – {to} ({days} d): {reason}",
+      "endedEarly": "ended early"
+    },
+    "unfreeze": {
+      "action": "End freeze",
+      "title": "End the freeze",
+      "endCurrent": "The freeze from {from} ends today; {days} unused days come off the end date.",
+      "dropPlanned": "The freeze planned from {from} is dropped; {days} days come off the end date.",
+      "confirm": "End freeze"
+    },
+    "cancel": {
+      "action": "Cancel",
+      "title": "Cancel the membership",
+      "description": "“{plan}” ends now. Refunds are handled with payments.",
+      "reason": "Reason",
+      "confirm": "Cancel membership",
+      "reasonShown": "Cancelled: {reason}"
+    }
+  },
+  "billing": {
+    "method": "Payment method",
+    "methods": {
+      "cash": "Cash",
+      "card_terminal": "Card terminal",
+      "transfer": "Bank transfer",
+      "online": "Online"
+    },
+    "amount": "Amount",
+    "amountHint": "In {currency}",
+    "invalidAmount": "Enter a valid amount.",
+    "dueOn": "Pay the rest by",
+    "dueOnHint": "Without a date the rest is owed at once and the member is a debtor.",
+    "invoiceNumber": "Invoice {number}",
+    "invoiceStatus": {
+      "open": "Unpaid",
+      "partially_paid": "Partly paid",
+      "paid": "Paid",
+      "void": "Written off"
+    },
+    "items": {
+      "freezeFee": "Freeze fee: {plan}"
+    },
+    "overdue": "Overdue",
+    "refunded": "refunded {amount}",
+    "sale": {
+      "payment": "Payment",
+      "debt": "{amount} will be owed.",
+      "sellAndPay": "Sell and take {amount}",
+      "doneTitle": "Sold",
+      "sold": "{plan}: {from} – {to}.",
+      "paid": "Paid {paid} of {total}",
+      "owes": "owes {amount}"
+    },
+    "freeze": {
+      "payNow": "Take the fee now"
+    },
+    "receipt": {
+      "print": "Print receipt",
+      "sms": "Send by SMS",
+      "smsSent": "Receipt sent by SMS.",
+      "number": "Invoice",
+      "date": "Date",
+      "member": "Member",
+      "total": "Total",
+      "paid": "Paid ({method})",
+      "balance": "Still owed",
+      "thanks": "Thank you!"
+    },
+    "member": {
+      "title": "Invoices and payments",
+      "owes": "Owes {amount}",
+      "noInvoices": "No invoices yet.",
+      "amounts": "{paid} paid of {total}",
+      "dueOn": "pay by {date}",
+      "voided": "Written off: {reason}",
+      "payments": "Payments"
+    },
+    "pay": {
+      "action": "Pay {amount}",
+      "title": "Payment for invoice {number}",
+      "description": "Owed: {amount}. A part may be paid.",
+      "confirm": "Take payment"
+    },
+    "refund": {
+      "action": "Refund",
+      "title": "Refund",
+      "description": "Up to {left} can be given back, by the same method ({method}).",
+      "reason": "Reason",
+      "membershipHint": "The membership stays as it is; cancel it separately if needed.",
+      "confirm": "Refund"
+    },
+    "journal": {
+      "title": "Payments",
+      "from": "From",
+      "to": "To",
+      "allMethods": "All methods",
+      "empty": "No payments for these days.",
+      "total": "{count, plural, one {# payment} other {# payments}}, net {amount}"
+    },
+    "shift": {
+      "title": "Cash desk",
+      "open": "Shift open",
+      "openedAt": "since {time}",
+      "opening": "Cash at the start",
+      "cashIn": "Cash taken",
+      "cashRefunds": "Cash given back",
+      "expected": "Should be in the drawer",
+      "card": "Card terminal",
+      "transfer": "Transfers",
+      "count": "Payments",
+      "counted": "Cash counted",
+      "note": "Note",
+      "difference": "Difference: {amount}",
+      "close": "Close shift",
+      "none": "No shift is open. Cash cannot be taken until one is.",
+      "openAction": "Open shift",
+      "history": "Recent shifts",
+      "noHistory": "No closed shifts yet.",
+      "expectedShort": "expected {amount}",
+      "countedShort": "counted {amount}"
+    }
+  },
+  "access": {
+    "title": "Reception",
+    "location": "Location",
+    "noLocation": "You are not assigned to any location.",
+    "occupancy": "{count, plural, one {# person inside} other {# people inside}}",
+    "offlineFeed": "Live updates paused",
+    "scanLabel": "Member code",
+    "scanPlaceholder": "Scan the code or type it and press Enter",
+    "waiting": "Waiting for a code",
+    "checking": "Checking…",
+    "allowed": "Come in",
+    "denied": "Not allowed",
+    "repeat": "Already let in a moment ago: no new visit counted.",
+    "until": "until {date}",
+    "daysLeft": "{count, plural, one {# day left} other {# days left}}",
+    "visitsLeft": "{count, plural, one {# visit left} other {# visits left}}",
+    "in": "In",
+    "out": "Left",
+    "exit": "Left",
+    "recent": "Today at this location",
+    "noEntries": "Nobody has come in today yet.",
+    "camera": {
+      "start": "Use camera",
+      "stop": "Stop camera",
+      "label": "Camera",
+      "denied": "Camera access was refused. Allow it in the browser settings.",
+      "unavailable": "No camera available. Use the scanner."
+    },
+    "manual": {
+      "action": "Let in by hand",
+      "title": "Let a member in by hand",
+      "description": "Find the member and say why. The entry is recorded and audited.",
+      "search": "Phone or name",
+      "results": "Members found",
+      "notFound": "No member found.",
+      "reason": "Reason",
+      "required": "Choose a member and give a reason.",
+      "confirm": "Let in"
+    },
+    "methods": {
+      "qr": "QR",
+      "manual": "By hand",
+      "qr_offline": "QR, offline"
+    },
+    "reasons": {
+      "invalid_code": "Not a valid code",
+      "expired_code": "Code is out of date: ask to refresh it",
+      "member_not_found": "Member not found",
+      "member_blocked": "Member is blocked",
+      "debt": "Has a debt",
+      "no_membership": "No membership",
+      "membership_expired": "Membership has expired",
+      "membership_not_started": "Membership has not started yet",
+      "membership_frozen": "Membership is frozen",
+      "wrong_location": "Not valid at this location",
+      "wrong_day": "Not valid today",
+      "outside_hours": "Not valid at this hour",
+      "daily_limit": "Daily visit limit reached"
+    },
+    "journal": {
+      "title": "Entries",
+      "from": "From",
+      "to": "To",
+      "result": "Result",
+      "all": "All",
+      "allowed": "Allowed",
+      "denied": "Refused",
+      "empty": "No entries for these days.",
+      "count": "{count, plural, one {# entry} other {# entries}}"
+    },
+    "offline": {
+      "mode": "Offline: checking here · {count, plural, =0 {nothing waiting} one {# entry waiting} other {# entries waiting}}",
+      "sending": "{count, plural, one {# entry} other {# entries}} waiting to be sent",
+      "decided": "Checked offline: it will be sent when the internet is back.",
+      "noSnapshot": "No internet and no saved member list for this location yet. Let the member in by hand when the internet is back."
+    }
+  },
+  "dashboard": {
+    "title": "Day at a glance",
+    "location": "Location",
+    "date": "Day",
+    "noLocation": "You are not assigned to any location.",
+    "net": "Takings (net)",
+    "refunds": "refunded {amount}",
+    "newMembers": "New members",
+    "visits": "Visits",
+    "visitsHint": "{members} members · {refused} refused",
+    "expiring": "Ending within a week",
+    "byMethod": "Takings by method",
+    "count": "{count, plural, one {# payment} other {# payments}}",
+    "noPayments": "No payments that day.",
+    "expiringTitle": "Memberships ending within a week",
+    "noExpiring": "None end within a week."
+  },
+  "messages": {
+    "intro": "Texts of the SMS the club sends. Placeholders in braces are filled in for each member. Eskiz must approve every new text before it can be sent.",
+    "language": "Language",
+    "locales": {
+      "uz": "O'zbekcha",
+      "ru": "Русский",
+      "en": "English"
+    },
+    "keys": {
+      "payment_receipt": "Payment receipt",
+      "expiry_reminder": "Membership ending reminder (3 days before)"
+    },
+    "standard": "Standard",
+    "custom": "Club text",
+    "variables": "Placeholders:",
+    "length": "{count} characters",
+    "preview": "Preview",
+    "reset": "Back to standard",
+    "save": "Save"
   }
 }

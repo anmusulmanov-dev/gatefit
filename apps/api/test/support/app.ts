@@ -13,7 +13,9 @@ import request, { type Response } from 'supertest';
 import { AppModule } from '../../src/app.module';
 import { configureApp } from '../../src/app.setup';
 import { Clock } from '../../src/common/clock/clock';
+import { QUEUE_PREFIX } from '../../src/common/queue/queue.service';
 import { SMS_PROVIDER, type SmsProvider } from '../../src/common/sms/sms.provider';
+import { FILE_STORAGE, MemoryFileStorage } from '../../src/common/storage/file-storage';
 import { TenantDb } from '../../src/common/tenancy/tenant-db.service';
 import { SessionService } from '../../src/modules/auth/session.service';
 import { PlatformSessionService } from '../../src/modules/platform/platform-session.service';
@@ -33,6 +35,11 @@ export class TestClock extends Clock {
     this.offsetMs += seconds * 1000;
   }
 
+  /** Makes it `instant` now; time keeps running from there. */
+  set(instant: Date | string): void {
+    this.offsetMs = new Date(instant).getTime() - Date.now();
+  }
+
   reset(): void {
     this.offsetMs = 0;
   }
@@ -41,10 +48,31 @@ export class TestClock extends Clock {
 /** Captures SMS instead of sending them. */
 export class FakeSms implements SmsProvider {
   readonly sent: { to: string; text: string }[] = [];
+  /** The next this many sends fail, as a provider that is down would. */
+  failNext = 0;
 
   send(to: string, text: string): Promise<void> {
+    if (this.failNext > 0) {
+      this.failNext -= 1;
+      return Promise.reject(new Error('Provider unavailable'));
+    }
     this.sent.push({ to, text });
     return Promise.resolve();
+  }
+
+  /** Waits for a message to this phone: messages go out through a queue. */
+  async waitFor(phone: string, timeoutMs = 5000): Promise<{ to: string; text: string }> {
+    const deadline = Date.now() + timeoutMs;
+    for (;;) {
+      const message = this.sent.findLast((sms) => sms.to === phone);
+      if (message) {
+        return message;
+      }
+      if (Date.now() > deadline) {
+        throw new Error(`No SMS reached ${phone}`);
+      }
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    }
   }
 
   /** The six-digit code from the latest message to this phone. */
@@ -62,6 +90,7 @@ export interface TestApp {
   app: NestExpressApplication;
   clock: TestClock;
   sms: FakeSms;
+  storage: MemoryFileStorage;
 }
 
 /** The real application, configured like production, with time and SMS under test control. */
@@ -70,18 +99,24 @@ export async function createTestApp(
 ): Promise<TestApp> {
   const clock = new TestClock();
   const sms = new FakeSms();
+  const storage = new MemoryFileStorage();
 
   const moduleRef = await Test.createTestingModule({ imports: [AppModule, ...extraImports] })
     .overrideProvider(Clock)
     .useValue(clock)
     .overrideProvider(SMS_PROVIDER)
     .useValue(sms)
+    .overrideProvider(FILE_STORAGE)
+    .useValue(storage)
+    // Test files run in parallel; each app's workers must see only its own jobs.
+    .overrideProvider(QUEUE_PREFIX)
+    .useValue(`gatefit-test-${randomUUID()}`)
     .compile();
 
   const app = moduleRef.createNestApplication<NestExpressApplication>();
   configureApp(app);
   await app.init();
-  return { app, clock, sms };
+  return { app, clock, sms, storage };
 }
 
 /** The Host header that addresses an organization. */
@@ -199,15 +234,24 @@ export async function cookiesFor(
 
 /** Requests to the API at an organization's address as the holder of the given cookies. */
 export function apiAs(t: TestApp, organization: Organization, cookies: string[]) {
-  const send = (method: 'get' | 'post' | 'patch', path: string) =>
+  const send = (method: 'get' | 'post' | 'patch' | 'put' | 'delete', path: string) =>
     request(t.app.getHttpServer())
       [method](`/api/v1${path}`)
       .set('Host', hostOf(organization))
       .set('Cookie', cookies);
   return {
     get: (path: string) => send('get', path),
-    post: (path: string, body?: object) => send('post', path).send(body),
+    /** Every POST carries a fresh Idempotency-Key (money endpoints require one), unless given. */
+    post: (path: string, body?: object, idempotencyKey: string = randomUUID()) =>
+      send('post', path).set('Idempotency-Key', idempotencyKey).send(body),
+    /** A POST without an Idempotency-Key. */
+    postWithoutKey: (path: string, body?: object) => send('post', path).send(body),
     patch: (path: string, body: object) => send('patch', path).send(body),
+    put: (path: string, body: object) => send('put', path).send(body),
+    delete: (path: string) => send('delete', path),
+    /** A multipart upload of one file in the field "file". */
+    upload: (method: 'post' | 'put', path: string, content: Buffer, fileName: string) =>
+      send(method, path).attach('file', content, fileName),
   };
 }
 

@@ -35,14 +35,15 @@ export class AuditService {
   async record(
     tx: TenantTransaction,
     organizationId: string,
-    actor: Actor,
+    /** null for a background job acting on its own. */
+    actor: Actor | null,
     entry: AuditEntry,
   ): Promise<void> {
     await tx.auditLog.create({
       data: {
         organizationId,
-        actorId: actor.userId,
-        ip: actor.ip,
+        actorId: actor?.userId ?? null,
+        ip: actor?.ip,
         action: entry.action,
         entity: entry.entity,
         entityId: entry.entityId,

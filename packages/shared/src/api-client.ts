@@ -1,4 +1,5 @@
 import { CLIENT_HEADER, type SessionAudience } from './auth';
+import { IDEMPOTENCY_HEADER } from './billing';
 import { type ApiError, apiErrorSchema, ErrorCode } from './errors';
 
 export type ApiResult<T> = { ok: true; data: T } | { ok: false; status: number; error: ApiError };
@@ -15,6 +16,21 @@ const unexpected: ApiError = {
 };
 
 /**
+ * True when the API could not be reached at all (no network, or a proxy in front of it
+ * answering for a server that is down), as opposed to the API refusing the request.
+ */
+export function isUnreachable(result: ApiResult<unknown>): boolean {
+  return (
+    !result.ok &&
+    (result.status === 0 ||
+      result.status === 502 ||
+      result.status === 503 ||
+      result.status === 504 ||
+      (result.status >= 500 && result.error === unexpected))
+  );
+}
+
+/**
  * Browser client for the API. Requests go to the app's own origin (a proxy forwards them),
  * so the httpOnly session cookies travel with them and no CORS is involved.
  *
@@ -26,6 +42,11 @@ export interface ApiClientOptions {
   prefix?: string;
   /** Renew an expired staff or member session and repeat the request once. */
   refreshOnExpiry?: boolean;
+}
+
+/** A fresh key for one money operation. */
+export function newIdempotencyKey(): string {
+  return globalThis.crypto.randomUUID();
 }
 
 export function createApiClient(
@@ -44,25 +65,33 @@ export function createApiClient(
     return refreshing;
   }
 
-  async function send<T>(method: Method, path: string, body?: unknown): Promise<ApiResult<T>> {
+  async function send<T>(
+    method: Method,
+    path: string,
+    body?: unknown,
+    read: Reader = readJson,
+    idempotencyKey?: string,
+  ): Promise<ApiResult<T>> {
     let response: Response;
     try {
+      // A FormData body sets its own multipart content type.
+      const isForm = typeof FormData !== 'undefined' && body instanceof FormData;
       response = await fetch(`${prefix}${path}`, {
         method,
         credentials: 'same-origin',
         headers: {
           [CLIENT_HEADER]: audience,
-          ...(body === undefined ? {} : { 'content-type': 'application/json' }),
+          ...(idempotencyKey ? { [IDEMPOTENCY_HEADER]: idempotencyKey } : {}),
+          ...(body === undefined || isForm ? {} : { 'content-type': 'application/json' }),
         },
-        body: body === undefined ? undefined : JSON.stringify(body),
+        body: body === undefined ? undefined : isForm ? body : JSON.stringify(body),
       });
     } catch {
       return { ok: false, status: 0, error: unexpected };
     }
 
     if (response.ok) {
-      const data = response.status === 204 ? undefined : ((await response.json()) as unknown);
-      return { ok: true, data: data as T };
+      return { ok: true, data: (await read(response)) as T };
     }
 
     const parsed = apiErrorSchema.safeParse(await response.json().catch(() => null));
@@ -73,8 +102,10 @@ export function createApiClient(
     method: Method,
     path: string,
     body?: unknown,
+    read?: Reader,
+    idempotencyKey?: string,
   ): Promise<ApiResult<T>> {
-    const result = await send<T>(method, path, body);
+    const result = await send<T>(method, path, body, read, idempotencyKey);
 
     const sessionExpired =
       refreshOnExpiry &&
@@ -85,14 +116,47 @@ export function createApiClient(
       return result;
     }
 
-    return (await refreshSession()) ? send<T>(method, path, body) : result;
+    // The retry carries the same key: it is the same operation.
+    return (await refreshSession()) ? send<T>(method, path, body, read, idempotencyKey) : result;
   }
 
   return {
     get: <T>(path: string) => request<T>('GET', path),
-    post: <T = void>(path: string, body?: unknown) => request<T>('POST', path, body),
+    /**
+     * Every POST carries an Idempotency-Key (money endpoints require one). Pass the same
+     * key when repeating one operation, e.g. one per open sale dialog; by default each call
+     * gets a fresh key.
+     */
+    post: <T = void>(path: string, body?: unknown, options: { idempotencyKey?: string } = {}) =>
+      request<T>('POST', path, body, undefined, options.idempotencyKey ?? newIdempotencyKey()),
     patch: <T>(path: string, body: unknown) => request<T>('PATCH', path, body),
+    put: <T>(path: string, body: unknown) => request<T>('PUT', path, body),
+    delete: <T = void>(path: string) => request<T>('DELETE', path),
+    /** Sends one file as multipart form data, in the field `file`. */
+    upload: <T>(method: 'POST' | 'PUT', path: string, file: Blob, fileName: string) => {
+      const form = new FormData();
+      form.append('file', file, fileName);
+      return request<T>(method, path, form);
+    },
+    /** Fetches a file the API generates, with the name it suggests. */
+    download: (path: string) => request<DownloadedFile>('GET', path, undefined, readFile),
   };
 }
+
+export interface DownloadedFile {
+  blob: Blob;
+  fileName: string | null;
+}
+
+type Reader = (response: Response) => Promise<unknown>;
+
+const readJson: Reader = async (response) =>
+  response.status === 204 ? undefined : ((await response.json()) as unknown);
+
+const readFile: Reader = async (response): Promise<DownloadedFile> => ({
+  blob: await response.blob(),
+  fileName:
+    /filename="([^"]+)"/.exec(response.headers.get('content-disposition') ?? '')?.[1] ?? null,
+});
 
 export type ApiClient = ReturnType<typeof createApiClient>;

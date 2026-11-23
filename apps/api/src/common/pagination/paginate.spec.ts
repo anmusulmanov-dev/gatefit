@@ -12,6 +12,14 @@ describe('pagination', () => {
     expect(pageArgs({ limit: 20, cursor: 'abc' }).where).toEqual({ id: { gt: 'abc' } });
   });
 
+  it('pages newest first when asked', () => {
+    expect(pageArgs({ limit: 20, cursor: 'abc' }, 'desc')).toEqual({
+      where: { id: { lt: 'abc' } },
+      orderBy: { id: 'desc' },
+      take: 21,
+    });
+  });
+
   it('returns a cursor only when another page exists', () => {
     const full = toPage(rows(3), { limit: 2 }, (row) => row.id);
     expect(full).toEqual({ items: ['id-1', 'id-2'], nextCursor: 'id-2' });

@@ -6,6 +6,7 @@ export const SETTINGS_SECTIONS = [
   { slug: 'locations', permission: 'locations.read' },
   { slug: 'staff', permission: 'staff.read' },
   { slug: 'roles', permission: 'roles.read' },
+  { slug: 'messages', permission: 'notifications.manage' },
   // Everyone may manage their own account.
   { slug: 'account', permission: null },
 ] as const satisfies readonly { slug: string; permission: Permission | null }[];

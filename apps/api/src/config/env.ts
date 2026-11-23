@@ -4,6 +4,8 @@ const booleanFlag = z.enum(['true', 'false']).transform((value) => value === 'tr
 
 // Drivers that print messages instead of sending them.
 const DEV_ONLY_SMS_DRIVERS: readonly string[] = ['console'];
+// Drivers that lose files on restart.
+const DEV_ONLY_STORAGE_DRIVERS: readonly string[] = ['memory'];
 
 export const envSchema = z
   .object({
@@ -44,12 +46,22 @@ export const envSchema = z
       .string()
       .refine((value) => Buffer.from(value, 'base64').length === 32, 'must be 32 bytes in base64'),
 
-    SMS_DRIVER: z.enum(['console']).default('console'),
+    // API description at /api/docs. Unset: on everywhere except production.
+    SWAGGER_ENABLED: z.stringbool().optional(),
+
+    SMS_DRIVER: z.enum(['console', 'eskiz']).default('console'),
+    // Eskiz account (SMS_DRIVER=eskiz). The sender name must be approved in the account.
+    ESKIZ_BASE_URL: z.url({ protocol: /^https$/ }).default('https://notify.eskiz.uz'),
+    ESKIZ_EMAIL: z.string().optional(),
+    ESKIZ_PASSWORD: z.string().optional(),
+    ESKIZ_FROM: z.string().min(1).default('4546'),
 
     // Requests per minute from one IP: all endpoints, and sign-in endpoints separately.
     RATE_LIMIT_PER_MINUTE: z.coerce.number().int().min(1).default(300),
     AUTH_RATE_LIMIT_PER_MINUTE: z.coerce.number().int().min(1).default(20),
 
+    // s3: any S3-compatible service (MinIO). memory: tests and machines without MinIO.
+    STORAGE_DRIVER: z.enum(['s3', 'memory']).default('s3'),
     S3_ENDPOINT: z.url({ protocol: /^https?$/ }),
     S3_REGION: z.string().min(1),
     S3_ACCESS_KEY: z.string().min(1),
@@ -65,6 +77,20 @@ export const envSchema = z
         code: 'custom',
         path: ['SMS_DRIVER'],
         message: 'the console driver is not allowed in production',
+      });
+    }
+    if (env.SMS_DRIVER === 'eskiz' && (!env.ESKIZ_EMAIL || !env.ESKIZ_PASSWORD)) {
+      context.addIssue({
+        code: 'custom',
+        path: ['ESKIZ_EMAIL'],
+        message: 'the eskiz driver needs ESKIZ_EMAIL and ESKIZ_PASSWORD',
+      });
+    }
+    if (appEnv === 'production' && DEV_ONLY_STORAGE_DRIVERS.includes(env.STORAGE_DRIVER)) {
+      context.addIssue({
+        code: 'custom',
+        path: ['STORAGE_DRIVER'],
+        message: 'the memory driver is not allowed in production',
       });
     }
   });

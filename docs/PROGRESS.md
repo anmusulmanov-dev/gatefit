@@ -4,16 +4,528 @@ Har sessiya oxirida yangilanadi: nima qilindi, nima qoldi, ma'lum muammolar.
 
 ## Holat
 
-| Bosqich                           | Holat                            |
-| --------------------------------- | -------------------------------- |
-| 0.1 Loyiha karkasi                | Tayyor (2026-11-11)              |
-| 0.2 Ko'p mijozlilik va RLS        | Tayyor (2026-11-11)              |
-| 0.3 Autentifikatsiya va ruxsatlar | Tayyor (2026-11-17)              |
-| MVP (M1–M8)                       | Boshlanmagan                     |
-| M1a Tashkilot ichki API           | Tayyor (2026-11-17)              |
-| M1b Platforma API                 | Tayyor (2026-11-17)              |
-| M1c Sozlamalar UI                 | Tayyor (2026-11-17)              |
-| M1d Super-admin UI                | Tayyor (2026-11-17) — M1 yopildi |
+| Bosqich                           | Holat                                              |
+| --------------------------------- | -------------------------------------------------- |
+| 0.1 Loyiha karkasi                | Tayyor (2026-11-11)                                |
+| 0.2 Ko'p mijozlilik va RLS        | Tayyor (2026-11-11)                                |
+| 0.3 Autentifikatsiya va ruxsatlar | Tayyor (2026-11-17)                                |
+| MVP (M1–M8)                       | Kod tayyor (M1–M8c); M8d va server sinovlari qoldi |
+| M1a Tashkilot ichki API           | Tayyor (2026-11-17)                                |
+| M1b Platforma API                 | Tayyor (2026-11-17)                                |
+| M1c Sozlamalar UI                 | Tayyor (2026-11-17)                                |
+| M1d Super-admin UI                | Tayyor (2026-11-17) — M1 yopildi                   |
+| M2a A'zolar API                   | Tayyor (2026-11-21)                                |
+| M2b Foto, import, eksport         | Tayyor (2026-11-21)                                |
+| M2c A'zolar UI                    | Tayyor (2026-11-21) — M2 yopildi                   |
+| M3a Tariflar va abonementlar API  | Tayyor (2026-11-22)                                |
+| M3b Tariflar va abonementlar UI   | Tayyor (2026-11-22) — M3 yopildi                   |
+| M4a To'lovlar va kassa API        | Tayyor (2026-11-22)                                |
+| M4b To'lovlar va kassa UI         | Tayyor (2026-11-22) — M4 yopildi                   |
+| M5a Kirish nazorati API           | Tayyor (2026-11-22)                                |
+| M5b Qabulxona ekrani va jurnal    | Tayyor (2026-11-22)                                |
+| M5c Oflayn qabulxona              | Tayyor (2026-11-22) — M5 yopildi                   |
+| M6a A'zo ilovasi API              | Tayyor (2026-11-22)                                |
+| M6b A'zo PWA                      | Tayyor (2026-11-22)                                |
+| M7a Xabarnomalar va hisobot API   | Tayyor (2026-11-22)                                |
+| M7b Bosh sahifa va shablonlar UI  | Tayyor (2026-11-22) — M7 yopildi                   |
+| M8a Mezonlar, tarjima, xavfsizlik | Tayyor (2026-11-22)                                |
+| M8b Prod infra, zaxira, tiklash   | Tayyor (2026-11-22)                                |
+| M8c Demo ma'lumot, yuklama testi  | Tayyor (2026-11-23)                                |
+
+## 2026-11-23 — MVP kodi main da, staging tuzatildi
+
+### Qilindi
+
+- M4b–M8c ning hammasi `main` ga kirdi (#18–#22 to'g'ridan-to'g'ri, qolganlari #29 orqali; #25, #26 yopildi). `main` CI yashil, staging yangi kodda.
+- **Caddy konfiguratsiyasi (#30):** staging javoblarida M8a xavfsizlik sarlavhalari yo'q edi. Sabab: Caddyfile bitta fayl sifatida ulangan, deploy'da git faylni almashtiradi va Linux'da konteyner eski faylni ko'raveradi. Staging va prod compose endi `./caddy` papkasini ulaydi. Deploy'dan keyin staging'da HSTS, nosniff, `X-Frame-Options: DENY`, Referrer-Policy, Permissions-Policy bor, `Server` yo'q.
+
+### Qoldi (MVP yopilishi uchun)
+
+- M8d: e2e testlar (mezonlar 1, 3, 11) — `feat/e2e-playwright` birlashgach.
+- Serverda bir martalik: WAL-G bilan vaqtga tiklash (mezon 12, `BACKUP_S3_*` kerak), yuklama testini staging'da takrorlash (mezon 14), service worker'ni staging'da sinash, haqiqiy Eskiz hisobi va tasdiqlangan shablonlar.
+- Staging'da asosiy oqimlarni (sotish, qabulxona, a'zo ilovasi, bosh sahifa) qo'lda bosib ko'rish.
+- Keyinroq: web va member uchun Content-Security-Policy, a'zo kartasida xabarnomalar ro'yxati, hisobni bekor qilish tugmasi, haqiqiy kamera bilan sinov.
+
+## 2026-11-23 — M8c: demo ma'lumot va yuklama testi
+
+Branch: `feat/m8-demo-load` (`feat/m8-prod-infra` ustiga). Yangi npm paket yo'q; k6 Docker image'i (`grafana/k6:2.3.0`).
+
+### Qilindi
+
+- **`pnpm --filter api seed:demo`** (`prisma/seed-demo.ts`): asosiy seed'dan keyin; 300 a'zo (`+99890002xxxx`), ~85 % ga oxirgi 30 kunda sotilgan abonement (Oylik, Ertalabki oylik, 12 tashrif, Yillik) to'liq to'lov bilan (naqd/karta/o'tkazma), har kuni tashriflar (tashrifli tarifda limitdan keyin rad). Har a'zo uchun alohida tasodif generatori: takror ishga tushirish hech narsa qo'shmaydi.
+- **`pnpm --filter api load:tokens [daqiqa]`** (`prisma/load-tokens.ts`): faol abonementli 200 a'zo uchun keyingi daqiqalarning QR kodlari (bazaga yozmaydi), `infra/load/.tokens.json` (gitignore).
+- **`infra/load/k6.js`** va yo'riqnoma `infra/load/README.md`: 100 virtual foydalanuvchi (30 s o'sish, 2 daqiqa, 15 s pasayish), 70 % xodim sahifalari (a'zolar, qidiruv, kirishlar, to'lovlar, kunlik hisobot, tariflar, /me), 30 % QR tekshiruvi; har foydalanuvchi o'z `X-Forwarded-For` manzili bilan (IP cheklovi 100 kishini ko'rsin). Chegaralar: API p95 < 300 ms, QR p95 < 500 ms, xato < 1 %.
+- `.env.example`: `LOAD_STAFF_PHONE`, `LOAD_STAFF_PASSWORD` (TOTP'siz menejer).
+
+### Tekshirildi
+
+- `seed:demo` dev bazada: 300 a'zo, 254 abonement, ~1 750 tashrif; takror — 0 yangi. Birinchi variantda takror ishga tushirish 45 ta ortiqcha abonement yaratardi (umumiy tasodif ketma-ketligi siljirdi) — tuzatildi.
+- **Yuklama testi (lokal dev, bitta kompyuter, 2026-11-23)**: 9 436 so'rov, xato 0 %, tekshiruvlar 100 %; API p95 **28 ms**, QR p95 **35 ms**, eng sekin 220 ms. Birinchi urinishda QR so'rovlarining 48 % 403 qaytdi: ssenariy a'zoni uning filialida tekshirardi, menejer esa bitta filialga biriktirilgan — ssenariy xodim filialida tekshiradigan qilindi (haqiqiy qabulxona kabi).
+- `pnpm format:check`, `pnpm i18n:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` — yashil. **COUNTS**
+
+### Ma'lum
+
+- Natija bitta kompyuterda (API, baza va k6 birga) olingan: staging serverda takrorlash kerak (`infra/load/README.md`).
+
+## 2026-11-22 — M8b: production infratuzilma, zaxira va tiklash
+
+Branch: `feat/m8-prod-infra` (`feat/m8-acceptance` ustiga). Yangi paket yo'q; Postgres image'iga WAL-G v3.0.9 binari (sha256 bilan tekshiriladi).
+
+### Qilindi
+
+- **`infra/docker-compose.prod.yml`**: staging asosida; fayllar tashqi S3 da (MinIO yo'q), Postgres o'z image'i (`infra/postgres/Dockerfile`: postgres:16-bookworm + WAL-G) bilan `archive_mode=on`, `archive_timeout=60`; seed faqat platforma (`SEED_DEMO=false`); ACME sertifikatlar; faqat Caddy portlari ochiq.
+- **Seed**: `SEED_DEMO=false` — faqat SaaS tariflari va birinchi operator (demo tashkilotsiz).
+- **Zaxira** `infra/prod/backup.sh` (kunlik cron): WAL-G base backup (14 ta saqlanadi = 2 hafta istalgan vaqtga tiklash) va `pg_dump` tashqi S3 ga (`dumps/`, 30 kun), serverda nusxa qolmaydi. Uzluksiz WAL arxivi: ko'pi bilan ~1 daqiqa ma'lumot xavfda.
+- **Tiklash** `infra/prod/restore.sh pitr [vaqt]` (WAL-G: base backup + WAL qaytadan) va `restore.sh dump <obyekt>` (pg_restore).
+- **Tiklash mashqi** `infra/restore-drill.sh dev|staging|prod`: jonli bazadan dump → alohida bazaga tiklash → har jadval qatorlari soni solishtiriladi → alohida baza o'chiriladi. Prod'da haftalik cron.
+- **`docs/RUNBOOK.md`**: birinchi ishga tushirish, yangilash, zaxira, tiklash (vaqtga, dump'dan, yangi serverga), nosozliklar jadvali. `.env.example`: `SEED_DEMO`, `BACKUP_S3_*`.
+
+### Tekshirildi
+
+- `infra/restore-drill.sh dev` — o'tdi: 60 jadval, 312 qator bir xil tiklandi, 37 s. Birinchi urinishda xato topildi va tuzatildi (sikl ichidagi `docker exec` qolgan qatorlarni o'qib yuborardi — "1 jadval" degan noto'g'ri natija).
+- `docker compose -f infra/docker-compose.prod.yml config` — to'g'ri; barcha skriptlar `bash -n` dan o'tdi.
+- `pnpm format:check`, `pnpm i18n:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` — yashil. **COUNTS**
+
+### Sinalmagan (server kerak)
+
+- WAL-G bilan haqiqiy S3 ga arxiv va vaqtga tiklash (PITR): staging yoki prod serverda bir marta qo'lda (`docs/RUNBOOK.md` → Restoring), bucket va kalitlar kerak.
+- Prod image'larining to'liq build'i va ACME sertifikat olish: haqiqiy domen va ochiq IP kerak.
+
+## 2026-11-22 — M8a: qabul mezonlari, tarjima tekshiruvi, xavfsizlik ko'rigi
+
+Branch: `feat/m8-acceptance` (`feat/m7-dashboard-ui` ustiga). Anvar tasdiqlagan M8 javoblari: WAL-G + kunlik pg_dump, tashqi S3 env orqali; yuklama testi k6 (Docker); staging'da bir martalik yuklama va tiklash mashqi; demo seed alohida buyruq; e2e `feat/e2e-playwright` birlashgach. Yangi paket yo'q.
+
+### Qilindi
+
+- **`docs/ACCEPTANCE.md`**: 14 mezon → test fayli va bloki yoki "yo'q". Bor: 2, 4–10, 13. Qisman: 1, 3, 11 (e2e kerak). Yo'q: 12 (tiklash, M8b), 14 (yuklama, M8c).
+- **Tarjima tekshiruvi** `pnpm i18n:check` (`packages/i18n/scripts/check-translations.mjs`) va CI qadami: kalitlar bir xil, bo'sh matn yo'q, o'zgaruvchilar inglizchadagi bilan bir xil, inglizcha qolgan matn yo'q (ataylab bir xillar ro'yxati bilan). 770 matn. Buzilgan holat bilan sinab ko'rildi: ikkala xato topildi.
+- **Xavfsizlik tuzatishlari**: so'rov logida query qatori va qiymatlari yo'q (`requestForLog`; a'zo qidiruvida telefon logga tushardi — CLAUDE.md qoida 9); Caddy: HSTS, nosniff, `X-Frame-Options: DENY`, Referrer-Policy, Permissions-Policy (kamera faqat o'z sayti), `Server` sarlavhasi olib tashlandi; Swagger production'da o'chiq (`SWAGGER_ENABLED` bilan yoqiladi).
+
+### OWASP Top 10 ko'rigi
+
+- **A01 Ruxsatlar**: har endpointda bitta belgi (`endpoint-protection.int-spec.ts`), har jadvalda RLS (`rls-coverage.int-spec.ts`), filial cheklovi va "A B ni ko'rmaydi" testlari. Topilma yo'q.
+- **A02 Kriptografiya**: parol Argon2id (19 MiB, 2 iteratsiya), TOTP shifrlangan (AES-256-GCM, HKDF), cookie `httpOnly` + `sameSite=lax` + prod'da `secure`, QR Ed25519. Topilma yo'q.
+- **A03 Injection**: faqat Prisma va teglangan `$queryRaw` (`Unsafe` chaqiriqlari yo'q), kirish zod bilan. Topilma yo'q.
+- **A04 Dizayn**: pul amallarida idempotentlik, so'rov tezligi cheklovi, OTP urinishlari cheklovi, QR 60 soniya + 5 daqiqalik takror skan qoidasi. QR 60 soniya ichida skrinshot bilan ishlashi mumkin — qabul qilingan xavf (ADR 0010).
+- **A05 Sozlamalar**: xavfsizlik sarlavhalari va Swagger tuzatildi. **Qoldi**: web va member uchun Content-Security-Policy (Next inline skriptlari bilan ehtiyotkor sozlash kerak).
+- **A06 Komponentlar**: CI'da `pnpm audit` (prod high, hammasi critical). Topilma yo'q.
+- **A07 Autentifikatsiya**: kirishda tezlik cheklovi, owner/accountant uchun TOTP, sessiya har so'rovda bazadan tekshiriladi, chiqish va hamma qurilmadan chiqish. Topilma yo'q.
+- **A08 Yaxlitlik**: `--frozen-lockfile`, service worker API javoblarini keshlamaydi. Topilma yo'q.
+- **A09 Log**: telefon query orqali logga tushardi — tuzatildi; `last_error` da telefon va matn yo'q. Topilma yopildi.
+- **A10 SSRF**: foydalanuvchi bergan URL'ga so'rov yo'q (S3, Eskiz manzillari faqat env'dan). Topilma yo'q.
+
+### Tekshirildi
+
+- `pnpm format:check`, `pnpm i18n:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` — yashil. **COUNTS**
+- `request-log.spec.ts`: query va telefon logda yo'q.
+- Caddyfile o'zgarishi lokal Docker bilan tekshirilmadi (image yuklanmadi): staging deploy'da `caddy validate` bilan tekshiriladi.
+
+## 2026-11-22 — M7b: bosh sahifa va xabar shablonlari (web)
+
+Branch: `feat/m7-dashboard-ui` (`feat/m7-notifications-api` ustiga). Yangi paket yo'q.
+
+### Qilindi
+
+- **Bosh sahifa** (`reports.daily` bo'lsa): kun xulosasi — filial va kun tanlash, sof tushum (qaytarilgani bilan), yangi a'zolar, tashriflar (a'zolar, rad), bir haftada tugaydiganlar; usullar bo'yicha tushum; tugaydigan abonementlar ro'yxati (a'zo kartasiga havola, telefon).
+- **Sozlamalar → Xabarlar** (`notifications.manage`): til bo'yicha chek va muddat eslatmasi matnlari, o'zgaruvchilar, belgilar soni, namuna ko'rinishi, saqlash va standartga qaytarish; noma'lum o'zgaruvchi xatosi.
+- Tarjimalar uz/ru/en (`dashboard.*`, `messages.*`, `permissionAreas.notifications`).
+
+### Tekshirildi
+
+- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` — yashil. **COUNTS**
+- Brauzerda (`demo.localhost`, owner): Chilonzor bugungi xulosa M4–M5 sinov ma'lumotiga mos (sof 900 000, qaytarilgan 50 000; karta 250 000, naqd 550 000, o'tkazma 150 000; tashriflar 3, 2 a'zo, 1 rad; 2 ta tugaydigan); shablon — noma'lum `{xato}` bilan xato xabari, tuzatib saqlash ("Klub matni"), standartga qaytarish; 375 px da gorizontal aylantirish yo'q.
+
+### Qoldi
+
+- A'zo kartasida yuborilgan xabarlar ro'yxati (API bor: `GET /notifications?memberId=`) — kerak bo'lsa keyin.
+
+## 2026-11-22 — M7a: xabarnomalar va kunlik hisobot (API)
+
+Branch: `feat/m7-notifications-api` (`feat/m6-member-pwa` ustiga). Qaror: `docs/ADR/0011-notifications.md`. Anvar tasdiqlagan javoblar: Eskiz drayveri soxta HTTP bilan, haqiqiy hisob keyin; eslatma tugashiga 3 kun qolganda soat 10:00 da (filial vaqti); tahrirlanadigan shablonlar — muddat eslatmasi va chek (OTP emas); qayta urinish 1, 5, 30 daqiqa; kunlik hisobot faqat web'da. Yangi paket yo'q.
+
+### Qilindi
+
+- **Jadvallar** (RLS): `notification_templates` (body null = standart), `notifications` (matn, holat, urinishlar, `dedupe_key`). `notifications.manage` yangi ruxsat — mavjud owner/manager rollariga migratsiya bilan qo'shildi.
+- **`NotificationsService`**: shablon + tashkilot tili, jurnal, commit'dan keyin BullMQ navbati, 3 qayta urinish, keyin `failed`. Chek SMS'i endi shu orqali (klub matni bilan).
+- **Eskiz** SMS drayveri (`SMS_DRIVER=eskiz`, `ESKIZ_EMAIL/PASSWORD/FROM`), `.env.example` yangilandi.
+- **`ExpiryReminderJob`** (soatlik): oxirgi kunga 3 kun qolganda, 10:00 dan keyin, bir marta.
+- **API**: `GET /notification-templates`, `PUT /notification-templates/{key}/{locale}` (audit), `GET /notifications?memberId=`, `GET /reports/daily?locationId=&date=` (tushum usullar bo'yicha, qaytarish, sof; yangi a'zolar; kirishlar, a'zolar, rad; 7 kunda tugaydiganlar).
+
+### Tekshirildi
+
+- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` — yashil. **COUNTS**
+- `test/notifications.int-spec.ts` (6): chek navbat orqali yuboriladi va `sent` bo'ladi, a'zo kartasida ro'yxat; klub shabloni ishlatiladi, noma'lum o'zgaruvchi 422, ruxsatsiz 403, standartga qaytish, audit; qayta urinish (yiqilgan → `queued`, keyin `sent`, qayta yuborilmaydi; oxirgi urinish → `failed`); eslatma 09:30 da yo'q, 10:30 da bir marta (takror ishga tushganda ham); kunlik hisobot (usullar, qaytarish, sof, yangi a'zolar, kirishlar, tugaydiganlar, boshqa sana); filial va tashkilot ajratilgan.
+- Birlik: Eskiz drayveri (kirish, token, 401 da qayta kirish, xatoda telefon va matn yo'q).
+
+### Ma'lum muammolar
+
+- Haqiqiy Eskiz bilan yuborish sinalmagan: hisob va tasdiqlangan shablonlar kerak.
+- Chek SMS'i endi navbat orqali: tugma bosilganda "yuborildi" degani "navbatga qo'yildi" degani.
+
+## 2026-11-22 — M6b: a'zo PWA
+
+Branch: `feat/m6-member-pwa` (`feat/m6-member-api` ustiga). Yangi paket: `qrcode` (+ `@types/qrcode`) — QR rasmini SVG sifatida chizish uchun (Anvar tasdiqlagan).
+
+### Qilindi
+
+- **Bosh sahifa**: QR kod (har 30 soniyada yangi, ortga sanash), abonement holati (tarif, holat, davr, qolgan kun yoki tashrif), qarz bo'lsa ogohlantirish.
+- **Oflayn QR**: `/me/qr` dagi hozirgi va keyingi 4 kod `localStorage` da saqlanadi; tarmoq bo'lmasa navbatdagi saqlangan kod ko'rsatiladi (~2,5 daqiqa) va "Internet yo'q" xabari chiqadi.
+- **Sahifalar**: abonementlar tarixi, to'lovlar (usul, filial, hisob, qaytarilgan; qarz), profil (ism, telefon, asosiy filial, til, chiqish). Pastki menyu.
+- **PWA**: service worker (`public/sw.js`, faqat production'da): sahifalar network-first, `_next/static` cache-first, `/api` keshlanmaydi. Manifest avvaldan bor.
+- Tarjimalar uz/ru/en (`member.*`). Sanalar raqamli (brauzerlarda o'zbekcha oy nomlari yo'q).
+
+### Tekshirildi
+
+- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` — yashil. **COUNTS**
+- Brauzerda, 360 px (`demo.localhost:3001`, demo a'zo SMS-kod bilan): QR va ortga sanash, "Oylik · Faol · 30 kun qoldi"; abonementlar, to'lovlar (qaytarilgan summa bilan), profil; gorizontal aylantirish yo'q. `/me/qr` so'rovi sun'iy uzilganda saqlangan keyingi kod va "Internet yo'q" xabari ko'rsatildi.
+- Tekshiruvda tuzatildi: o'zbekcha sanalar "2026 M11 22" bo'lib chiqardi.
+
+### Ma'lum muammolar
+
+- Service worker faqat production build'da ishlaydi: dev'da sinalmagan; staging'da tekshirish kerak (ilovani o'rnatish, samolyot rejimida ochish).
+- Mezon 3 uchun e2e test hali yo'q: `feat/e2e-playwright` birlashgach qo'shiladi.
+
+## 2026-11-22 — M6a: a'zo ilovasi uchun API
+
+Branch: `feat/m6-member-api` (`feat/m5-access-offline` ustiga). Anvar tasdiqlagan javoblar: QR uchun `qrcode` paketi (M6b); `/me/qr` hozirgi + keyingi 4 kod; e2e (mezon 3) `feat/e2e-playwright` birlashgach uning ustiga; profil faqat ko'rish + til; to'lovlar tarixi ro'yxat + qarz.
+
+### Qilindi
+
+- `GET /me/member` (profil), `GET /me/memberships` (o'z abonementlari), `GET /me/payments` (o'z to'lovlari va valyuta bo'yicha qarz). Faqat a'zo sessiyasi (`memberUser`, xodimga 403), a'zo sessiyadan aniqlanadi, id so'rovda berilmaydi. Har modul o'z jadvalini o'zi beradi (CLAUDE.md qoida 7).
+- `GET /me/qr` endi `upcoming` (keyingi 4 kod, har biri o'z 30 soniyalik navbatidan amal qiladi): signal yo'qolsa telefon taxminan 2,5 daqiqa ishlaydigan kod ko'rsatadi.
+
+### Tekshirildi
+
+- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` — yashil. **COUNTS**
+- `test/member-app.int-spec.ts` (4): o'z profili, abonementlari, to'lovlari va qarzi (boshqa a'zoniki ko'rinmaydi); xodim sessiyasiga 403; bir telefon ikki tashkilotda — B sessiyasi faqat B ma'lumotini ko'radi; kelgusi kod o'z navbatigacha rad, navbatida o'tadi.
+
+### Qoldi
+
+- M6b: yuqoridagi yozuv.
+- Mezon 3 e2e — Playwright birlashgach.
+
+## 2026-11-22 — M5c: oflayn qabulxona (web)
+
+Branch: `feat/m5-access-offline` (`feat/m5-access-ui` ustiga). Yangi paket yo'q.
+
+### Qilindi
+
+- **`packages/shared/src/access-offline.ts`**: `checkTokenOffline` (WebCrypto Ed25519, ochiq kalit bilan), `decideOffline` (API bilan bir xil qoidalar; navbatdagi kirishlar bugungi tashrif, tashrif ayirish va 5 daqiqalik takror skan uchun hisobga olinadi), `uuidv7`. `isUnreachable` (`api-client.ts`): tarmoq yo'q yoki proksi API o'rniga javob berdi.
+- **IndexedDB** (`reception/offline-store.ts`): filial bo'yicha snapshot va yuborilmagan kirishlar navbati; brauzer qayta ochilsa ham saqlanadi.
+- **`useOfflineAccess`**: snapshot har 5 daqiqada yangilanadi, navbat har 30 soniyada va `online` hodisasida yuboriladi (500 tadan), 48 soatdan eskilari tashlanadi. API'ga yetib bo'lmasa ekran o'zi qaror qiladi va kirishni navbatga yozadi.
+- Ekranda: "Oflayn: shu yerda tekshirilmoqda · navbatda N ta", internet qaytganda "Yuborilishi kutilmoqda", natijada "Oflayn tekshirildi". Snapshot bo'lmasa — tushunarli xabar.
+
+### Tekshirildi
+
+- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` — yashil. **COUNTS**
+- Birlik (`access-offline.spec.ts`, 9): Node'da yaratilgan haqiqiy Ed25519 kalit bilan imzo tekshiruvi, eskirgan va soxta kod, boshqa kalit, navbatga yozish, takror skan, tashrif ayirish, kunlik limit, snapshotda yo'q a'zo, uuidv7 tartibi.
+- Brauzerda (mezon 11): snapshot IndexedDB'ga saqlandi (Chilonzor, 23 a'zo); **API serveri to'xtatildi** — QR skan "Kirish mumkin · Oflayn tekshirildi", navbatda 1 ta; soxta kod oflaynda "Kod yaroqsiz", navbatga tushmadi; API qayta yoqilgach navbat o'zi yuborildi, jurnalda "QR, oflayn" yozuvi paydo bo'ldi.
+
+### Ma'lum muammolar
+
+- Oflayn rejimda foto ko'rsatilmaydi (havolalar qisqa muddatli) va "Bugun shu filialda" ro'yxatiga oflayn kirishlar qo'shilmaydi; zaldagilar soni yangilanmaydi.
+- Oflayndagi kunlik limit faqat shu ekranning navbatini hisoblaydi: uzilishdan oldingi bugungi kirishlar hisobga olinmaydi (snapshotda yo'q).
+- Mezon 11 uchun avtomatik e2e (10 daqiqa uzilish) Playwright qo'shilganda yoziladi; hozir birlik testlari, API sinxron testlari va qo'lda brauzer tekshiruvi bilan qoplangan.
+
+## 2026-11-22 — M5b: qabulxona ekrani va kirish jurnali (web)
+
+Branch: `feat/m5-access-ui` (`feat/m5-access-api` ustiga). Yangi paket: `jsqr` (kamera kadrlaridan QR o'qish; Windows Chrome'da BarcodeDetector yo'q) — Anvar tasdiqlagan.
+
+### Qilindi
+
+- **`/reception`** (`access.verify`): USB skaner uchun doim fokusdagi maydon (kod + Enter), kamera (`jsqr`, 250 ms), katta yashil yoki qizil natija (foto yoki bosh harflar, ism, tarif, qolgan kun yoki tashrif, rad sababi, takror skan belgisi), zaldagilar soni, bugungi kirishlar (jonli, SSE), "Chiqdi", qo'lda kiritish (telefon yoki ism bo'yicha qidiruv, sabab majburiy). Kamera bir xil kodni 5 soniyada bir marta yuboradi.
+- **`/check-ins`** (`access.read`): filial, kunlar (filial vaqt mintaqasida), natija filtri; usul va qo'lda kiritish sababi.
+- Menyu: "Qabulxona", "Kirishlar". Tarjimalar uz/ru/en (`access.*`), barcha rad sabablari.
+
+### Tekshirildi
+
+- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` — yashil. **COUNTS**
+- Brauzerda (`demo.localhost`, owner; kod demo a'zo SMS-kodi bilan olingan): skaner kabi kiritish — "Kirish mumkin", foto o'rnida bosh harflar, tarif va 30 kun; jonli oqim "Zalda: 1" va ro'yxat; 56 soniyada qayta skan — "Hozirgina kirgan"; 60 soniyadan keyin — qizil "Kod eskirgan"; qo'lda kiritish (qidiruv, sabab) — "Zalda: 2"; "Chiqdi" — "Zalda: 1"; jurnal (4 yozuv, sabab ko'rinadi); 375 px da gorizontal aylantirish yo'q, xato so'rov yo'q.
+- Tekshiruvda tuzatildi: rad etilgan skan a'zoning "Chiqdi" tugmasini yashirib qo'yardi.
+
+### Ma'lum muammolar
+
+- **Kamera** brauzer panelida bloklangan: "ruxsat berilmadi" xabari to'g'ri chiqadi, lekin haqiqiy kamera bilan skan sinalmagan. Haqiqiy qurilmada tekshirish kerak.
+- Qo'lda kiritish qidiruvi faqat xodim ko'radigan a'zolarni topadi (ADR 0006); boshqa filial a'zosi QR bilan kiradi.
+
+## 2026-11-22 — M5a: kirish nazorati (API)
+
+Branch: `feat/m5-access-api` (`feat/m4-billing-ui` ustiga). Qaror: `docs/ADR/0010-access.md`. Anvar tasdiqlagan javoblar: QR imzosi Ed25519; jonli yangilanish SSE; kamera uchun `jsqr` (M5b da); zaldagilar 3 soatdan keyin avtomatik chiqqan + qo'lda "chiqdi"; qarzdor rad etiladi. Standartlar: cheksiz abonement birinchi, keyin tugashi yaqini; 5 daqiqa ichida takror skan yangi tashrif emas; tashrifli abonementda kirish tashrifni kamaytiradi.
+
+### Qilindi
+
+- **QR**: `GET /me/qr` (faqat a'zo sessiyasi) — 30 soniyalik qadamda imzolangan token, 60 soniyada eskiradi. Kalit har tashkilot uchun `DATA_ENCRYPTION_KEY` dan hosil qilinadi, saqlanmaydi.
+- **`POST /access/verify`** (`access.verify`): imzo, muddat, a'zo holati (bloklangan, qarzdor), abonementlar (muddat, boshlanish, muzlatish, filial, hafta kuni, soat oynasi, kunlik limit), takror skan; `check_ins` ga yozadi (eskirgan kod ham — a'zo ma'lum), tashrifni ayiradi. Qoidalar `packages/shared/src/access-rules.ts` da.
+- **`POST /access/manual`** (`access.manual`, sabab majburiy, audit `check_in.manual`), **`POST /access/exit`**, **`GET /check-ins`** (jurnal, filial cheklovi), **`GET /locations/{id}/occupancy`**.
+- **Jonli oqim**: `GET /access/events?locationId=` (SSE), Redis pub/sub, commit'dan keyin (`TenantDb.afterCommit`).
+- **Oflayn**: `GET /access/offline` (ochiq kalit, filial a'zolari va abonementlari), `POST /access/sync` (ekran yaratgan id bilan, takror yuborilsa yozilmaydi, 48 soatdan eski rad, tashrif ayiriladi).
+- **`check_ins`**: oy bo'yicha partition, RLS, faqat `INSERT` + `SELECT`; kunlik `CheckInPartitionsJob` 3 oy oldinga yaratadi.
+
+### Tekshirildi
+
+- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` — yashil. **COUNTS**
+- `test/access.int-spec.ts` (26): mezon 4 (faol o'tadi 1 soniyadan tez; muddati tugagan, muzlatilgan, soatdan tashqari, boshqa kun, boshqa filial, boshlanmagan, abonementsiz, bloklangan, qarzdor — sababi bilan), mezon 5 (55 soniyada o'tadi, 65 da `expired_code`; soxta va boshqa tashkilot kodi), kunlik limit va takror skan, tashrif ayirish, qo'lda kiritish va audit, filial va ruxsat cheklovi, zaldagilar (kirdi, chiqdi, 3 soat), jurnal, oflayn snapshot (ochiq kalit bilan imzo tekshiruvi), sinxron takrori, SSE, "A tashkilot B ni ko'rmaydi", yozuvni o'zgartirish/o'chirish bazada rad, partitionlar, tezlik (p95 < 500 ms).
+- Birlik: kirish qoidalari va token formati (shared), `AccessTokensService`.
+
+### Rejadan chetlanishlar
+
+- Oxirgi 31 kunda tugagan abonementlar ham olinadi: rad sababi "abonement yo'q" emas, "muddati tugagan" bo'lishi uchun.
+- Noma'lum yoki soxta kod jurnalga yozilmaydi (a'zo noma'lum).
+
+### Qoldi
+
+- M5b: yuqoridagi yozuv.
+- M5c: yuqoridagi yozuv.
+
+## 2026-11-22 — M4b: to'lovlar va kassa (web)
+
+Branch: `feat/m4-billing-ui` (`feat/m4-billing-api` ustiga). **M4a bilan birga birlashtiriladi**, avval M4a.
+
+### Qilindi
+
+- **Sotish dialogi**: tarif, filial, boshlanish sanasi va to'lov (usul, summa — standart to'liq narx). Kam to'lansa qarz summasi va ixtiyoriy muddat. Oxirida "Sotildi": chek chop etish, SMS, yopish. Bitta dialog — bitta `Idempotency-Key`.
+- **A'zo kartasi**: "Hisoblar va to'lovlar" (`payments.read`): hisoblar holati, muddati o'tgani, qarz belgisi, qoldiqni to'lash (qisman), to'lovlar ro'yxati, chek, SMS, qaytarish (`payments.refund`). Muzlatish dialogida narxni hozir qabul qilish.
+- **Sahifalar**: `/receipts/{id}` (chop etiladigan chek), `/payments` (jurnal: filial, kunlar filial vaqt mintaqasida, usul, sof jami, qaytarish), `/cash-shift` (smenani ochish, yig'indilar, sanalgan summa va jonli farq bilan yopish, oxirgi smenalar). Menyu: "To'lovlar", "Kassa".
+- **Muzlatish narxi** hisob va chekda "Muzlatish narxi: <tarif>" deb ko'rinadi (`ReceiptDto.items[].kind`).
+- **Xato matnlari**: `errorMessageKey` ro'yxati katalogdagi barcha `errors.*` kalitlari bilan tenglashtirildi (M3 va M4 kodlari "Xatolik yuz berdi" bo'lib chiqayotgan edi), sinxronlik testi qo'shildi.
+- `useApiGet(null)` — so'rovni kutadi; kassa va jurnal filial yuklanmasdan so'rov yubormaydi.
+
+### Tekshirildi
+
+- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` — yashil. API: **API** test, shared: **SHARED**, i18n: **I18N**.
+- Brauzerda (`demo.localhost`, owner): smena ochish (100 000); smenasiz filialda naqd sotish — "Avval kassa smenasini oching", o'sha dialogda filialni almashtirib sotish (kalit qayta ishlatildi); chek sahifasi va SMS (konsol drayveri); karta bilan qisman sotish — `Qarzdor`, qarz belgisi; qoldiqni naqd + o'tkazma bilan to'lash — `Faol`; naqd qaytarish; smenasiz filialda karta bilan sotish; muzlatish narxini karta bilan olish; jurnal (sof 900 000); smena yig'indilari (kutilgan 600 000) va 595 000 bilan yopish (farq −5 000). 375 px da gorizontal aylantirish yo'q, konsolda kutilmagan xato yo'q.
+
+### Ma'lum muammolar
+
+- **Qaytarish qarz qiladi**: `paid = to'lovlar − qaytarishlar`, abonement qoladi, shuning uchun qaytarilgan summa yana qoldiq bo'ladi va muddatsiz hisob a'zoni darhol `debtor` qiladi. Kechirish kerak bo'lsa hisobni `void` qilish (API bor, web'da tugma yo'q) yoki abonementni bekor qilish. Anvar tasdiqladi (2026-11-22): shunday qoladi.
+- Hisobni `void` qilish va qo'lda hisob (`POST /invoices`) uchun web'da tugma yo'q.
+
+## 2026-11-22 — M4a: to'lovlar va kassa (API)
+
+Branch: `feat/m4-billing-api`. Qaror: `docs/ADR/0009-billing.md`. Anvar tasdiqlagan reja va savollarga javoblar (taklif qilinganicha): to'lov muddati sotishda tanlanadi, standart — darhol; kassa smenasi filialda bitta; naqd uchun ochiq smena majburiy, terminal va o'tkazma ochiq smenaga bog'lanadi; qaytarish abonementni bekor qilmaydi, abonement bekor qilinsa qoldiq `void`; chek SMS'i faqat xodim bosganda.
+
+### Qilindi
+
+- **Jadvallar** (RLS): `invoices`, `invoice_items`, `invoice_counters`, `payments`, `refunds`, `cash_shifts`, `idempotency_keys`. `payments`, `refunds`, `invoice_items` ga faqat `INSERT` + `SELECT` grant. CHECK: summalar musbat, `paid_minor <= total_minor`, qator summasi = narx × soni. Filialda bitta ochiq smena (qisman yagona indeks).
+- **Idempotentlik** (`@Idempotent()`, `src/common/idempotency`): kalit majburiy (400), takror — avvalgi javob (`Idempotent-Replayed`), boshqa tana — 422, parallel so'rovlar navbatga qo'yiladi, yiqilgan so'rov kaliti qayta ishlatiladi.
+- **Sotish to'lov bilan**: `POST /members/{id}/memberships` endi `payment` va `dueOn` qabul qiladi va `{ membership, invoice, payment }` qaytaradi; hammasi bitta tranzaksiyada (naqd smenasiz bo'lsa abonement ham yozilmaydi). Bepul tarifga hisob yaratilmaydi.
+- **Hisoblar**: `GET/POST /invoices`, `GET /invoices/{id}`, `POST /invoices/{id}/payments` (qisman, qoldiqdan ko'p emas), `POST /invoices/{id}/void` (`payments.refund`). Raqam tashkilot va yil bo'yicha (`2026-000001`).
+- **To'lovlar**: `GET /payments` (jurnal: a'zo, filial, usul, smena, vaqt oralig'i), `GET /payments/{id}`, `POST /payments/{id}/refund` (`payments.refund`, sabab, qoldiqdan ko'p emas, naqd — ochiq smenadan), `GET /payments/{id}/receipt`, `POST /payments/{id}/receipt/sms`.
+- **Kassa**: `POST /cash-shifts/open`, `GET /cash-shifts/current?locationId=`, `GET /cash-shifts`, `GET /cash-shifts/{id}`, `POST /cash-shifts/{id}/close` (kutilgan, sanalgan, farq).
+- **Muzlatish narxi** muzlatishda hisobga yoziladi, `payment` bilan shu yerda to'lanadi; abonement bekor qilinsa uning to'lanmagan hisoblari `void`.
+- **`debtor`**: muddati o'tgan qoldiq (blocked dan past, abonementlardan ustun). Soatlik `DebtStatusJob`, har hisob bir marta (`overdue_marked_at`).
+- **`FiscalProvider`** porti va bo'sh drayver. Chek SMS matni uz/ru/en.
+- **API klienti** har POST ga `Idempotency-Key` qo'shadi (`options.idempotencyKey` bilan bitta amal uchun bir kalit).
+- **Audit**: `invoice.create`, `invoice.void`, `payment.create`, `refund.create`, `cash_shift.open`, `cash_shift.close`.
+- **Seed**: demo abonementlarga hisob va karta to'lovi; bitta a'zo yarmini to'lagan (`debtor`). Idempotent.
+
+### Tekshirildi
+
+- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` — yashil. API: 463 test, shared: 53, i18n: 11.
+- `test/billing.int-spec.ts`: mezon 2 (a'zo qo'shish + sotish + naqd to'lov), mezon 8 (smena hisoboti = jurnaldagi naqd − qaytarish, farq), mezon 9 (qaytarish faqat ruxsat bilan, auditda), qisman to'lov va qarz, muddat o'tishi (Toshkent yarim tuni), soatlik vazifa, bekor qilishda `void`, idempotentlik (takror, boshqa tana, kalitsiz, parallel, yiqilgandan keyin), filial cheklovi, chek va SMS, "A tashkilot B ni ko'rmaydi" (HTTP va RLS), to'lovni tahrirlash va o'chirish bazada rad etiladi.
+- Birlik: hisob holati, qoldiq (katta summalar), kutilgan naqd, so'rov xeshi, a'zo holati qarz bilan.
+- Seed test bazasida ikki marta ishga tushirildi: 20 hisob, 1 qarzdor.
+
+### Rejadan chetlanishlar
+
+- **`payments` va `refunds` da `updated_at`/`deleted_at` yo'q**: ular hech qachon o'zgarmaydi (TZ 6 dagi umumiy qoidadan istisno, `audit_logs` kabi).
+- **Jurnal vaqt filtri** `from`/`to` lahza (ISO), sana emas: klient filial vaqt mintaqasida kun chegarasini hisoblaydi.
+- **Hisobni bekor qilish** uchun alohida ruxsat qo'shilmadi: `payments.refund`.
+- **Idempotentlik kalitlari muddatsiz** saqlanadi (TZ da muddat yo'q).
+
+### Qoldi
+
+- M4b: web (yuqoridagi yozuv).
+- **M4a yolg'iz birlashsa**: web sotishda to'lov so'ramaydi, ya'ni har sotuv qarz bo'lib qoladi. M4b bilan birga birlashtirish kerak.
+- Xodim ismi jurnalda yo'q (faqat `received_by` id) — kerak bo'lsa staff servisi orqali.
+
+## 2026-11-22 — M3b: tariflar va abonementlar UI
+
+Branch: `feat/m3-memberships-ui` (`feat/m3-memberships-api` ustidan).
+
+### Qilindi
+
+- **Menyu:** "Tariflar" (`plans.read`).
+- **`/plans`:** sotuvdagi / sotuvdan olingan / hammasi filtri. Har qatorda tur, narx, muddat, tashriflar, cheklovlar, muzlatish shartlari. `plans.manage` bo'lsa qo'shish va tahrirlash dialogi: tur, muddat, tashriflar soni, narx (tashkilot valyutasida, `decimalToMinor`), kirish soatlari (4 tagacha oraliq), hafta kunlari, kunlik limit, filiallar, muzlatish (jami kun, marta, eng kam kun, narx), sotuvdan olish.
+- **A'zo kartasi → "Abonementlar":** ro'yxat (holat, sanalar, qolgan kun va tashrif, narx, filial, muzlatishlar, bekor qilish sababi). Dialoglar:
+  - sotish: filial, shu filialda amal qiladigan tarif, boshlanish sanasi, oxirgi kun oldindan ko'rinadi;
+  - muzlatish: sana, kunlar, sabab, kimning tashabbusi, yangi tugash sanasi, qolgan limit, narx;
+  - muzlatishni tugatish: qaytadigan kunlar;
+  - bekor qilish: sabab.
+    Tugmalar ruxsatga qarab, arxivdagi a'zoda yo'q. O'zgarishdan keyin a'zo holati ham yangilanadi.
+- **A'zolar ro'yxati:** har qatorda amaldagi abonement: tarif, qolgan kun yoki "keyinroq boshlanadi", qolgan tashriflar.
+- Tarjimalar `plans.*`, `memberships.*`, `nav.plans` — uz, ru, en.
+
+### Tekshirildi
+
+- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm --filter web build` — yashil.
+- **Brauzerda** (`demo.localhost:3000`, menejer, Anvar kirdi): tariflar ro'yxati; a'zolar ro'yxatida qolgan kunlar; abonementsiz a'zoga "Oylik" sotish (a'zo `Faol`), bugundan 7 kun muzlatish (tugash 7 kunga surildi, a'zo `Muzlatilgan`), muzlatishni tugatish (sana qaytdi, `Faol`), sabab bilan bekor qilish (`Abonementsiz`). 375 px da gorizontal skroll yo'q. Bepul muzlatish "bepul" deb ko'rsatiladigan qilindi.
+- **Tarif formasi staging'da tekshirildi** (`demo.staging.gatefit.uz`, owner, M3 birlashgandan keyin): "Sinov tarifi (Claude)" qo'shildi (tashriflar bo'yicha, 8 tashrif, 07:00–12:00, Sh/Ya, kuniga 1, Chilonzor, muzlatish 14 kun / 2 marta / 10 000), ro'yxatda hammasi to'g'ri ko'rindi; narx 260 000 ga o'zgartirildi va sotuvdan olindi ("Sotuvdan olinganlar" filtrida ko'rinadi). 375 px da dialog sig'adi, gorizontal skroll yo'q. Sinov tarifi staging'da sotuvdan olingan holda qoldi.
+
+### Qoldi
+
+- Playwright — `feat/e2e-playwright` birlashgach.
+- Kirish soatlarida `24:00` ni UI orqali kiritib bo'lmaydi (`type="time"`); `23:59` yetadi.
+
+## 2026-11-22 — M3a: tariflar, abonementlar, muzlatish (API)
+
+Branch: `feat/m3-memberships-api`. Qaror: `docs/ADR/0008-memberships.md`. Anvar tasdiqlagan reja: M3a (API), M3b (web UI). Savollarga javoblar (taklif qilinganicha qabul qilindi): sotish M3 da to'lovsiz, abonement darhol amalda; muzlatish limiti va narxi tarifda, narx faqat yoziladi (M4 da undiriladi); "a'zo so'rovi bilan" muzlatishni xodim `source=member_request` bilan kiritadi (a'zoning o'zi — M6); sinov tarifi bir a'zoga bir marta; boshlanish sanasi sotishda tanlanadi.
+
+### Qilindi
+
+- **Jadvallar** (RLS, `DELETE` grant yo'q, kompozit FK, CHECK: summa manfiy emas, sanalar oldinga):
+  - `plans`: tur (`duration`, `visits`, `single`, `trial`), muddat (`day`, `month`, `year`), tashriflar soni, `price_minor` + `currency` (tashkilot valyutasi), `restrictions` JSONB (vaqt oralig'i, hafta kunlari, kunlik limit, filiallar; zod sxema), muzlatish limitlari va narxi, `is_active`.
+  - `memberships`: tarif shartlari nusxasi, sotilgan filial, `starts_on`/`ends_on` (filial kalendari) va `starts_at`/`ends_at`, `visits_left`, holat (`scheduled`, `active`, `frozen`, `expired`, `cancelled`), `status_changes_at`, `auto_renew` (v1), bekor qilish ma'lumoti.
+  - `membership_freezes`: sanalar va lahzalar, kunlar, sabab, manba, narx, erta tugash va bekor qilish.
+- **Sana funksiyalari** (`packages/shared/src/dates.ts`, yangi paket yo'q): kun/oy qo'shish (oy oxiriga qisish), filial vaqt mintaqasida sana va yarim tun (DST va yarim tun o'tkazib yuborilgan zonalar bilan), muddat oxiri.
+- **Endpointlar** (`@RequireModule('memberships')`): `GET/POST /plans`, `GET/PATCH /plans/{id}` (`plans.read`, `plans.manage`); `GET /members/{id}/memberships` (`members.read`), `POST /members/{id}/memberships` (`memberships.sell`); `GET /memberships/{id}`; `POST /memberships/{id}/freeze`, `/unfreeze` (`memberships.freeze`); `POST /memberships/{id}/cancel` (`memberships.cancel`, sabab majburiy). Abonementni a'zosini ko'ra oladigan xodim ko'radi (ADR 0006); sotish faqat xodim ishlaydigan va tarif ruxsat bergan filialda.
+- **Muzlatish:** tugash sanasini suradi; erta tugatish faqat ishlatilgan kunlarni qoldiradi; boshlanmagani bekor qilinadi; ustma-ust tushmaydi; limitlar shartnoma nusxasidan.
+- **Soatlik vazifa** (`MembershipStatusJob`, BullMQ, `0 * * * *` UTC): `status_changes_at` kelgan abonementlar holatini yangilaydi, a'zo holatini qayta hisoblaydi, `membership.status` auditi (tizim). Idempotent va parallel xavfsiz.
+- **A'zo holati** abonementlardan (`memberStatusFrom`); `unblock` endi abonementlardan hisoblaydi. `GET /members` har qatorda amaldagi abonement xulosasi (`membership`: tugash sanasi, qolgan kun va tashrif) — M2 dan qolgan ish.
+- **Audit:** `plan.create`, `plan.update`, `membership.sell`, `membership.freeze`, `membership.unfreeze`, `membership.cancel`, `membership.status`. `AuditService.record` tizim vazifasi uchun `actor = null` qabul qiladi.
+- **Seed:** demo klubga 6 tarif (oylik, ertalabki, 12 tashrif, yillik, bir martalik, sinov) va 20 a'zoga abonement (amaldagi, tugagan, muzlatilgan). Idempotent.
+- Xato kodlari va tarjimalari (uz, ru, en); TZ 6 va 7-bo'limlar yangilandi.
+
+### Tekshirildi
+
+- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` — yashil. API: 427 test, shared: 53, i18n: 11.
+- Birlik: oy oxiri, kabisa yili, Toshkent/Nyu-York/Berlin (DST)/Santyago (yarim tun yo'q kun), muddat oxiri, holat, keyingi o'zgarish lahzasi, muzlatish limitlari, ustma-ust tushish, erta tugatish.
+- `test/memberships.int-spec.ts`: qabul mezoni 6 (Toshkent yarim tunida 18:59:59.999Z da faol, 19:00Z da tugagan, a'zo ham; Nyu-York filiali o'z yarim tunida; qayta ishga tushish auditni takrorlamaydi; soatlik vazifa barcha tashkilotlarni topadi), mezon 7 (10 kun muzlatish tugashni 10 kunga suradi, muzlatilgan kunlarda a'zo `frozen`, erta tugatish 7 kunni qaytaradi), ruxsatlar, filial cheklovi, modul, audit, "A tashkilot B ni ko'rmaydi" (HTTP va RLS, yozish ham).
+- Brauzerda tekshirilmagan (UI M3b da).
+
+### Rejadan chetlanishlar
+
+- **Sotish sanasi oralig'i:** 31 kun orqaga (qog'ozdagi abonementlarni kiritish uchun) va 90 kun oldinga. TZ da yo'q, mening tanlovim.
+- **Har tarif turida muddat bor:** `visits` (masalan 12 tashrif 2 oy ichida), `single` (1 kun, 1 tashrif), `trial` ham muddatli.
+- **`/unfreeze`** joriy muzlatishni tugatadi, bo'lmasa navbatdagi rejalashtirilganini bekor qiladi (alohida endpoint qo'shilmadi).
+- **`OrganizationService` eksport qilindi** (`currency`, `findLocation`, `existingLocationIds`): plans moduli tashkilot jadvallariga to'g'ridan-to'g'ri murojaat qilmaydi.
+
+### Qoldi
+
+- M3b: web — tariflar ro'yxati va formasi, a'zo kartasida abonementlar, sotish, muzlatish va bekor qilish dialoglari, ro'yxatda qolgan kunlar. Playwright — `feat/e2e-playwright` birlashgach.
+- M4: sotish va to'lov bitta tranzaksiyada, muzlatish narxini undirish, `debtor`.
+- M5: kirishda cheklovlar (vaqt, kun, kunlik limit, filial) va tashrif ayirish; tashriflar tugasa `expired`.
+
+## 2026-11-21 — M2c: a'zolar UI
+
+Branch: `feat/m2-members-ui` (`feat/m2-members-files` ustidan).
+
+### Qilindi
+
+- **Menyu:** "A'zolar" (`members.read` bo'lsa).
+- **`/members`:** qidiruv (yozish to'xtagach), holat va filial filtri, foto yoki bosh harflar, holat belgisi, "Yana ko'rsatish"; tugmalar ruxsatga qarab: qo'shish, import, eksport (XLSX, CSV — joriy filtrlar bilan).
+- **`/members/new` va tahrirlash:** barcha F-1.1 maydonlari; filial standart qiymati — sarlavhada tanlangan filial; yozish davomida takror tekshiruvi: band telefon egasi (ochish yoki arxivdagini tiklash) va bir xil ismli a'zolar ro'yxati.
+- **`/members/{id}`:** karta, foto yuklash/almashtirish/o'chirish, bloklash (sabab bilan) va blokdan chiqarish, arxivlash (tasdiq bilan) va tiklash.
+- **`/members/import`:** 4 qadamli usta — fayl (namuna yuklab olish), ustunlarni moslash (avtomatik taklif, misollar, filial), tekshiruv natijasi (qator, maydon, sabab), fon importi va natija.
+- **API klienti** (`packages/shared`): `put`, `delete`, `upload` (multipart), `download` (fayl va nomi).
+- **Tarjimalar:** `members.*`, `nav.members`, yangi xato kodlari — uz, ru, en.
+- **Seed tuzatildi:** demo a'zolar telefonida bitta raqam kam edi (`+99890001028`); endi `+998900001000`–`+998900001029`. Mavjud dev bazada `UPDATE` bilan tuzatildi.
+
+### Tekshirildi
+
+- `pnpm lint`, `pnpm typecheck`, `pnpm test` — yashil (API 375, shared 33, i18n 11). `pnpm format:check` loyiha fayllarida toza (lokal `.claude/worktrees/` dagi boshqa sessiya fayllari hisobga olinmaydi).
+- **Brauzerda** (`demo.localhost:3000`, menejer roli, dev MinIO va Redis bilan): ro'yxat va qidiruv (`karim 1028`), band telefon ogohlantirishi va bir xil ismlilar ro'yxati, a'zo qo'shish, foto yuklash (MinIO → imzolangan havola orqali ko'rindi), bloklash, import (ruscha sarlavhali CSV avtomatik moslandi, 3 ta xato qator ko'rsatildi, 2 ta a'zo fon vazifasida qo'shildi), CSV eksport. 375 px kenglikda gorizontal skroll yo'q. Konsolda xato yo'q.
+
+### Rejadan chetlanishlar
+
+- **Playwright e2e bu PR da yo'q:** e2e infratuzilmasini parallel sessiya (`feat/e2e-playwright`) qilyapti. U birlashgach a'zolar oqimi (kirish → qo'shish → qidiruv) uchun e2e test qo'shiladi.
+
+### Qoldi
+
+- A'zolar uchun Playwright testi (yuqorida).
+- Qo'lda qo'shishda telefon faqat format bo'yicha tekshiriladi (importda esa raqam haqiqiyligi) — M2b dagi eslatma.
+- Ro'yxatda faol abonement va qolgan kunlar — M3.
+
+## 2026-11-21 — M2b: foto, import, eksport
+
+Branch: `feat/m2-members-files` (`feat/m2-members-api` ustidan). Qaror: `docs/ADR/0007-files-and-jobs.md`.
+
+### Qilindi
+
+- **Yangi paketlar** (Anvar tasdiqlagan): `bullmq` (fon vazifalari), `exceljs` (XLSX o'qish va yozish), `@aws-sdk/client-s3` (fayl saqlash), `libphonenumber-js` (importda telefonni mamlakat bo'yicha E.164 ga keltirish). `msgpackr-extract` ning native build'i o'chirilgan (JS varianti yetadi).
+- **Fayl saqlash porti** `FileStorage`: `s3` va `memory` drayverlari, `STORAGE_DRIVER` (productionda `memory` taqiqlangan). **Imzolangan havolalar** `GET /files/{token}` (`@Public`, HMAC va muddat).
+- **Foto:** `PUT /members/{id}/photo` (multipart, 5 MB, JPEG/PNG/WebP baytlardan aniqlanadi), `DELETE /members/{id}/photo`; eski fayl o'chiriladi. `MemberDto.hasPhoto` o'rniga `photoUrl`.
+- **Import** (`member_imports` jadvali, RLS; `members.import_id`):
+  - `POST /members/imports` CSV (`,` `;` tab, BOM) yoki XLSX qabul qiladi; sarlavhalardan ustunlar uz/ru/en da avtomatik moslanadi; 5 ta namuna qator. 10 000 qatorgacha.
+  - `POST /members/imports/{id}/validate` moslash va filial bilan har qatorni tekshiradi: ism, telefon (mamlakat bo'yicha, `998901234567` ham), fayl ichida takror, bazada bor, sana (`YYYY-MM-DD`, `DD.MM.YYYY`), jins, manba, uzunlik. Xatolar qator raqami bilan (birinchi 1000 tasi).
+  - `POST /members/imports/{id}/commit` BullMQ vazifasi; qayta bosilsa hech narsa o'zgarmaydi; tekshiruvdan keyin band bo'lgan telefon o'tkazib yuboriladi va sanaladi. `member.import` auditi.
+  - `GET /members/imports/template` — uz/ru/en sarlavhali bo'sh XLSX.
+- **Eksport:** `GET /members/export?format=xlsx|csv` + ro'yxat filtrlari, tashkilot tilida, importga qaytib tushadi. CSV: BOM, formula injeksiyasidan himoya. Faqat ko'rinadigan a'zolar. `member.export` auditi.
+- **Ruxsatlar:** foto — `members.manage`, import — `members.import`, eksport — `members.export`. Filial cheklovi importga ham tegishli.
+- **Test infratuzilmasi:** `createTestApp` xotira storage va har ilovaga alohida navbat prefiksi beradi; `apiAs` ga `put`, `delete`, `upload`.
+
+### Tekshirildi
+
+- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` — yashil. API: 375 test, shared: 33, i18n: 11.
+- **Qabul mezoni 1 (import qismi):** 500 a'zoli XLSX (telefonlar Excel raqami sifatida) xatosiz yuklanadi, fon vazifasi 500 tasini yozadi, qayta `commit` takror yozmaydi (`test/member-files.int-spec.ts`).
+- Foto: imzolangan havola, soxta, o'zgartirilgan va muddati o'tgan havola 404; SVG `.jpg` nomi bilan rad etiladi; 5 MB dan katta rad.
+- Ajratish: B tashkilot A ning importini ko'rmaydi va boshlay olmaydi; eksportda boshqa tashkilot a'zolari yo'q; filial xodimi boshqa filialga import qila olmaydi.
+- S3 drayveri dev MinIO bilan qo'lda tekshirildi (yozish, o'qish, o'chirish). CI da MinIO yo'q, testlar `memory` drayverida.
+
+### Rejadan chetlanishlar
+
+- **Import yo'li `/members/imports/...`** (TZ da `POST /members/import`): bir nechta qadam (yuklash, tekshirish, boshlash, holat) alohida resursni talab qiladi. TZ 7-bo'lim yangilandi.
+- **Imzolangan havola S3 ning o'zi emas, API orqali** (ADR 0007).
+- **Telefon qat'iyligi farqli:** importda `libphonenumber-js` raqam haqiqiyligini tekshiradi, qo'lda qo'shishda esa hozircha faqat E.164 formati (`phoneSchema`). Bir xil qilish uchun shared ga paket qo'shish kerak — M2c da forma bilan birga ko'rib chiqiladi.
+
+### Qoldi
+
+- M2c: web UI (ro'yxat, karta, forma, import ustasi, eksport), Playwright.
+- Rasm o'lchamini kichraytirish (paket kerak) — hozir 5 MB gacha asl holida.
+- Juda katta eksport fon vazifasiga (ADR 0007).
+
+## 2026-11-21 — M2a: a'zolar API
+
+Branch: `feat/m2-members-api`. Qaror: `docs/ADR/0006-member-visibility.md`. Anvar tasdiqlagan reja: M2a (API), M2b (foto, import, eksport), M2c (web UI, Playwright).
+
+### Qilindi
+
+- **Jadval `members`** (RLS, `DELETE` grant yo'q): F-1.1 maydonlari, favqulodda aloqa, `blocked_reason`, `home_location_id` (majburiy), `user_id` (a'zo ilovasi). Telefon tashkilot ichida yagona. Qidiruv uchun `pg_trgm` indekslari (ism, familiya, telefon). `consents.member_id` qo'shildi.
+- **Holat `inactive`** (abonement yo'q) qo'shildi; `blocked` qo'lda, qolganlari M3/M4 da avtomatik.
+- **Endpointlar** (`@RequireModule('members')`):
+  - `GET /members`: yangilari birinchi, kursor, `q` (har so'z ism, familiya yoki telefonda), `status`, `locationId`;
+  - `GET /members/duplicates`: telefon egasi va bir xil ism (+ tug'ilgan sana);
+  - `GET/PATCH /members/{id}`, `POST /members`: band telefon `409 MEMBER_PHONE_TAKEN` va `details.member`;
+  - `POST /members/{id}/block` (sabab bilan), `/unblock`, `/archive`, `/restore`.
+- **Yangi ruxsat `members.archive`** (owner, manager); mavjud tashkilotlarga migratsiya bilan qo'shildi.
+- **Filial cheklovi:** owner va accountant hammani, qolganlar o'z filiallari a'zolarini ko'radi (ADR 0006).
+- **Audit:** `member.create`, `member.update` (faqat o'zgargan maydon nomlari, qiymatlar emas), `member.block/unblock/archive/restore`.
+- **A'zo kirishi** endi faqat `members` da bor (arxivlanmagan) telefon uchun: notanish telefonga SMS yuborilmaydi, javob o'zgarmaydi. Birinchi kirishda `members.user_id` bog'lanadi; telefon o'zgarsa bog'lanish uziladi.
+- **Seed:** demo tashkilotga 30 a'zo (`+998900001000`–`+998900001029`).
+- **TZ yangilandi:** 6-bo'lim (`members` ustunlari, qoidalar), 7-bo'lim (endpointlar).
+
+### Tekshirildi
+
+- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` — yashil. API: 333 test, shared: 33, i18n: 11.
+- `test/members.int-spec.ts`: har endpoint, validatsiya, telefon takrori, filial cheklovi, ruxsatlar, modul yo'q tashkilot (403), audit, "A tashkilot B ni ko'rmaydi" (HTTP va RLS darajasida, bir telefon ikki tashkilotda — ikki alohida a'zo).
+- `test/auth-otp.int-spec.ts`: a'zo bo'lmagan telefon, boshqa tashkilot a'zosi, arxivlangan a'zo, `user_id` bog'lanishi.
+- `rls-coverage` qo'riqchi testi yangi jadvalni qamradi.
+- Brauzerda tekshirilmagan (UI M2c da).
+
+### Rejadan chetlanishlar
+
+- **Ro'yxat filtri `?status=&locationId=&q=`**, TZ dagi `filter[...]` emas — `/staff` bilan bir xil.
+- **Bloklash alohida endpoint** (`/block`, `/unblock`), `PATCH` emas: sabab majburiy va auditga yoziladi.
+- **Faol a'zolar hisoblagichi M3 ga qoldirildi** (Anvar tasdiqlagan): "faol" abonementga bog'liq.
+
+### Qoldi
+
+- M2b: foto (S3), import (BullMQ, CSV/XLSX, 500 a'zo testi), eksport. M2c: web UI, Playwright.
+- `unblock` hozir holatni `inactive` ga qaytaradi; M3 da abonementlardan hisoblanadi.
+- A'zo sessiyasi (`AccessContext`) hali a'zo yozuvini yuklamaydi — M6 (PWA) da.
+
+## 2026-11-21 — CI: bog'liqliklar auditi
+
+Branch: `chore/ci-dependency-audit`.
+
+### Qilindi
+
+- **CI `audit` jobi** (TZ 9-bo'lim): `pnpm audit` (pnpm o'zida bor, yangi action yo'q), faqat lockfile'ni o'qiydi. Yiqiladi: production bog'liqliklarda `high` va undan yuqori, dev bilan birga hammasida `critical`. Har dushanba 05:00 UTC jadval bo'yicha ham ishlaydi (asosiy `ci` jobi jadvalda ishlamaydi).
+- **`minimumReleaseAgeExclude` olib tashlandi:** next-intl 4.15.0 va qarindoshlari 2026-11-11 da chiqqan, cheklovdan o'tadi; `pnpm install --frozen-lockfile` o'tdi.
+
+### Ma'lum muammolar
+
+- Dev'da 1 high (`effect` ReDoS, GHSA-7589-6fvf-x4pw, `prisma` CLI orqali) va 2 moderate. Production'ga kirmaydi; Prisma yangilanganda ketadi.
 
 ## 2026-11-21 — Playwright e2e
 
