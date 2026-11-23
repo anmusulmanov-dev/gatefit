@@ -4,33 +4,59 @@ Har sessiya oxirida yangilanadi: nima qilindi, nima qoldi, ma'lum muammolar.
 
 ## Holat
 
-| Bosqich                           | Holat                                              |
-| --------------------------------- | -------------------------------------------------- |
-| 0.1 Loyiha karkasi                | Tayyor (2026-11-11)                                |
-| 0.2 Ko'p mijozlilik va RLS        | Tayyor (2026-11-11)                                |
-| 0.3 Autentifikatsiya va ruxsatlar | Tayyor (2026-11-17)                                |
-| MVP (M1–M8)                       | Kod tayyor (M1–M8c); M8d va server sinovlari qoldi |
-| M1a Tashkilot ichki API           | Tayyor (2026-11-17)                                |
-| M1b Platforma API                 | Tayyor (2026-11-17)                                |
-| M1c Sozlamalar UI                 | Tayyor (2026-11-17)                                |
-| M1d Super-admin UI                | Tayyor (2026-11-17) — M1 yopildi                   |
-| M2a A'zolar API                   | Tayyor (2026-11-21)                                |
-| M2b Foto, import, eksport         | Tayyor (2026-11-21)                                |
-| M2c A'zolar UI                    | Tayyor (2026-11-21) — M2 yopildi                   |
-| M3a Tariflar va abonementlar API  | Tayyor (2026-11-22)                                |
-| M3b Tariflar va abonementlar UI   | Tayyor (2026-11-22) — M3 yopildi                   |
-| M4a To'lovlar va kassa API        | Tayyor (2026-11-22)                                |
-| M4b To'lovlar va kassa UI         | Tayyor (2026-11-22) — M4 yopildi                   |
-| M5a Kirish nazorati API           | Tayyor (2026-11-22)                                |
-| M5b Qabulxona ekrani va jurnal    | Tayyor (2026-11-22)                                |
-| M5c Oflayn qabulxona              | Tayyor (2026-11-22) — M5 yopildi                   |
-| M6a A'zo ilovasi API              | Tayyor (2026-11-22)                                |
-| M6b A'zo PWA                      | Tayyor (2026-11-22)                                |
-| M7a Xabarnomalar va hisobot API   | Tayyor (2026-11-22)                                |
-| M7b Bosh sahifa va shablonlar UI  | Tayyor (2026-11-22) — M7 yopildi                   |
-| M8a Mezonlar, tarjima, xavfsizlik | Tayyor (2026-11-22)                                |
-| M8b Prod infra, zaxira, tiklash   | Tayyor (2026-11-22)                                |
-| M8c Demo ma'lumot, yuklama testi  | Tayyor (2026-11-23)                                |
+| Bosqich                           | Holat                                       |
+| --------------------------------- | ------------------------------------------- |
+| 0.1 Loyiha karkasi                | Tayyor (2026-11-11)                         |
+| 0.2 Ko'p mijozlilik va RLS        | Tayyor (2026-11-11)                         |
+| 0.3 Autentifikatsiya va ruxsatlar | Tayyor (2026-11-17)                         |
+| MVP (M1–M8)                       | Kod tayyor (M1–M8d); server sinovlari qoldi |
+| M1a Tashkilot ichki API           | Tayyor (2026-11-17)                         |
+| M1b Platforma API                 | Tayyor (2026-11-17)                         |
+| M1c Sozlamalar UI                 | Tayyor (2026-11-17)                         |
+| M1d Super-admin UI                | Tayyor (2026-11-17) — M1 yopildi            |
+| M2a A'zolar API                   | Tayyor (2026-11-21)                         |
+| M2b Foto, import, eksport         | Tayyor (2026-11-21)                         |
+| M2c A'zolar UI                    | Tayyor (2026-11-21) — M2 yopildi            |
+| M3a Tariflar va abonementlar API  | Tayyor (2026-11-22)                         |
+| M3b Tariflar va abonementlar UI   | Tayyor (2026-11-22) — M3 yopildi            |
+| M4a To'lovlar va kassa API        | Tayyor (2026-11-22)                         |
+| M4b To'lovlar va kassa UI         | Tayyor (2026-11-22) — M4 yopildi            |
+| M5a Kirish nazorati API           | Tayyor (2026-11-22)                         |
+| M5b Qabulxona ekrani va jurnal    | Tayyor (2026-11-22)                         |
+| M5c Oflayn qabulxona              | Tayyor (2026-11-22) — M5 yopildi            |
+| M6a A'zo ilovasi API              | Tayyor (2026-11-22)                         |
+| M6b A'zo PWA                      | Tayyor (2026-11-22)                         |
+| M7a Xabarnomalar va hisobot API   | Tayyor (2026-11-22)                         |
+| M7b Bosh sahifa va shablonlar UI  | Tayyor (2026-11-22) — M7 yopildi            |
+| M8a Mezonlar, tarjima, xavfsizlik | Tayyor (2026-11-22)                         |
+| M8b Prod infra, zaxira, tiklash   | Tayyor (2026-11-22)                         |
+| M8c Demo ma'lumot, yuklama testi  | Tayyor (2026-11-23)                         |
+| M8d E2e: mezonlar 1, 2, 3, 11     | Tayyor (2026-11-23)                         |
+
+## 2026-11-23 — M8d: qabul mezonlari uchun e2e
+
+Branch: `feat/m8d-e2e`. Yangi paket yo'q.
+
+### Qilindi
+
+- `apps/e2e` ga to'rt oqim (Playwright, haqiqiy API, web va a'zo ilovasi build'lari bilan):
+  - `operator/organization-setup.spec.ts` — mezon 1: operator tashkilot ochadi, ega birinchi kirishda parol va TOTP o'rnatadi, tarif, menejer va 500 a'zo CSV importi; 30 daqiqa chegarasi (amalda ~5 s).
+  - `owner/reception-sale.spec.ts` — mezon 2 UI: a'zo qo'shish, abonement sotish, karta to'lovi 60 soniyada.
+  - `member-app.spec.ts` — mezon 3: a'zo ilovasida SMS-kod bilan kirish va QR kodi.
+  - `offline/reception-offline.spec.ts` — mezon 11: qabulxona internetsiz, brauzer soati 10 daqiqa suriladi, QR oflayn tekshiriladi va internet qaytgach jurnalga "QR, oflayn" bo'lib tushadi. Soat haqiqiy vaqtdan 10 daqiqa orqadan boshlanadi: API kelajakdagi kirishni rad etadi.
+- A'zo ilovasi e2e ga qo'shildi (:3101, `NEXT_DIST_DIR` qo'llab-quvvatlanadi). API chiqishi `apps/e2e/.output/api.log` ga (gitignore): konsol SMS drayveri kodni shu yerga yozadi, `support/sms.ts` o'qiydi. Mahsulot kodi o'zgarmadi.
+- E2e API fayllarni xotirada saqlaydi (`STORAGE_DRIVER=memory`): CI e2e job'ida MinIO yo'q. Birinchi CI ishga tushishida import yuklash shu sababli o'tmadi (lokalda MinIO bor edi), qayta urinish esa birinchi urinish ochgan tashkilot slug'iga urildi — endi har urinish o'z tashkilotini ochadi.
+- `platform-auth.spec.ts` operator sessiyasini saqlaydi (`operator` loyihasi uchun). `support/i18n.ts` dagi `t()` `{nom}` o'rinlarini to'ldiradi.
+- `docs/ACCEPTANCE.md`: 1, 2, 3, 11 — "Bor". 14 mezondan 13 tasi to'liq; 12 (WAL-G bilan vaqtga tiklash) prod serverda sinaladi.
+
+### Tekshirildi
+
+- `pnpm test:e2e` — 8 test yashil (~19 s), ketma-ket ikki marta. `pnpm format:check`, `pnpm i18n:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` — yashil. **COUNTS**
+- Staging: tiklash sinovi (`infra/restore-drill.sh staging`) o'tdi — 60 jadval, 225 qator, 13 s. Demo ma'lumot (`seed:demo`) staging'ga qo'shildi.
+
+### Ma'lum
+
+- Staging'da yuklama testi qoldirildi: `.env` dagi `LOAD_STAFF_PASSWORD` menejerning haqiqiy paroliga mos emas (INVALID_CREDENTIALS). Parolni yangilab, `infra/load/README.md` bo'yicha k6 ni staging tarmog'i ichidan (`BASE_URL=http://api:8000`) ishga tushirish kerak: Caddy orqali 100 foydalanuvchi bitta IP bo'lib ko'rinadi va IP cheklovi (300/daqiqa) testni buzadi.
 
 ## 2026-11-23 — MVP kodi main da, staging tuzatildi
 

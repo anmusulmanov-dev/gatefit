@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { OPERATOR, platformUrl } from '../support/env.ts';
+import { OPERATOR, OPERATOR_STATE, platformUrl } from '../support/env.ts';
 import { t } from '../support/i18n.ts';
 import { completeTotpSetup, submitCredentials } from '../support/sign-in.ts';
 
@@ -14,4 +14,6 @@ test('operator signs in to the platform console', async ({ page }) => {
   await expect(page).toHaveURL(/\/platform\/organizations/);
   await expect(page.getByRole('heading', { name: t('platform.nav.organizations') })).toBeVisible();
   await expect(page.getByText('Gatefit Demo')).toBeVisible();
+
+  await page.context().storageState({ path: OPERATOR_STATE });
 });

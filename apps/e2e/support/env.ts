@@ -31,6 +31,7 @@ function e2eDatabase(name: string): string {
 // Windows (Hyper-V) may reserve ranges around it, see `netsh int ipv4 show excludedportrange`.
 export const API_PORT = 7100;
 export const WEB_PORT = 3100;
+export const MEMBER_PORT = 3101;
 export const E2E_DATABASE = 'gatefit_e2e';
 // The web app is built into its own directory: its API address is fixed at build time.
 export const WEB_DIST_DIR = '.next-e2e';
@@ -40,9 +41,28 @@ export const OPERATOR = { phone: '+998900000109', password: 'e2e-operator-passwo
 
 /** The owner's signed-in session, saved by staff-auth.spec.ts for the tests that follow. */
 export const OWNER_STATE = '.auth/owner.json';
+/** The operator's session, saved by platform-auth.spec.ts. */
+export const OPERATOR_STATE = '.auth/operator.json';
+/** The member's session in the member app, saved by member-app.spec.ts. */
+export const MEMBER_STATE = '.auth/member.json';
+
+/**
+ * Everything the e2e API prints, SMS included: the console SMS driver writes to stdout, so
+ * the member sign-in test reads its code here (support/sms.ts). Git-ignored.
+ */
+export const API_LOG = resolve(import.meta.dirname, '../.output/api.log');
+
+/** The member reception-sale.spec.ts adds and sells to; later flows use the same person. */
+export const SALE_MEMBER = { phone: '+998900009901', firstName: 'Sardor', lastName: 'E2E' };
 
 export const organizationUrl = `http://demo.localhost:${WEB_PORT}`;
 export const platformUrl = `http://admin.localhost:${WEB_PORT}`;
+export const memberUrl = `http://demo.localhost:${MEMBER_PORT}`;
+
+/** The staff panel of another organization, e.g. one the operator just opened. */
+export function organizationUrlOf(slug: string): string {
+  return `http://${slug}.localhost:${WEB_PORT}`;
+}
 
 function redisUrl(): string {
   // A database of its own, so rate limits and one-time keys never mix with development.
@@ -61,6 +81,9 @@ export function apiEnv(): Record<string, string> {
     APP_BASE_DOMAIN: 'localhost',
     TRUST_PROXY: 'true',
     SMS_DRIVER: 'console',
+    // Files (member imports, photos) in the API's memory: the suite needs no MinIO, and CI
+    // runs only PostgreSQL and Redis.
+    STORAGE_DRIVER: 'memory',
     LOG_LEVEL: 'warn',
     // Every request comes from one IP.
     RATE_LIMIT_PER_MINUTE: '1000000',
@@ -72,7 +95,7 @@ export function apiEnv(): Record<string, string> {
   };
 }
 
-/** Variables for building and serving the web app against the e2e API. */
+/** Variables for building and serving the web and member apps against the e2e API. */
 export function webEnv(): Record<string, string> {
   return {
     // The root .env says development, which breaks `next build` and `next start`.

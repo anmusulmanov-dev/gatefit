@@ -7,8 +7,11 @@ const messages: unknown = JSON.parse(
   readFileSync(resolve(repoRoot, 'packages/i18n/src/uz.json'), 'utf8'),
 );
 
-/** The Uzbek text for a dotted message key, e.g. `t('auth.signIn')`. */
-export function t(key: string): string {
+/**
+ * The Uzbek text for a dotted message key, e.g. `t('auth.signIn')`. Simple `{name}`
+ * placeholders are filled from `values`; plural forms are not supported.
+ */
+export function t(key: string, values: Record<string, string | number> = {}): string {
   let node: unknown = messages;
   for (const part of key.split('.')) {
     node =
@@ -19,5 +22,7 @@ export function t(key: string): string {
   if (typeof node !== 'string') {
     throw new Error(`No message for "${key}" in uz.json`);
   }
-  return node;
+  return node.replace(/\{(\w+)\}/g, (match, name: string) =>
+    name in values ? String(values[name]) : match,
+  );
 }

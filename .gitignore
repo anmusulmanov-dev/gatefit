@@ -27,6 +27,7 @@ Thumbs.db
 .auth
 test-results
 playwright-report
+apps/e2e/.output
 
 # Load test codes (pnpm --filter api load:tokens)
 infra/load/.tokens.json

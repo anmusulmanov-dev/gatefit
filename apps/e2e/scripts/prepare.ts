@@ -1,7 +1,7 @@
 import { execSync } from 'node:child_process';
 import { apiEnv, E2E_DATABASE, repoRoot, webEnv } from '../support/env.ts';
 
-// Runs before `playwright test`: builds the API and the web app, then rebuilds the e2e
+// Runs before `playwright test`: builds the API, the web app and the member app, then rebuilds the e2e
 // database from migrations and seeds it, so every run starts from the same state.
 // Set E2E_SKIP_BUILD=1 to reuse the previous builds.
 
@@ -20,6 +20,7 @@ if (process.env.E2E_SKIP_BUILD !== '1') {
   // Also builds the shared packages the web app needs.
   run('pnpm exec turbo run build --filter=api');
   run('pnpm --filter web exec next build', webEnv());
+  run('pnpm --filter member exec next build', webEnv());
 }
 
 const env = apiEnv();
