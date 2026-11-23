@@ -9,7 +9,7 @@ Har sessiya oxirida yangilanadi: nima qilindi, nima qoldi, ma'lum muammolar.
 | 0.1 Loyiha karkasi                | Tayyor (2026-11-11)              |
 | 0.2 Ko'p mijozlilik va RLS        | Tayyor (2026-11-11)              |
 | 0.3 Autentifikatsiya va ruxsatlar | Tayyor (2026-11-17)              |
-| MVP (M1–M8)                       | Jarayonda (M1–M4 tayyor)         |
+| MVP (M1–M8)                       | Jarayonda (M1–M5 tayyor)         |
 | M1a Tashkilot ichki API           | Tayyor (2026-11-17)              |
 | M1b Platforma API                 | Tayyor (2026-11-17)              |
 | M1c Sozlamalar UI                 | Tayyor (2026-11-17)              |
@@ -23,6 +23,30 @@ Har sessiya oxirida yangilanadi: nima qilindi, nima qoldi, ma'lum muammolar.
 | M4b To'lovlar va kassa UI         | Tayyor (2026-11-22) — M4 yopildi |
 | M5a Kirish nazorati API           | Tayyor (2026-11-22)              |
 | M5b Qabulxona ekrani va jurnal    | Tayyor (2026-11-22)              |
+| M5c Oflayn qabulxona              | Tayyor (2026-11-22) — M5 yopildi |
+
+## 2026-11-22 — M5c: oflayn qabulxona (web)
+
+Branch: `feat/m5-access-offline` (`feat/m5-access-ui` ustiga). Yangi paket yo'q.
+
+### Qilindi
+
+- **`packages/shared/src/access-offline.ts`**: `checkTokenOffline` (WebCrypto Ed25519, ochiq kalit bilan), `decideOffline` (API bilan bir xil qoidalar; navbatdagi kirishlar bugungi tashrif, tashrif ayirish va 5 daqiqalik takror skan uchun hisobga olinadi), `uuidv7`. `isUnreachable` (`api-client.ts`): tarmoq yo'q yoki proksi API o'rniga javob berdi.
+- **IndexedDB** (`reception/offline-store.ts`): filial bo'yicha snapshot va yuborilmagan kirishlar navbati; brauzer qayta ochilsa ham saqlanadi.
+- **`useOfflineAccess`**: snapshot har 5 daqiqada yangilanadi, navbat har 30 soniyada va `online` hodisasida yuboriladi (500 tadan), 48 soatdan eskilari tashlanadi. API'ga yetib bo'lmasa ekran o'zi qaror qiladi va kirishni navbatga yozadi.
+- Ekranda: "Oflayn: shu yerda tekshirilmoqda · navbatda N ta", internet qaytganda "Yuborilishi kutilmoqda", natijada "Oflayn tekshirildi". Snapshot bo'lmasa — tushunarli xabar.
+
+### Tekshirildi
+
+- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` — yashil. **COUNTS**
+- Birlik (`access-offline.spec.ts`, 9): Node'da yaratilgan haqiqiy Ed25519 kalit bilan imzo tekshiruvi, eskirgan va soxta kod, boshqa kalit, navbatga yozish, takror skan, tashrif ayirish, kunlik limit, snapshotda yo'q a'zo, uuidv7 tartibi.
+- Brauzerda (mezon 11): snapshot IndexedDB'ga saqlandi (Chilonzor, 23 a'zo); **API serveri to'xtatildi** — QR skan "Kirish mumkin · Oflayn tekshirildi", navbatda 1 ta; soxta kod oflaynda "Kod yaroqsiz", navbatga tushmadi; API qayta yoqilgach navbat o'zi yuborildi, jurnalda "QR, oflayn" yozuvi paydo bo'ldi.
+
+### Ma'lum muammolar
+
+- Oflayn rejimda foto ko'rsatilmaydi (havolalar qisqa muddatli) va "Bugun shu filialda" ro'yxatiga oflayn kirishlar qo'shilmaydi; zaldagilar soni yangilanmaydi.
+- Oflayndagi kunlik limit faqat shu ekranning navbatini hisoblaydi: uzilishdan oldingi bugungi kirishlar hisobga olinmaydi (snapshotda yo'q).
+- Mezon 11 uchun avtomatik e2e (10 daqiqa uzilish) Playwright qo'shilganda yoziladi; hozir birlik testlari, API sinxron testlari va qo'lda brauzer tekshiruvi bilan qoplangan.
 
 ## 2026-11-22 — M5b: qabulxona ekrani va kirish jurnali (web)
 
@@ -72,7 +96,7 @@ Branch: `feat/m5-access-api` (`feat/m4-billing-ui` ustiga). Qaror: `docs/ADR/001
 ### Qoldi
 
 - M5b: yuqoridagi yozuv.
-- M5c: oflayn rejim (IndexedDB, navbat, sinxron) — mezon 11 web qismi.
+- M5c: yuqoridagi yozuv.
 
 ## 2026-11-22 — M4b: to'lovlar va kassa (web)
 

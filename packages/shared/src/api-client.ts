@@ -16,6 +16,21 @@ const unexpected: ApiError = {
 };
 
 /**
+ * True when the API could not be reached at all (no network, or a proxy in front of it
+ * answering for a server that is down), as opposed to the API refusing the request.
+ */
+export function isUnreachable(result: ApiResult<unknown>): boolean {
+  return (
+    !result.ok &&
+    (result.status === 0 ||
+      result.status === 502 ||
+      result.status === 503 ||
+      result.status === 504 ||
+      (result.status >= 500 && result.error === unexpected))
+  );
+}
+
+/**
  * Browser client for the API. Requests go to the app's own origin (a proxy forwards them),
  * so the httpOnly session cookies travel with them and no CORS is involved.
  *

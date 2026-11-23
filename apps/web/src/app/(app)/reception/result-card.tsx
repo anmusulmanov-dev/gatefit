@@ -12,9 +12,12 @@ import { useReasonText } from './access-ui';
 export function ResultCard({
   result,
   pending,
+  offline = false,
 }: {
   result: AccessResultDto | null;
   pending: boolean;
+  /** Decided by the screen without the API; sent when the internet is back. */
+  offline?: boolean;
 }) {
   const t = useTranslations('access');
   const reason = useReasonText();
@@ -50,6 +53,7 @@ export function ResultCard({
       </p>
       {result.reason && <p className="text-xl font-semibold">{reason(result.reason)}</p>}
       {result.repeat && <p className="text-sm">{t('repeat')}</p>}
+      {offline && result.checkInId !== null && <p className="text-sm">{t('offline.decided')}</p>}
       {member && (
         <div className="flex items-center gap-4">
           {member.photoUrl ? (
