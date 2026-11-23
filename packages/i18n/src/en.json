@@ -106,6 +106,7 @@
     "CASH_SHIFT_ALREADY_OPEN": "A cash shift is already open at this location.",
     "CASH_SHIFT_CLOSED": "This cash shift is already closed.",
     "INVALID_DUE_DATE": "The due date cannot be in the past.",
+    "INVALID_TEMPLATE": "The text uses a placeholder this message does not have.",
     "FILE_REQUIRED": "Choose a file.",
     "FILE_TOO_LARGE": "The file is too large (up to 5 MB).",
     "UNSUPPORTED_FILE_TYPE": "Use a JPEG, PNG or WebP image.",
@@ -124,7 +125,8 @@
   },
   "sms": {
     "otp": "Gatefit: your sign-in code is {code}. Do not share it.",
-    "receipt": "{organization}: payment of {amount} received. Invoice {number}, still owed {balance}."
+    "receipt": "{organization}: payment of {amount} received. Invoice {number}, still owed {balance}.",
+    "expiryReminder": "{organization}: {name}, your {plan} membership ends on {date} ({days} days left). Renew it at the front desk."
   },
   "web": {
     "home": {
@@ -317,6 +319,7 @@
     "payments": "Payments",
     "cash_shifts": "Cash desk",
     "reports": "Reports",
+    "notifications": "Messages",
     "audit": "Audit"
   },
   "permissions": {
@@ -368,6 +371,9 @@
     "reports": {
       "daily": "Daily report",
       "financial": "Financial reports"
+    },
+    "notifications": {
+      "manage": "Message templates"
     },
     "audit": {
       "read": "View audit log"

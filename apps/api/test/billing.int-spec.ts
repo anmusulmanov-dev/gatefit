@@ -619,8 +619,8 @@ describe('Payments and cash desk (integration)', () => {
       });
       expect(t.sms.sent.filter((sms) => sms.to === member.phone)).toEqual([]);
       await owner.post(`/payments/${sale.payment?.id}/receipt/sms`).expect(204);
-      const [sms] = t.sms.sent.filter((item) => item.to === member.phone);
-      expect(sms?.text).toContain(sale.invoice?.number);
+      const sms = await t.sms.waitFor(member.phone);
+      expect(sms.text).toContain(sale.invoice?.number);
     });
   });
 

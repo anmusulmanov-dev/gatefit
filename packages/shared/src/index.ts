@@ -11,6 +11,7 @@ export * from './member-imports';
 export * from './members';
 export * from './modules';
 export * from './money';
+export * from './notifications';
 export * from './organization';
 export * from './pagination';
 export * from './permissions';

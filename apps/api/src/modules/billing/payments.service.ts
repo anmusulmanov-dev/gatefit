@@ -1,4 +1,3 @@
-import { messages, resolveLocale } from '@gatefit/i18n';
 import {
   ErrorCode,
   formatMinor,
@@ -18,8 +17,8 @@ import { FISCAL_PROVIDER, type FiscalProvider } from '../../common/fiscal/fiscal
 import { canSeeLocation, type StaffCaller } from '../../common/http/staff-request';
 import { pageArgs, toPage } from '../../common/pagination/paginate';
 import type { TenantTransaction } from '../../common/prisma/prisma.service';
-import { SMS_PROVIDER, type SmsProvider } from '../../common/sms/sms.provider';
 import { MembersService } from '../members/members.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { OrganizationService } from '../tenancy/organization.service';
 import { CashShiftsService } from './cash-shifts.service';
 import {
@@ -42,7 +41,7 @@ export class PaymentsService {
     private readonly shifts: CashShiftsService,
     private readonly members: MembersService,
     private readonly organizations: OrganizationService,
-    @Inject(SMS_PROVIDER) private readonly sms: SmsProvider,
+    private readonly notifications: NotificationsService,
     @Inject(FISCAL_PROVIDER) private readonly fiscal: FiscalProvider,
   ) {}
 
@@ -73,6 +72,40 @@ export class PaymentsService {
       include: paymentInclude,
     });
     return toPage(rows, query, toPaymentDto);
+  }
+
+  /** Money taken and given back at a location in a time range, for the daily report. */
+  async dayTotals(
+    tx: TenantTransaction,
+    locationId: string,
+    from: Date,
+    to: Date,
+  ): Promise<{
+    revenue: { method: string; count: number; amountMinor: string }[];
+    refundsMinor: string;
+  }> {
+    const [payments, refunds] = await Promise.all([
+      tx.payment.groupBy({
+        by: ['method'],
+        where: { locationId, createdAt: { gte: from, lt: to } },
+        _count: { _all: true },
+        _sum: { amountMinor: true },
+      }),
+      tx.refund.aggregate({
+        where: { locationId, createdAt: { gte: from, lt: to } },
+        _sum: { amountMinor: true },
+      }),
+    ]);
+    return {
+      revenue: payments
+        .map((row) => ({
+          method: row.method,
+          count: row._count._all,
+          amountMinor: (row._sum.amountMinor ?? 0n).toString(),
+        }))
+        .sort((a, b) => a.method.localeCompare(b.method)),
+      refundsMinor: (refunds._sum.amountMinor ?? 0n).toString(),
+    };
   }
 
   /** The signed-in member's own payments, newest first, and what they still owe (member app). */
@@ -241,17 +274,24 @@ export class PaymentsService {
     };
   }
 
-  /** Texts the receipt to the member, in the organization's language. Only when staff ask. */
+  /**
+   * Texts the receipt to the member, in the organization's language and with the club's
+   * wording (docs/TZ.md F-4.2). Only when staff ask; sent through the notifications queue.
+   */
   async sendReceiptSms(tx: TenantTransaction, caller: StaffCaller, id: string): Promise<void> {
     const receipt = await this.receipt(tx, caller, id);
-    const organization = await this.organizations.get(tx, caller.organizationId);
-    const locale = resolveLocale(organization.locale);
-    const text = messages[locale].sms.receipt
-      .replace('{organization}', receipt.organization.name)
-      .replace('{amount}', formatMinor(receipt.amountMinor, receipt.currency, locale))
-      .replace('{number}', receipt.invoiceNumber)
-      .replace('{balance}', formatMinor(receipt.balanceMinor, receipt.currency, locale));
-    await this.sms.send(receipt.member.phone, text);
+    const payment = await this.findVisible(tx, caller, id);
+    await this.notifications.send(tx, caller.organizationId, {
+      kind: 'payment_receipt',
+      template: 'payment_receipt',
+      memberId: payment.memberId,
+      to: receipt.member.phone,
+      values: (locale) => ({
+        amount: formatMinor(receipt.amountMinor, receipt.currency, locale),
+        number: receipt.invoiceNumber,
+        balance: formatMinor(receipt.balanceMinor, receipt.currency, locale),
+      }),
+    });
   }
 
   private async findVisible(tx: TenantTransaction, caller: StaffCaller, id: string) {

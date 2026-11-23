@@ -26,6 +26,30 @@ Har sessiya oxirida yangilanadi: nima qilindi, nima qoldi, ma'lum muammolar.
 | M5c Oflayn qabulxona              | Tayyor (2026-11-22) — M5 yopildi |
 | M6a A'zo ilovasi API              | Tayyor (2026-11-22)              |
 | M6b A'zo PWA                      | Tayyor (2026-11-22)              |
+| M7a Xabarnomalar va hisobot API   | Tayyor (2026-11-22)              |
+
+## 2026-11-22 — M7a: xabarnomalar va kunlik hisobot (API)
+
+Branch: `feat/m7-notifications-api` (`feat/m6-member-pwa` ustiga). Qaror: `docs/ADR/0011-notifications.md`. Anvar tasdiqlagan javoblar: Eskiz drayveri soxta HTTP bilan, haqiqiy hisob keyin; eslatma tugashiga 3 kun qolganda soat 10:00 da (filial vaqti); tahrirlanadigan shablonlar — muddat eslatmasi va chek (OTP emas); qayta urinish 1, 5, 30 daqiqa; kunlik hisobot faqat web'da. Yangi paket yo'q.
+
+### Qilindi
+
+- **Jadvallar** (RLS): `notification_templates` (body null = standart), `notifications` (matn, holat, urinishlar, `dedupe_key`). `notifications.manage` yangi ruxsat — mavjud owner/manager rollariga migratsiya bilan qo'shildi.
+- **`NotificationsService`**: shablon + tashkilot tili, jurnal, commit'dan keyin BullMQ navbati, 3 qayta urinish, keyin `failed`. Chek SMS'i endi shu orqali (klub matni bilan).
+- **Eskiz** SMS drayveri (`SMS_DRIVER=eskiz`, `ESKIZ_EMAIL/PASSWORD/FROM`), `.env.example` yangilandi.
+- **`ExpiryReminderJob`** (soatlik): oxirgi kunga 3 kun qolganda, 10:00 dan keyin, bir marta.
+- **API**: `GET /notification-templates`, `PUT /notification-templates/{key}/{locale}` (audit), `GET /notifications?memberId=`, `GET /reports/daily?locationId=&date=` (tushum usullar bo'yicha, qaytarish, sof; yangi a'zolar; kirishlar, a'zolar, rad; 7 kunda tugaydiganlar).
+
+### Tekshirildi
+
+- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` — yashil. **COUNTS**
+- `test/notifications.int-spec.ts` (6): chek navbat orqali yuboriladi va `sent` bo'ladi, a'zo kartasida ro'yxat; klub shabloni ishlatiladi, noma'lum o'zgaruvchi 422, ruxsatsiz 403, standartga qaytish, audit; qayta urinish (yiqilgan → `queued`, keyin `sent`, qayta yuborilmaydi; oxirgi urinish → `failed`); eslatma 09:30 da yo'q, 10:30 da bir marta (takror ishga tushganda ham); kunlik hisobot (usullar, qaytarish, sof, yangi a'zolar, kirishlar, tugaydiganlar, boshqa sana); filial va tashkilot ajratilgan.
+- Birlik: Eskiz drayveri (kirish, token, 401 da qayta kirish, xatoda telefon va matn yo'q).
+
+### Ma'lum muammolar
+
+- Haqiqiy Eskiz bilan yuborish sinalmagan: hisob va tasdiqlangan shablonlar kerak.
+- Chek SMS'i endi navbat orqali: tugma bosilganda "yuborildi" degani "navbatga qo'yildi" degani.
 
 ## 2026-11-22 — M6b: a'zo PWA
 

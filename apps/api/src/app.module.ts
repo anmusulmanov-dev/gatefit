@@ -25,6 +25,8 @@ import { AuthGuard } from './modules/auth/auth.guard';
 import { AuthModule } from './modules/auth/auth.module';
 import { BillingModule } from './modules/billing/billing.module';
 import { AccessModule } from './modules/access/access.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
+import { ReportsModule } from './modules/reports/reports.module';
 import { EntitlementsModule } from './modules/entitlements/entitlements.service';
 import { FilesModule } from './modules/files/files.module';
 import { HealthModule } from './modules/health/health.module';
@@ -58,6 +60,8 @@ import { OrganizationModule } from './modules/tenancy/organization.module';
     PlansModule,
     BillingModule,
     AccessModule,
+    NotificationsModule,
+    ReportsModule,
     PlatformModule,
     OrganizationModule,
     FilesModule,

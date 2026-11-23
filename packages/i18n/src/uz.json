@@ -106,6 +106,7 @@
     "CASH_SHIFT_ALREADY_OPEN": "Bu filialda smena allaqachon ochiq.",
     "CASH_SHIFT_CLOSED": "Bu smena allaqachon yopilgan.",
     "INVALID_DUE_DATE": "To'lov muddati o'tgan sana bo'lishi mumkin emas.",
+    "INVALID_TEMPLATE": "Matnda bu xabarda yo'q o'zgaruvchi ishlatilgan.",
     "FILE_REQUIRED": "Faylni tanlang.",
     "FILE_TOO_LARGE": "Fayl juda katta (5 MB gacha).",
     "UNSUPPORTED_FILE_TYPE": "JPEG, PNG yoki WebP rasm yuklang.",
@@ -124,7 +125,8 @@
   },
   "sms": {
     "otp": "Gatefit: kirish kodi {code}. Uni hech kimga aytmang.",
-    "receipt": "{organization}: {amount} to'lov qabul qilindi. Hisob {number}, qoldiq {balance}."
+    "receipt": "{organization}: {amount} to'lov qabul qilindi. Hisob {number}, qoldiq {balance}.",
+    "expiryReminder": "{organization}: {name}, «{plan}» abonementingiz {date} da tugaydi ({days} kun qoldi). Qabulxonada uzaytiring."
   },
   "web": {
     "home": {
@@ -317,6 +319,7 @@
     "payments": "To'lovlar",
     "cash_shifts": "Kassa",
     "reports": "Hisobotlar",
+    "notifications": "Xabarlar",
     "audit": "Audit"
   },
   "permissions": {
@@ -368,6 +371,9 @@
     "reports": {
       "daily": "Kunlik hisobot",
       "financial": "Moliyaviy hisobotlar"
+    },
+    "notifications": {
+      "manage": "Xabar shablonlari"
     },
     "audit": {
       "read": "Audit jurnalini ko'rish"
