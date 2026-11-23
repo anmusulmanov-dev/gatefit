@@ -30,6 +30,28 @@ Har sessiya oxirida yangilanadi: nima qilindi, nima qoldi, ma'lum muammolar.
 | M7b Bosh sahifa va shablonlar UI  | Tayyor (2026-11-22) — M7 yopildi |
 | M8a Mezonlar, tarjima, xavfsizlik | Tayyor (2026-11-22)              |
 | M8b Prod infra, zaxira, tiklash   | Tayyor (2026-11-22)              |
+| M8c Demo ma'lumot, yuklama testi  | Tayyor (2026-11-23)              |
+
+## 2026-11-23 — M8c: demo ma'lumot va yuklama testi
+
+Branch: `feat/m8-demo-load` (`feat/m8-prod-infra` ustiga). Yangi npm paket yo'q; k6 Docker image'i (`grafana/k6:2.3.0`).
+
+### Qilindi
+
+- **`pnpm --filter api seed:demo`** (`prisma/seed-demo.ts`): asosiy seed'dan keyin; 300 a'zo (`+99890002xxxx`), ~85 % ga oxirgi 30 kunda sotilgan abonement (Oylik, Ertalabki oylik, 12 tashrif, Yillik) to'liq to'lov bilan (naqd/karta/o'tkazma), har kuni tashriflar (tashrifli tarifda limitdan keyin rad). Har a'zo uchun alohida tasodif generatori: takror ishga tushirish hech narsa qo'shmaydi.
+- **`pnpm --filter api load:tokens [daqiqa]`** (`prisma/load-tokens.ts`): faol abonementli 200 a'zo uchun keyingi daqiqalarning QR kodlari (bazaga yozmaydi), `infra/load/.tokens.json` (gitignore).
+- **`infra/load/k6.js`** va yo'riqnoma `infra/load/README.md`: 100 virtual foydalanuvchi (30 s o'sish, 2 daqiqa, 15 s pasayish), 70 % xodim sahifalari (a'zolar, qidiruv, kirishlar, to'lovlar, kunlik hisobot, tariflar, /me), 30 % QR tekshiruvi; har foydalanuvchi o'z `X-Forwarded-For` manzili bilan (IP cheklovi 100 kishini ko'rsin). Chegaralar: API p95 < 300 ms, QR p95 < 500 ms, xato < 1 %.
+- `.env.example`: `LOAD_STAFF_PHONE`, `LOAD_STAFF_PASSWORD` (TOTP'siz menejer).
+
+### Tekshirildi
+
+- `seed:demo` dev bazada: 300 a'zo, 254 abonement, ~1 750 tashrif; takror — 0 yangi. Birinchi variantda takror ishga tushirish 45 ta ortiqcha abonement yaratardi (umumiy tasodif ketma-ketligi siljirdi) — tuzatildi.
+- **Yuklama testi (lokal dev, bitta kompyuter, 2026-11-23)**: 9 436 so'rov, xato 0 %, tekshiruvlar 100 %; API p95 **28 ms**, QR p95 **35 ms**, eng sekin 220 ms. Birinchi urinishda QR so'rovlarining 48 % 403 qaytdi: ssenariy a'zoni uning filialida tekshirardi, menejer esa bitta filialga biriktirilgan — ssenariy xodim filialida tekshiradigan qilindi (haqiqiy qabulxona kabi).
+- `pnpm format:check`, `pnpm i18n:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` — yashil. **COUNTS**
+
+### Ma'lum
+
+- Natija bitta kompyuterda (API, baza va k6 birga) olingan: staging serverda takrorlash kerak (`infra/load/README.md`).
 
 ## 2026-11-22 — M8b: production infratuzilma, zaxira va tiklash
 
