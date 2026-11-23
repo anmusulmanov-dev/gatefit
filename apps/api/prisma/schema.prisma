@@ -178,6 +178,7 @@ model Organization {
   payments        Payment[]
   refunds         Refund[]
   cashShifts      CashShift[]
+  checkIns        CheckIn[]
 
   @@map("organizations")
 }
@@ -203,6 +204,7 @@ model Location {
   payments       Payment[]
   refunds        Refund[]
   cashShifts     CashShift[]
+  checkIns       CheckIn[]
 
   @@unique([organizationId, id])
   @@unique([organizationId, name])
@@ -344,6 +346,7 @@ model Member {
   memberships  Membership[]
   invoices     Invoice[]
   payments     Payment[]
+  checkIns     CheckIn[]
 
   @@unique([organizationId, id])
   @@unique([organizationId, phone])
@@ -884,4 +887,55 @@ model PlatformSession {
 
   @@index([adminId])
   @@map("platform_sessions")
+}
+
+// --- Entry control (docs/TZ.md F-3.1 to F-3.4, docs/ADR/0010-access.md) ---
+
+enum CheckInDirection {
+  in
+  out
+}
+
+enum CheckInMethod {
+  qr
+  manual
+  qr_offline
+}
+
+enum CheckInResult {
+  allowed
+  denied
+}
+
+// Append-only (CLAUDE.md rule 5), partitioned by month of `at` in the hand-written SQL of
+// the access migration; the primary key includes `at` for that reason.
+model CheckIn {
+  id             String           @db.Uuid
+  organizationId String           @map("organization_id") @db.Uuid
+  // When the member came through; for offline entries, as the reception screen saw it.
+  at             DateTime         @db.Timestamptz(3)
+  locationId     String           @map("location_id") @db.Uuid
+  memberId       String           @map("member_id") @db.Uuid
+  // The membership the entry was counted against; null when none applied.
+  membershipId   String?          @map("membership_id") @db.Uuid
+  direction      CheckInDirection
+  method         CheckInMethod
+  result         CheckInResult
+  // packages/shared/src/access.ts ACCESS_DENY_REASONS
+  denyReason     String?          @map("deny_reason")
+  // Why staff let the member in by hand.
+  note           String?
+  // users.id of the staff member who scanned or entered it.
+  recordedBy     String           @map("recorded_by") @db.Uuid
+  // When the server received it (later than `at` for offline entries).
+  createdAt      DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  location     Location     @relation(fields: [organizationId, locationId], references: [organizationId, id])
+  member       Member       @relation(fields: [organizationId, memberId], references: [organizationId, id])
+
+  @@id([id, at])
+  @@index([organizationId, locationId, at])
+  @@index([organizationId, memberId, at])
+  @@map("check_ins")
 }

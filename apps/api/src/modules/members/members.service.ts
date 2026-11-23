@@ -43,6 +43,15 @@ export type MemberRow = Prisma.MemberGetPayload<{ include: typeof memberInclude 
 
 const MAX_SIMILAR = 5;
 
+export interface EntryProfile {
+  id: string;
+  firstName: string;
+  lastName: string;
+  status: MemberStatus;
+  archived: boolean;
+  photoUrl: string | null;
+}
+
 /** `YYYY-MM-DD` of a DATE column, which Prisma reads as midnight UTC. */
 const toIsoDate = (value: Date | null) => (value ? value.toISOString().slice(0, 10) : null);
 const fromIsoDate = (value: string | null | undefined) =>
@@ -393,6 +402,52 @@ export class MembersService {
     if (key) {
       await this.storage.delete(key);
     }
+  }
+
+  /**
+   * Who is at the door, for entry control. Not limited to the caller's locations: a member
+   * may come to any location their membership allows (docs/ADR/0010-access.md).
+   * `withPhoto` adds a short-lived photo link. Asked by ids, archived members are included
+   * (flagged); asked for all, they are left out.
+   */
+  async entryProfiles(
+    tx: TenantTransaction,
+    filter: { ids: readonly string[] } | { all: true },
+    withPhoto: boolean,
+  ): Promise<Map<string, EntryProfile>> {
+    const rows = await tx.member.findMany({
+      where: 'ids' in filter ? { id: { in: [...filter.ids] } } : { deletedAt: null },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        status: true,
+        photoKey: true,
+        deletedAt: true,
+      },
+    });
+    return new Map(
+      rows.map((row) => [
+        row.id,
+        {
+          id: row.id,
+          firstName: row.firstName,
+          lastName: row.lastName,
+          status: row.status,
+          archived: row.deletedAt !== null,
+          photoUrl: withPhoto && row.photoKey ? this.links.link(row.photoKey) : null,
+        },
+      ]),
+    );
+  }
+
+  /** The member the signed-in member app user is, in the current organization. */
+  async memberIdOfUser(tx: TenantTransaction, userId: string): Promise<string | null> {
+    const row = await tx.member.findFirst({
+      where: { userId, deletedAt: null },
+      select: { id: true },
+    });
+    return row?.id ?? null;
   }
 
   toDto(row: MemberRow): MemberDto {

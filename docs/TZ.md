@@ -231,7 +231,7 @@ Qoidalar:
 | A'zolar | GET/POST /members, GET /members/duplicates, GET/PATCH /members/{id}, POST /members/{id}/block, /unblock, /archive, /restore, PUT/DELETE /members/{id}/photo, POST /members/imports, GET /members/imports/{id}, POST /members/imports/{id}/validate, /commit, GET /members/imports/template, GET /members/export; GET /files/{token} (imzolangan havola) | M |
 | Tariflar | GET/POST /plans, GET/PATCH /plans/{id} | M |
 | Abonementlar | GET/POST /members/{id}/memberships, GET /memberships/{id}, POST /memberships/{id}/freeze, /unfreeze, /cancel | M |
-| Kirish | GET /me/qr, POST /access/verify, POST /access/manual, GET /check-ins, GET /locations/{id}/occupancy | M |
+| Kirish | GET /me/qr, POST /access/verify, POST /access/manual, POST /access/exit, GET /check-ins, GET /locations/{id}/occupancy, GET /access/events (SSE), GET /access/offline, POST /access/sync | M |
 | To'lovlar | GET/POST /invoices, GET /invoices/{id}, POST /invoices/{id}/payments, /void, GET /payments, GET /payments/{id}, POST /payments/{id}/refund, GET /payments/{id}/receipt, POST /payments/{id}/receipt/sms; abonement sotish to'lov bilan (`POST /members/{id}/memberships`) | M |
 | Kassa | POST /cash-shifts/open, POST /cash-shifts/{id}/close, GET /cash-shifts/current?locationId=, GET /cash-shifts, GET /cash-shifts/{id} | M |
 | Hisobotlar | GET /reports/daily | M |
