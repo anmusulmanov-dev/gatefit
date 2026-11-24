@@ -14,7 +14,13 @@
     "loadError": "Ma'lumotni yuklab bo'lmadi.",
     "optional": "ixtiyoriy",
     "actions": "Amallar",
-    "confirm": "Tasdiqlash"
+    "confirm": "Tasdiqlash",
+    "colorMode": "Ko'rinish rejimi",
+    "colorModes": {
+      "system": "Tizim",
+      "light": "Yorug'",
+      "dark": "Qorong'i"
+    }
   },
   "languages": {
     "uz": "O'zbekcha",
@@ -220,7 +226,27 @@
     "memberLimit": "Har filialda {count} tagacha faol a'zo",
     "unlimited": "Faol a'zolar soni cheklanmagan",
     "platformHint": "Mamlakat, valyuta va tarifni Gatefit o'zgartiradi.",
-    "readOnly": "Ma'lumotlarni o'zgartirishga ruxsatingiz yo'q."
+    "readOnly": "Ma'lumotlarni o'zgartirishga ruxsatingiz yo'q.",
+    "theme": "Mavzu",
+    "themeHint": "Xodimlar paneli va a'zo ilovasi shu ranglarda ko'rinadi.",
+    "themes": {
+      "zumrad": {
+        "name": "Zumrad",
+        "description": "Tinch firuza-yashil, yumshoq soyalar."
+      },
+      "olov": {
+        "name": "Olov",
+        "description": "Energik to'q sariq va qizil gradient."
+      },
+      "neon": {
+        "name": "Neon tun",
+        "description": "Binafsha neon va shisha effekti, qorong'i rejimda ayniqsa chiroyli."
+      },
+      "moviy": {
+        "name": "Moviy",
+        "description": "Ishonchli ko'k, aniq chiziqlar, soya kam."
+      }
+    }
   },
   "locations": {
     "add": "Filial qo'shish",

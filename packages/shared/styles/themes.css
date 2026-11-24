@@ -1,0 +1,475 @@
+/*
+ * Gatefit themes, shared by the staff panel (apps/web) and the member app (apps/member).
+ * Import after Tailwind: `@import '@gatefit/shared/styles/themes.css';`
+ *
+ * <html data-theme="zumrad|olov|neon|moviy" data-mode="system|light|dark">
+ *   data-theme  the organization's pick (organizations.theme), default zumrad
+ *   data-mode   the person's own light/dark choice (cookie gf-mode), default system
+ *
+ * Every colour is `light-dark(light, dark)`, resolved by `color-scheme`, which data-mode sets.
+ * Fonts come from next/font in each app as --ff-* variables; a theme only points at them.
+ * See docs/ADR/0012-themes.md.
+ */
+
+@custom-variant dark {
+  &:where([data-mode='dark'], [data-mode='dark'] *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where([data-mode='system'], [data-mode='system'] *) {
+      @slot;
+    }
+  }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--foreground);
+  --color-popover: var(--card);
+  --color-popover-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--muted);
+  --color-secondary-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--muted);
+  --color-accent-foreground: var(--foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--border);
+  --color-ring: var(--primary);
+  --color-brand-soft: var(--brand-soft);
+  --color-brand-ink: var(--brand-ink);
+  --color-brand-accent: var(--brand-accent);
+  --color-ink: var(--ink);
+  --color-ok: var(--ok);
+  --color-ok-foreground: var(--ok-foreground);
+  --color-ok-soft: var(--ok-soft);
+  --color-ok-ink: var(--ok-ink);
+  --color-no: var(--no);
+  --color-no-foreground: var(--no-foreground);
+  --color-no-soft: var(--no-soft);
+  --color-no-ink: var(--no-ink);
+  --color-warn-soft: var(--warn-soft);
+  --color-warn-ink: var(--warn-ink);
+
+  --radius-sm: calc(var(--radius) * 0.5);
+  --radius-md: calc(var(--radius) * 0.7);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.3);
+
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.04), 0 10px 30px -16px var(--shadow-color);
+  --shadow-raised: 0 16px 34px -14px var(--shadow-hover-color);
+
+  --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-head), ui-sans-serif, system-ui, sans-serif;
+  --font-numeric: var(--font-num), ui-sans-serif, system-ui, sans-serif;
+}
+
+@theme {
+  --animate-rise: rise 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  --animate-pop: pop 0.42s cubic-bezier(0.2, 0.9, 0.3, 1.25) both;
+  --animate-shake: pop 0.3s ease-out both, shake 0.42s 0.25s ease-in-out;
+  --animate-draw: draw 0.45s 0.18s ease-out both;
+  --animate-ring: ring 1s 0.15s ease-out both;
+  --animate-grow: grow 0.9s 0.1s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  --animate-live: live 1.8s infinite;
+  --animate-shimmer: shimmer 1.3s linear infinite;
+
+  @keyframes rise {
+    from {
+      transform: translateY(6px);
+      opacity: 0;
+    }
+  }
+  @keyframes pop {
+    from {
+      transform: scale(0.93);
+      opacity: 0;
+    }
+  }
+  @keyframes shake {
+    20%,
+    60% {
+      transform: translateX(-6px);
+    }
+    40%,
+    80% {
+      transform: translateX(6px);
+    }
+  }
+  @keyframes draw {
+    from {
+      stroke-dashoffset: 40;
+    }
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+  @keyframes ring {
+    from {
+      transform: scale(1);
+      opacity: 1;
+    }
+    to {
+      transform: scale(1.6);
+      opacity: 0;
+    }
+  }
+  @keyframes grow {
+    from {
+      transform: scaleX(0);
+    }
+  }
+  @keyframes live {
+    70% {
+      box-shadow: 0 0 0 7px transparent;
+    }
+    100% {
+      box-shadow: 0 0 0 0 transparent;
+    }
+  }
+  @keyframes shimmer {
+    from {
+      background-position: 200% 0;
+    }
+    to {
+      background-position: -200% 0;
+    }
+  }
+}
+
+/* ---- Light or dark ------------------------------------------------------------------- */
+
+:root,
+[data-mode='system'] {
+  color-scheme: light dark;
+}
+[data-mode='light'] {
+  color-scheme: light;
+}
+[data-mode='dark'] {
+  color-scheme: dark;
+}
+
+/* ---- Shared by every theme: state colours keep one meaning everywhere ------------------- */
+
+:root {
+  /* Large solid fills (reception result) carry white text in both modes: >= 5:1. */
+  --ok: #15803d;
+  --ok-foreground: #ffffff;
+  --no: #b91c1c;
+  --no-foreground: #ffffff;
+  --ok-soft: light-dark(#dcfce7, #0e2f1c);
+  --ok-ink: light-dark(#14532d, #86efac);
+  --no-soft: light-dark(#fee2e2, #3a1212);
+  --no-ink: light-dark(#7f1d1d, #fca5a5);
+  --warn-soft: light-dark(#fef3c7, #36260a);
+  --warn-ink: light-dark(#78350f, #fcd34d);
+  --destructive: light-dark(#b91c1c, #fca5a5);
+}
+
+/* ---- A: Zumrad (default) ---------------------------------------------------------------- */
+
+:root,
+[data-theme='zumrad'] {
+  --background: light-dark(#f2f7f6, #071412);
+  --foreground: light-dark(#0b201d, #e3f1ee);
+  --card: light-dark(#ffffff, #0d1f1c);
+  --muted: light-dark(#e8f1ef, #132b27);
+  --muted-foreground: light-dark(#4f6b67, #8daea8);
+  --border: light-dark(#d6e4e1, #1d3833);
+  --primary: light-dark(#0f766e, #2dd4bf);
+  --primary-foreground: light-dark(#ffffff, #03201d);
+  --primary-gradient: none;
+  --brand-soft: light-dark(#ddf2ee, #0f3a34);
+  --brand-ink: light-dark(#0b5e58, #5eead4);
+  --brand-accent: light-dark(#f2735c, #ff8f7a);
+  --ink: light-dark(#0b201d, #020807);
+  --shadow-color: light-dark(rgb(15 118 110 / 0.35), rgb(0 0 0 / 0.7));
+  --shadow-hover-color: light-dark(rgb(15 118 110 / 0.4), rgb(45 212 191 / 0.22));
+  --radius: 0.875rem;
+  --font-head: var(--ff-manrope);
+  --font-body: var(--ff-inter);
+  --font-num: var(--ff-manrope);
+  --page-glow: none;
+
+  --topbar-bg: light-dark(rgb(255 255 255 / 0.82), rgb(13 31 28 / 0.82));
+  --topbar-fg: var(--foreground);
+  --topbar-muted: var(--muted-foreground);
+  --topbar-hover: var(--muted);
+  --nav-active-bg: var(--brand-soft);
+  --nav-active-fg: var(--brand-ink);
+
+  --hero-bg: var(--brand-soft);
+  --hero-fg: var(--foreground);
+  --hero-muted: var(--brand-ink);
+  --hero-border: transparent;
+
+  --brand-panel: radial-gradient(120% 140% at 100% 0%, #0f766e 0%, #0b5e58 55%, #063b37 100%);
+}
+
+/* ---- B: Olov ---------------------------------------------------------------------------- */
+
+[data-theme='olov'] {
+  --background: light-dark(#f4f5f7, #0c0d10);
+  --foreground: light-dark(#15171c, #f2f3f5);
+  --card: light-dark(#ffffff, #15181e);
+  --muted: light-dark(#eef0f3, #1c2028);
+  --muted-foreground: light-dark(#555d6b, #9ca4b2);
+  --border: light-dark(#e1e4e9, #272c35);
+  --primary: light-dark(#c2410c, #fb923c);
+  --primary-foreground: light-dark(#ffffff, #1f0b00);
+  --primary-gradient: linear-gradient(
+    135deg,
+    var(--primary),
+    color-mix(in oklab, var(--primary) 70%, var(--brand-accent))
+  );
+  --brand-soft: light-dark(#ffede3, #3a1e0e);
+  --brand-ink: light-dark(#9a3412, #fdba74);
+  --brand-accent: light-dark(#be123c, #fb7185);
+  --ink: light-dark(#15171c, #060709);
+  --shadow-color: light-dark(rgb(194 65 12 / 0.4), rgb(0 0 0 / 0.8));
+  --shadow-hover-color: light-dark(rgb(194 65 12 / 0.45), rgb(251 146 60 / 0.3));
+  --radius: 1.25rem;
+  --font-head: var(--ff-unbounded);
+  --font-body: var(--ff-onest);
+  --font-num: var(--ff-unbounded);
+  --page-glow: none;
+
+  --topbar-bg: var(--ink);
+  --topbar-fg: #ffffff;
+  --topbar-muted: #c9ced8;
+  --topbar-hover: rgb(255 255 255 / 0.08);
+  --nav-active-bg: var(--primary);
+  --nav-active-fg: var(--primary-foreground);
+
+  --hero-bg: linear-gradient(135deg, var(--primary), var(--brand-accent));
+  --hero-fg: var(--primary-foreground);
+  --hero-muted: var(--primary-foreground);
+  --hero-border: transparent;
+
+  --brand-panel: linear-gradient(135deg, #c2410c, #be123c);
+}
+
+/* ---- C: Neon tun ------------------------------------------------------------------------ */
+
+[data-theme='neon'] {
+  --background: light-dark(#f4f3fd, #0a0918);
+  --foreground: light-dark(#16133a, #eeedff);
+  --card: light-dark(#ffffff, rgb(19 17 42 / 0.8));
+  --muted: light-dark(#eeecfb, #1b1838);
+  --muted-foreground: light-dark(#5b5785, #a39fd4);
+  --border: light-dark(#e0ddf6, #2a2650);
+  --primary: light-dark(#6d28d9, #a78bfa);
+  --primary-foreground: light-dark(#ffffff, #1a0f3a);
+  --primary-gradient: none;
+  --brand-soft: light-dark(#ede6fe, #2a2160);
+  --brand-ink: light-dark(#5b21b6, #c4b5fd);
+  --brand-accent: light-dark(#0891b2, #22d3ee);
+  --ink: light-dark(#16133a, #05040d);
+  --shadow-color: light-dark(rgb(109 40 217 / 0.35), rgb(124 58 237 / 0.55));
+  --shadow-hover-color: light-dark(rgb(109 40 217 / 0.45), rgb(124 58 237 / 0.6));
+  --radius: 1rem;
+  --font-head: var(--ff-montserrat);
+  --font-body: var(--ff-inter);
+  --font-num: var(--ff-montserrat);
+  --page-glow:
+    radial-gradient(
+      60% 40% at 0% 0%,
+      color-mix(in oklab, var(--primary) 20%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      50% 35% at 100% 20%,
+      color-mix(in oklab, var(--brand-accent) 14%, transparent),
+      transparent 70%
+    );
+
+  --topbar-bg: light-dark(rgb(255 255 255 / 0.75), rgb(10 9 24 / 0.7));
+  --topbar-fg: var(--foreground);
+  --topbar-muted: var(--muted-foreground);
+  --topbar-hover: var(--muted);
+  --nav-active-bg: var(--brand-soft);
+  --nav-active-fg: var(--brand-ink);
+
+  --hero-bg:
+    linear-gradient(var(--card), var(--card)) padding-box,
+    linear-gradient(135deg, var(--primary), var(--brand-accent)) border-box;
+  --hero-fg: var(--foreground);
+  --hero-muted: var(--muted-foreground);
+  --hero-border: transparent;
+
+  --brand-panel: linear-gradient(135deg, #4c1d95, #6d28d9 45%, #0e7490);
+}
+
+/* ---- D: Moviy --------------------------------------------------------------------------- */
+
+[data-theme='moviy'] {
+  --background: light-dark(#f6f8fb, #09101f);
+  --foreground: light-dark(#0f172a, #e7edf7);
+  --card: light-dark(#ffffff, #0f1a2e);
+  --muted: light-dark(#eef2f7, #15233c);
+  --muted-foreground: light-dark(#4f5d73, #94a3bb);
+  --border: light-dark(#dce3ed, #21304a);
+  --primary: light-dark(#1d4ed8, #60a5fa);
+  --primary-foreground: light-dark(#ffffff, #061630);
+  --primary-gradient: none;
+  --brand-soft: light-dark(#e3ecfd, #13294d);
+  --brand-ink: light-dark(#1e40af, #93c5fd);
+  --brand-accent: light-dark(#fbbf24, #fbbf24);
+  --ink: light-dark(#0f172a, #04080f);
+  --shadow-color: light-dark(rgb(15 23 42 / 0.12), rgb(0 0 0 / 0.5));
+  --shadow-hover-color: light-dark(rgb(15 23 42 / 0.18), rgb(0 0 0 / 0.6));
+  --radius: 0.5rem;
+  --font-head: var(--ff-plex-sans);
+  --font-body: var(--ff-plex-sans);
+  --font-num: var(--ff-plex-mono);
+  --page-glow: none;
+
+  --topbar-bg: var(--card);
+  --topbar-fg: var(--foreground);
+  --topbar-muted: var(--muted-foreground);
+  --topbar-hover: transparent;
+  --nav-active-bg: transparent;
+  --nav-active-fg: var(--brand-ink);
+
+  --hero-bg: var(--card);
+  --hero-fg: var(--foreground);
+  --hero-muted: var(--muted-foreground);
+  --hero-border: var(--border);
+
+  --brand-panel:
+    linear-gradient(rgb(255 255 255 / 0.08) 1px, transparent 1px) 0 0 / 22px 22px,
+    linear-gradient(90deg, rgb(255 255 255 / 0.08) 1px, transparent 1px) 0 0 / 22px 22px, #1d4ed8;
+}
+
+/* ---- Base ------------------------------------------------------------------------------- */
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background font-sans text-foreground;
+    background-image: var(--page-glow);
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+  }
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-head), ui-sans-serif, system-ui, sans-serif;
+    text-wrap: balance;
+  }
+}
+
+/* ---- Pieces whose shape differs by theme ------------------------------------------------ */
+
+@utility gf-topbar {
+  background: var(--topbar-bg);
+  color: var(--topbar-fg);
+  backdrop-filter: saturate(1.4) blur(12px);
+}
+
+/* Navigation link; mark the current one with aria-current="page". */
+@utility gf-nav-link {
+  color: var(--topbar-muted);
+  border-radius: var(--radius-md);
+  transition:
+    background-color 0.15s,
+    color 0.15s;
+  &:hover {
+    background: var(--topbar-hover);
+    color: var(--topbar-fg);
+  }
+  &[aria-current='page'] {
+    background: var(--nav-active-bg);
+    color: var(--nav-active-fg);
+  }
+  [data-theme='moviy'] & {
+    border-radius: 0;
+    box-shadow: inset 0 -2px 0 transparent;
+  }
+  [data-theme='moviy'] &[aria-current='page'] {
+    box-shadow: inset 0 -2px 0 var(--primary);
+  }
+  [data-theme='neon'] &[aria-current='page'] {
+    box-shadow: 0 0 18px -6px var(--primary);
+  }
+}
+
+/* The one figure a screen leads with. */
+@utility gf-hero {
+  background: var(--hero-bg);
+  color: var(--hero-fg);
+  border: 1.5px solid var(--hero-border);
+  [data-theme='moviy'] & {
+    box-shadow: inset 0 3px 0 var(--primary);
+  }
+}
+@utility gf-hero-muted {
+  color: var(--hero-muted);
+}
+
+/* Brand panel on sign-in pages: white text on a dark brand fill in every theme (>= 4.5:1). */
+@utility gf-brand-panel {
+  background: var(--brand-panel);
+  color: #ffffff;
+  position: relative;
+  overflow: hidden;
+  &::after {
+    content: '';
+    position: absolute;
+    right: -40px;
+    top: -40px;
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    border: 22px solid rgb(255 255 255 / 0.1);
+    box-shadow: 0 0 0 26px rgb(255 255 255 / 0.05);
+    pointer-events: none;
+  }
+}
+
+@utility gf-primary-fill {
+  background-color: var(--primary);
+  background-image: var(--primary-gradient);
+  color: var(--primary-foreground);
+}
+
+@utility gf-glass {
+  [data-theme='neon'] & {
+    backdrop-filter: blur(14px);
+  }
+}
+
+/* Placeholder block while data loads. */
+@utility gf-skeleton {
+  border-radius: var(--radius-sm);
+  background: linear-gradient(
+      90deg,
+      var(--muted) 0%,
+      color-mix(in oklab, var(--muted) 50%, var(--card)) 50%,
+      var(--muted) 100%
+    )
+    0 0 / 200% 100%;
+  animation: var(--animate-shimmer);
+}
+
+/* ---- Motion: honour the system setting ---------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

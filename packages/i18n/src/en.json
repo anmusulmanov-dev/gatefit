@@ -14,7 +14,13 @@
     "loadError": "Could not load the data.",
     "optional": "optional",
     "actions": "Actions",
-    "confirm": "Confirm"
+    "confirm": "Confirm",
+    "colorMode": "Appearance",
+    "colorModes": {
+      "system": "System",
+      "light": "Light",
+      "dark": "Dark"
+    }
   },
   "languages": {
     "uz": "O'zbekcha",
@@ -220,7 +226,27 @@
     "memberLimit": "Up to {count} active members per location",
     "unlimited": "Unlimited active members",
     "platformHint": "Country, currency and plan are changed by Gatefit.",
-    "readOnly": "You are not allowed to change these details."
+    "readOnly": "You are not allowed to change these details.",
+    "theme": "Theme",
+    "themeHint": "The staff panel and member app use these colours.",
+    "themes": {
+      "zumrad": {
+        "name": "Emerald",
+        "description": "Calm teal green with soft shadows."
+      },
+      "olov": {
+        "name": "Blaze",
+        "description": "Energetic orange-to-red gradient."
+      },
+      "neon": {
+        "name": "Neon night",
+        "description": "Violet neon and glass, best in dark mode."
+      },
+      "moviy": {
+        "name": "Blue",
+        "description": "Trustworthy blue, crisp lines, few shadows."
+      }
+    }
   },
   "locations": {
     "add": "Add location",
