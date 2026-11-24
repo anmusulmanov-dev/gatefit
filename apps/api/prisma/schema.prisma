@@ -19,6 +19,16 @@ datasource db {
   provider = "postgresql"
 }
 
+// The look the organization picked (packages/shared/src/theme.ts).
+enum OrganizationTheme {
+  zumrad
+  olov
+  neon
+  moviy
+
+  @@map("organization_theme")
+}
+
 enum OrganizationStatus {
   trial
   active
@@ -147,6 +157,7 @@ model Organization {
   country     String             @db.Char(2)
   currency    String             @db.Char(3)
   locale      String
+  theme       OrganizationTheme  @default(zumrad)
   status      OrganizationStatus @default(trial)
   trialEndsAt DateTime?          @map("trial_ends_at") @db.Timestamptz(3)
   // The plan in force now; saas_subscriptions keeps the history.

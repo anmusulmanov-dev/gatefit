@@ -1,3 +1,4 @@
+import request from 'supertest';
 import type { Organization, PrismaClient } from '../src/generated/prisma/client';
 import {
   apiAs,
@@ -57,6 +58,7 @@ describe('Organization settings and locations (integration)', () => {
         country: 'UZ',
         currency: 'UZS',
         locale: 'uz',
+        theme: 'zumrad',
         status: 'trial',
         trialEndsAt: null,
         plan: null,
@@ -82,14 +84,37 @@ describe('Organization settings and locations (integration)', () => {
         actorId: ownerUser.userId,
         entity: 'organization',
         entityId: orgA.id,
-        before: { name: orgA.name, locale: 'uz' },
-        after: { name: 'Fit Club', locale: 'ru' },
+        before: { name: orgA.name, locale: 'uz', theme: 'zumrad' },
+        after: { name: 'Fit Club', locale: 'ru', theme: 'zumrad' },
       });
+    });
+
+    it('lets the owner pick a theme, and records it', async () => {
+      const response = await owner.patch('/organization', { theme: 'olov' }).expect(200);
+      expect(response.body).toMatchObject({ id: orgA.id, theme: 'olov' });
+
+      const entries = await admin.auditLog.findMany({
+        where: { organizationId: orgA.id, action: 'organization.update' },
+        orderBy: { at: 'desc' },
+      });
+      expect(entries[0]).toMatchObject({
+        before: { theme: 'zumrad' },
+        after: { theme: 'olov' },
+      });
+    });
+
+    it('rejects an unknown theme', async () => {
+      await owner.patch('/organization', { theme: 'pink' }).expect(400);
     });
 
     it('does not touch another organization', async () => {
       const other = await outsider.get('/organization').expect(200);
-      expect(other.body).toMatchObject({ id: orgB.id, name: orgB.name, locale: 'uz' });
+      expect(other.body).toMatchObject({
+        id: orgB.id,
+        name: orgB.name,
+        locale: 'uz',
+        theme: 'zumrad',
+      });
     });
 
     it('is refused to a manager', async () => {
@@ -107,6 +132,29 @@ describe('Organization settings and locations (integration)', () => {
       await owner.patch('/organization', { country: 'US', currency: 'USD' }).expect(400);
       const unchanged = await admin.organization.findUniqueOrThrow({ where: { id: orgA.id } });
       expect(unchanged).toMatchObject({ country: 'UZ', currency: 'UZS' });
+    });
+  });
+
+  describe('GET /branding', () => {
+    it('tells anyone at the address the name and theme, and nothing else', async () => {
+      const response = await apiAs(t, orgA, []).get('/branding').expect(200);
+      expect(response.body).toEqual({ name: 'Fit Club', theme: 'olov' });
+    });
+
+    it('answers for the organization of the address only', async () => {
+      const response = await apiAs(t, orgB, []).get('/branding').expect(200);
+      expect(response.body).toEqual({ name: orgB.name, theme: 'zumrad' });
+    });
+
+    it('needs an organization address', async () => {
+      await request(t.app.getHttpServer())
+        .get('/api/v1/branding')
+        .set('Host', 'localhost')
+        .expect(404);
+      await request(t.app.getHttpServer())
+        .get('/api/v1/branding')
+        .set('Host', 'nobody.localhost')
+        .expect(404);
     });
   });
 

@@ -1,10 +1,14 @@
 import { Module } from '@nestjs/common';
-import { LocationsController, OrganizationController } from './organization.controller';
+import {
+  BrandingController,
+  LocationsController,
+  OrganizationController,
+} from './organization.controller';
 import { OrganizationService } from './organization.service';
 
 // Owns the organizations and locations tables.
 @Module({
-  controllers: [OrganizationController, LocationsController],
+  controllers: [OrganizationController, LocationsController, BrandingController],
   providers: [OrganizationService],
   exports: [OrganizationService],
 })

@@ -1,4 +1,5 @@
 import {
+  type BrandingDto,
   type LocationCreateInput,
   locationCreateSchema,
   type LocationDto,
@@ -25,7 +26,8 @@ import type { AppRequest } from '../../common/http/app-request';
 import { staffCaller } from '../../common/http/staff-request';
 import { TenantDb } from '../../common/tenancy/tenant-db.service';
 import { ZodPipe, zodBody } from '../../common/validation/zod';
-import { RequirePermission } from '../auth/auth.decorators';
+import { Public, RequirePermission } from '../auth/auth.decorators';
+import { organizationRequired } from '../auth/auth.errors';
 import { OrganizationService } from './organization.service';
 
 @ApiTags('organization')
@@ -45,7 +47,7 @@ export class OrganizationController {
 
   @Patch()
   @RequirePermission('organization.update')
-  @ApiOperation({ summary: 'Change the organization name or default language' })
+  @ApiOperation({ summary: 'Change the organization name, default language or theme' })
   @ApiBody(zodBody(organizationUpdateSchema))
   update(
     @Body(new ZodPipe(organizationUpdateSchema)) body: OrganizationUpdateInput,
@@ -94,5 +96,26 @@ export class LocationsController {
     @Body(new ZodPipe(locationUpdateSchema)) body: LocationUpdateInput,
   ): Promise<LocationDto> {
     return this.organization.updateLocation(this.tenantDb.tx, id, body);
+  }
+}
+
+// Before sign-in, a page knows only its address: this tells it whose it is and how it looks.
+@ApiTags('organization')
+@Controller('branding')
+export class BrandingController {
+  constructor(
+    private readonly organization: OrganizationService,
+    private readonly tenantDb: TenantDb,
+  ) {}
+
+  @Get()
+  @Public()
+  @ApiOperation({ summary: 'Name and theme of the organization at this address' })
+  get(@Req() req: AppRequest): Promise<BrandingDto> {
+    const tenant = req.tenant;
+    if (!tenant) {
+      throw organizationRequired();
+    }
+    return this.tenantDb.run(tenant.id, (tx) => this.organization.branding(tx, tenant.id));
   }
 }
