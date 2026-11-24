@@ -23,14 +23,14 @@ export function PaymentsList() {
   return (
     <div className="flex flex-col gap-4">
       {payments.data.owed.map((debt) => (
-        <p key={debt.currency} className="rounded-md bg-amber-100 px-3 py-2 text-amber-900">
+        <p key={debt.currency} className="rounded-md bg-warn-soft px-3 py-2 text-warn-ink">
           {t('member.payments.owed', { amount: money(debt.amountMinor, debt.currency) })}
         </p>
       ))}
       {payments.data.items.length === 0 ? (
         <p className="text-sm text-muted-foreground">{t('member.payments.empty')}</p>
       ) : (
-        <ul className="flex flex-col divide-y divide-border rounded-xl border border-border">
+        <ul className="flex flex-col divide-y divide-border overflow-hidden rounded-lg border border-border bg-card shadow-card">
           {payments.data.items.map((payment) => (
             <li key={payment.id} className="flex flex-col gap-1 p-4">
               <div className="flex flex-wrap items-baseline justify-between gap-2">

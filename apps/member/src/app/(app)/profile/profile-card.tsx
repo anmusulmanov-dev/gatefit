@@ -18,7 +18,7 @@ export function ProfileCard() {
   }
   const { data } = profile;
   return (
-    <section className="flex flex-col gap-4 rounded-xl border border-border p-4">
+    <section className="gf-glass flex flex-col gap-4 rounded-lg border border-border bg-card p-4 shadow-card">
       <div className="flex items-center gap-4">
         {data.photoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element -- short-lived signed link from the API

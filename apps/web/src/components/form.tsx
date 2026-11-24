@@ -68,7 +68,22 @@ export function FormMessage({
   }
   if (success) {
     return (
-      <p role="status" className="text-sm text-emerald-700 dark:text-emerald-400">
+      <p
+        role="status"
+        className="flex animate-rise items-center gap-2 text-sm font-medium text-ok-ink"
+      >
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 24 24"
+          className="size-5 shrink-0 rounded-full bg-ok p-1 text-ok-foreground"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="3"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M5 12.5l4.5 4.5L19 7.5" strokeDasharray="40" className="animate-draw" />
+        </svg>
         {success}
       </p>
     );

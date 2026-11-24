@@ -108,7 +108,10 @@ export function MembershipsSection({
       ) : memberships.data.items.length === 0 ? (
         <Empty>{t('memberships.empty')}</Empty>
       ) : (
-        <ul className="flex flex-col divide-y rounded-lg border" aria-busy={memberships.loading}>
+        <ul
+          className="flex flex-col divide-y overflow-hidden rounded-lg border bg-card shadow-card [&>li]:transition-colors [&>li:hover]:bg-muted/50"
+          aria-busy={memberships.loading}
+        >
           {memberships.data.items.map((membership) => {
             const inForce = membership.status === 'active' || membership.status === 'frozen';
             const canEndFreeze =

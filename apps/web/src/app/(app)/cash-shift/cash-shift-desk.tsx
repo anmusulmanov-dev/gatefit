@@ -97,7 +97,7 @@ export function CashShiftDesk({ scope }: { scope: MemberScope }) {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">{t('billing.shift.title')}</h1>
+        <h1 className="text-2xl font-extrabold tracking-tight">{t('billing.shift.title')}</h1>
         {(locations.data?.length ?? 0) > 1 && (
           <Select
             aria-label={t('members.location')}
@@ -121,7 +121,7 @@ export function CashShiftDesk({ scope }: { scope: MemberScope }) {
       ) : !current.data || !location ? (
         <Loading />
       ) : shift ? (
-        <section className="flex flex-col gap-4 rounded-lg border p-4">
+        <section className="flex flex-col gap-4 rounded-lg border bg-card p-4 shadow-card">
           <div className="flex flex-wrap items-center gap-2">
             <Badge tone="positive">{t('billing.shift.open')}</Badge>
             <span className="text-sm text-muted-foreground">
@@ -193,7 +193,11 @@ export function CashShiftDesk({ scope }: { scope: MemberScope }) {
           </form>
         </section>
       ) : (
-        <form onSubmit={onOpen} className="flex flex-col gap-3 rounded-lg border p-4" noValidate>
+        <form
+          onSubmit={onOpen}
+          className="flex flex-col gap-3 rounded-lg border bg-card p-4 shadow-card"
+          noValidate
+        >
           <p className="text-sm text-muted-foreground">{t('billing.shift.none')}</p>
           <Field
             id="shift-opening"
@@ -226,7 +230,7 @@ export function CashShiftDesk({ scope }: { scope: MemberScope }) {
         ) : history.data.items.filter((item) => item.status === 'closed').length === 0 ? (
           <Empty>{t('billing.shift.noHistory')}</Empty>
         ) : (
-          <ul className="flex flex-col divide-y rounded-lg border">
+          <ul className="flex flex-col divide-y overflow-hidden rounded-lg border bg-card shadow-card [&>li]:transition-colors [&>li:hover]:bg-muted/50">
             {history.data.items
               .filter((item) => item.status === 'closed')
               .map((item) => (

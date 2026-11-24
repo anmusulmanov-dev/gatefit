@@ -144,7 +144,7 @@ export function ImportWizard({ scope }: { scope: MemberScope }) {
       <Link href="/members" className="text-sm text-muted-foreground hover:underline">
         ← {t('members.back')}
       </Link>
-      <h1 className="text-2xl font-semibold">{t('members.importWizard.title')}</h1>
+      <h1 className="text-2xl font-extrabold tracking-tight">{t('members.importWizard.title')}</h1>
 
       <ol className="flex flex-wrap gap-2 text-sm" aria-label={t('members.importWizard.title')}>
         {STEPS.map((name, index) => (
@@ -192,7 +192,7 @@ export function ImportWizard({ scope }: { scope: MemberScope }) {
           <p className="text-sm">
             {job.fileName} · {t('members.importWizard.rowsTotal', { count: job.totalRows })}
           </p>
-          <div className="overflow-x-auto rounded-lg border">
+          <div className="overflow-x-auto rounded-lg border bg-card">
             <table className="w-full text-sm">
               <thead className="bg-muted/50 text-left">
                 <tr>
@@ -281,7 +281,7 @@ export function ImportWizard({ scope }: { scope: MemberScope }) {
         <div className="flex flex-col gap-4">
           <div className="flex flex-wrap gap-4 text-sm">
             <span>{t('members.importWizard.rowsTotal', { count: job.totalRows })}</span>
-            <span className="font-medium text-emerald-700 dark:text-emerald-400">
+            <span className="font-medium text-ok-ink">
               {t('members.importWizard.valid', { count: job.validRows ?? 0 })}
             </span>
             {job.errorCount > 0 && (
@@ -297,7 +297,7 @@ export function ImportWizard({ scope }: { scope: MemberScope }) {
                   {t('members.importWizard.errorsShown', { count: job.errors.length })}
                 </p>
               )}
-              <div className="max-h-96 overflow-auto rounded-lg border">
+              <div className="max-h-96 overflow-auto rounded-lg border bg-card">
                 <table className="w-full text-sm">
                   <thead className="sticky top-0 bg-background text-left">
                     <tr>

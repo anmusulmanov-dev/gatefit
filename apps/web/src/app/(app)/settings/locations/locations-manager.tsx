@@ -68,7 +68,10 @@ export function LocationsManager() {
       ) : locations.data.length === 0 ? (
         <Empty>{t('locations.empty')}</Empty>
       ) : (
-        <ul className="flex flex-col divide-y rounded-lg border" aria-busy={locations.loading}>
+        <ul
+          className="flex flex-col divide-y overflow-hidden rounded-lg border bg-card shadow-card [&>li]:transition-colors [&>li:hover]:bg-muted/50"
+          aria-busy={locations.loading}
+        >
           {locations.data.map((location) => (
             <li
               key={location.id}

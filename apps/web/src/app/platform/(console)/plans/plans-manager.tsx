@@ -24,7 +24,7 @@ export function PlansManager() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold tracking-tight">{t('platform.nav.plans')}</h1>
+        <h1 className="text-2xl font-extrabold tracking-tight">{t('platform.nav.plans')}</h1>
         <Button
           onClick={() => {
             setEditing({ kind: 'new' });
@@ -41,7 +41,10 @@ export function PlansManager() {
       ) : plans.data.length === 0 ? (
         <Empty>{t('platformPlans.empty')}</Empty>
       ) : (
-        <ul className="flex flex-col divide-y rounded-lg border" aria-busy={plans.loading}>
+        <ul
+          className="flex flex-col divide-y overflow-hidden rounded-lg border bg-card shadow-card [&>li]:transition-colors [&>li:hover]:bg-muted/50"
+          aria-busy={plans.loading}
+        >
           {plans.data.map((plan) => {
             const limit = plan.limits.activeMembersPerLocation;
             return (

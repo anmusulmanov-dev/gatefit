@@ -37,7 +37,7 @@ export function PlansManager() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">{t('plans.title')}</h1>
+        <h1 className="text-2xl font-extrabold tracking-tight">{t('plans.title')}</h1>
         <div className="flex flex-wrap gap-2">
           <Select
             aria-label={t('plans.show')}
@@ -70,7 +70,10 @@ export function PlansManager() {
       ) : plans.data.items.length === 0 ? (
         <Empty>{t('plans.empty')}</Empty>
       ) : (
-        <ul className="flex flex-col divide-y rounded-lg border" aria-busy={plans.loading}>
+        <ul
+          className="flex flex-col divide-y overflow-hidden rounded-lg border bg-card shadow-card [&>li]:transition-colors [&>li:hover]:bg-muted/50"
+          aria-busy={plans.loading}
+        >
           {plans.data.items.map((plan) => {
             const limits = restrictionLines(plan.restrictions, locationNames);
             return (

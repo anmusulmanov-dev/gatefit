@@ -65,7 +65,7 @@ export function PaymentsJournal({ scope }: { scope: MemberScope }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-2xl font-semibold">{t('billing.journal.title')}</h1>
+      <h1 className="text-2xl font-extrabold tracking-tight">{t('billing.journal.title')}</h1>
       <div className="grid gap-3 sm:grid-cols-4">
         {(locations.data?.length ?? 0) > 1 && (
           <Field id="journal-location" label={t('members.location')}>
@@ -139,7 +139,10 @@ export function PaymentsJournal({ scope }: { scope: MemberScope }) {
               })}
             </p>
           )}
-          <ul className="flex flex-col divide-y rounded-lg border" aria-busy={payments.loading}>
+          <ul
+            className="flex flex-col divide-y overflow-hidden rounded-lg border bg-card shadow-card [&>li]:transition-colors [&>li:hover]:bg-muted/50"
+            aria-busy={payments.loading}
+          >
             {items.map((payment) => (
               <li
                 key={payment.id}

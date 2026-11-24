@@ -17,7 +17,7 @@ export default async function LoginPage() {
   }
 
   return (
-    <PageFrame>
+    <PageFrame brand>
       <LoginForm />
     </PageFrame>
   );

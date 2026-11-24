@@ -103,7 +103,7 @@ export function MembersList({ scope }: { scope: MemberScope }) {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">{t('members.title')}</h1>
+        <h1 className="text-2xl font-extrabold tracking-tight">{t('members.title')}</h1>
         <div className="flex flex-wrap gap-2">
           {canExport && (
             <>
@@ -194,7 +194,10 @@ export function MembersList({ scope }: { scope: MemberScope }) {
         <Empty>{filtered ? t('members.notFound') : t('members.empty')}</Empty>
       ) : (
         <>
-          <ul className="flex flex-col divide-y rounded-lg border" aria-busy={firstPage.loading}>
+          <ul
+            className="flex flex-col divide-y overflow-hidden rounded-lg border bg-card shadow-card [&>li]:transition-colors [&>li:hover]:bg-muted/50"
+            aria-busy={firstPage.loading}
+          >
             {items.map((member) => (
               <li key={member.id}>
                 <Link

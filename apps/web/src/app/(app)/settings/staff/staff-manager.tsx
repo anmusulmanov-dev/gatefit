@@ -109,7 +109,10 @@ export function StaffManager() {
         <Empty>{t('staffSettings.empty')}</Empty>
       ) : (
         <>
-          <ul className="flex flex-col divide-y rounded-lg border" aria-busy={firstPage.loading}>
+          <ul
+            className="flex flex-col divide-y overflow-hidden rounded-lg border bg-card shadow-card [&>li]:transition-colors [&>li:hover]:bg-muted/50"
+            aria-busy={firstPage.loading}
+          >
             {items.map((staff) => (
               <li
                 key={staff.id}

@@ -154,9 +154,9 @@ export function ReceptionDesk({ scope }: { scope: MemberScope }) {
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-3">
-          <h1 className="text-2xl font-semibold">{t('title')}</h1>
+          <h1 className="text-2xl font-extrabold tracking-tight">{t('title')}</h1>
           {feed.occupancy !== null && (
-            <Badge tone="neutral">{t('occupancy', { count: feed.occupancy })}</Badge>
+            <Badge tone="brand">{t('occupancy', { count: feed.occupancy })}</Badge>
           )}
           {offline.offline ? (
             <Badge tone="warning">{t('offline.mode', { count: offline.queued })}</Badge>
@@ -303,9 +303,12 @@ function RecentEntries({
     }
   }
   return (
-    <ul className="flex flex-col divide-y rounded-lg border">
+    <ul className="flex flex-col divide-y overflow-hidden rounded-lg border bg-card shadow-card [&>li]:transition-colors [&>li:hover]:bg-muted/50">
       {entries.map((entry) => (
-        <li key={entry.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-2">
+        <li
+          key={entry.id}
+          className="flex animate-rise flex-wrap items-center justify-between gap-3 px-4 py-2"
+        >
           <div className="flex min-w-0 flex-wrap items-center gap-2 text-sm">
             <span className="w-12 text-muted-foreground tabular-nums">{time(entry)}</span>
             <span className="font-medium">

@@ -53,7 +53,7 @@ export function MemberAvatar({
   return (
     <span
       aria-hidden
-      className={`${box} flex shrink-0 items-center justify-center rounded-full bg-secondary font-medium text-secondary-foreground`}
+      className={`${box} flex shrink-0 items-center justify-center rounded-full bg-brand-soft font-bold text-brand-ink`}
     >
       {initials}
     </span>

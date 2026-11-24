@@ -132,9 +132,9 @@ export function QrCard() {
   return (
     <section
       aria-labelledby="qr-title"
-      className="flex flex-col items-center gap-3 rounded-xl border border-border p-4"
+      className="gf-glass flex flex-col items-center gap-3 rounded-lg border border-border bg-card p-4 shadow-card"
     >
-      <h2 id="qr-title" className="text-lg font-semibold">
+      <h2 id="qr-title" className="text-lg font-bold">
         {t('title')}
       </h2>
       {current && svg?.token === current.token ? (
@@ -142,10 +142,10 @@ export function QrCard() {
         <img
           src={svg.url}
           alt={t('alt')}
-          className="aspect-square w-full max-w-72 rounded-lg bg-white p-2"
+          className="aspect-square w-full max-w-72 animate-pop rounded-md bg-white p-2 shadow-card"
         />
       ) : (
-        <div className="flex aspect-square w-full max-w-72 items-center justify-center rounded-lg border border-dashed border-border p-4 text-center text-sm text-muted-foreground">
+        <div className="gf-skeleton flex aspect-square w-full max-w-72 items-center justify-center p-4 text-center text-sm text-muted-foreground">
           {codes.length === 0 && !offline ? t('loading') : t('noCode')}
         </div>
       )}
@@ -154,7 +154,7 @@ export function QrCard() {
           {t('refreshIn', { seconds: secondsLeft })}
         </p>
       )}
-      {offline && current && <p className="text-center text-sm text-amber-700">{t('offline')}</p>}
+      {offline && current && <p className="text-center text-sm text-warn-ink">{t('offline')}</p>}
       <p className="text-center text-sm text-muted-foreground">{t('hint')}</p>
     </section>
   );

@@ -84,7 +84,7 @@ export function ManualEntryDialog({
             <Empty>{t('access.manual.notFound')}</Empty>
           ) : (
             <ul
-              className="flex flex-col divide-y rounded-lg border"
+              className="flex flex-col divide-y overflow-hidden rounded-lg border bg-card shadow-card [&>li]:transition-colors [&>li:hover]:bg-muted/50"
               aria-label={t('access.manual.results')}
             >
               {found.data.items.map((member) => (

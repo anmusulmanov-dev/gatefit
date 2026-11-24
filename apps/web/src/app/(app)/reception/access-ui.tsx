@@ -22,7 +22,7 @@ export function CheckInBadge({ checkIn }: { checkIn: CheckInDto }) {
   const reason = useReasonText();
   if (checkIn.result === 'denied') {
     return (
-      <Badge tone="warning">{checkIn.denyReason ? reason(checkIn.denyReason) : t('denied')}</Badge>
+      <Badge tone="negative">{checkIn.denyReason ? reason(checkIn.denyReason) : t('denied')}</Badge>
     );
   }
   return checkIn.direction === 'out' ? (
