@@ -32,6 +32,35 @@ Har sessiya oxirida yangilanadi: nima qilindi, nima qoldi, ma'lum muammolar.
 | M8b Prod infra, zaxira, tiklash   | Tayyor (2026-11-22)                         |
 | M8c Demo ma'lumot, yuklama testi  | Tayyor (2026-11-23)                         |
 | M8d E2e: mezonlar 1, 2, 3, 11     | Tayyor (2026-11-23)                         |
+| UI mavzulari (F-10.6)             | Tayyor (2026-11-24)                         |
+
+## 2026-11-24 — Interfeys mavzulari (F-10.6)
+
+Branch: `feat/ui-themes`. Yangi paket yo'q (shriftlar `next/font` orqali). ADR: `docs/ADR/0012-themes.md`.
+
+### Qilindi
+
+- Anvar to'rt dizayn yo'nalishidan "hammasini, tashkilot tanlasin" variantini tanladi; standart — Zumrad. TZ ga F-10.6 qo'shildi.
+- API: `organizations.theme` (enum, standart `zumrad`, migratsiya + `GRANT UPDATE (theme)`), `PATCH /organization` mavzuni qabul qiladi va auditga yozadi, ommaviy `GET /branding` (nom va mavzu, faqat subdomen tashkiloti). Integratsiya testlari va ommaviy endpointlar ro'yxati yangilandi.
+- `packages/shared/styles/themes.css`: to'rt mavzu × yorug'/qorong'i (`light-dark()`), umumiy holat ranglari (`ok`, `no`, `warn`), soyalar, yumaloqlik, shriftlar, animatsiyalar, `prefers-reduced-motion`. Web va member shu faylni import qiladi.
+- Web: yangi yuqori panel (mavzuga qarab), menyu, kartalar, tugmalar, skelet yuklanish, kirish sahifasida brend paneli, bosh sahifada asosiy ko'rsatkich, qabulxonada katta yashil/qizil natija (paydo bo'lish, rad etilganda silkinish, belgi chizilishi), muvaffaqiyat xabari animatsiyasi, sozlamalarda mavzu tanlash (tirik namunalar bilan, saqlanganda darhol qo'llanadi), yorug'/qorong'i almashtirgich (`gf-mode` cookie).
+- Member: zal mavzusi, brend paneli bilan kirish, pastki menyu ikonkalar bilan, QR va abonement kartalari, abonement qolgan kunlar chizig'i, PWA `theme-color` mavzudan.
+- Qattiq yozilgan `emerald`/`amber`/`red` ranglari tokenlarga almashtirildi. Matnlar faqat tarjima fayllarida.
+- `.prettierignore` ga `.claude/worktrees`: `pnpm format` boshqa sessiyalarning worktree fayllarini o'zgartirib yubormasin.
+
+### Tekshirildi
+
+- `pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm test:e2e` — yashil.
+- Brauzerda: to'rt mavzu yorug' va qorong'i, qabulxona natijasi (ruxsat va rad), mavzuni saqlash, member ilovasi; 360 px da gorizontal siljish yo'q.
+
+### Qoldi
+
+- Zal o'z logotipi va brend rangi (white-label, F-9.4 / v1).
+- Telefonda xodimlar panelining yuqori qismi hali baland (til tugmalari, mode, chiqish); keyin menyu ichiga yig'ish mumkin.
+
+### Ma'lum muammolar
+
+- Build Google Fonts'ga internet talab qiladi (`next/font/google`). Internetsiz build qulaydi.
 
 ## 2026-11-23 — M8d: qabul mezonlari uchun e2e
 
