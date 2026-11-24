@@ -47,7 +47,10 @@ export function RolesManager() {
       ) : !roles.data ? (
         <Loading />
       ) : (
-        <ul className="flex flex-col divide-y rounded-lg border" aria-busy={roles.loading}>
+        <ul
+          className="flex flex-col divide-y overflow-hidden rounded-lg border bg-card shadow-card [&>li]:transition-colors [&>li:hover]:bg-muted/50"
+          aria-busy={roles.loading}
+        >
           {roles.data.map((role) => {
             // Editing needs the right and every permission the role grants (as the API checks).
             const editable = canManage && !role.isSystem && holdsAll(role.permissions);

@@ -260,7 +260,7 @@ export function SellDialog({
                 />
               </Field>
               {plan && !free && canTakePayment && (
-                <fieldset className="flex flex-col gap-3 rounded-lg border p-3">
+                <fieldset className="flex flex-col gap-3 rounded-lg border bg-card p-3 shadow-card">
                   <legend className="px-1 text-sm font-medium">{t('billing.sale.payment')}</legend>
                   <div className="grid gap-3 sm:grid-cols-2">
                     <Field id="sell-method" label={t('billing.method')}>
@@ -283,7 +283,7 @@ export function SellDialog({
                   </div>
                   {leavesDebt && (
                     <>
-                      <p className="text-sm text-amber-800 dark:text-amber-300">
+                      <p className="text-sm text-warn-ink">
                         {t('billing.sale.debt', {
                           amount: money(
                             (BigInt(plan.priceMinor) - BigInt(amountMinor)).toString(),

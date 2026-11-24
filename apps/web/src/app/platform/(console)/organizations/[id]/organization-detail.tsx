@@ -78,7 +78,7 @@ function Header({ organization }: { organization: PlatformOrganizationDetailDto 
   return (
     <div className="flex flex-col gap-2">
       <div className="flex flex-wrap items-center gap-3">
-        <h1 className="text-2xl font-semibold tracking-tight">{organization.name}</h1>
+        <h1 className="text-2xl font-extrabold tracking-tight">{organization.name}</h1>
         <StatusBadge status={organization.status} />
       </div>
       <p className="text-sm text-muted-foreground">
@@ -161,7 +161,7 @@ function SettingsForm({
   const blocked = form.status === 'blocked';
 
   return (
-    <section className="flex flex-col gap-4 rounded-lg border p-4">
+    <section className="flex flex-col gap-4 rounded-lg border bg-card p-4 shadow-card">
       <h2 className="text-lg font-semibold">{t('platformOrgs.settingsSection')}</h2>
       <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
         <div className="grid gap-4 sm:grid-cols-2">
@@ -312,7 +312,7 @@ function Owners({
 }) {
   const t = useTranslations('platformOrgs');
   return (
-    <section className="flex flex-col gap-4 rounded-lg border p-4">
+    <section className="flex flex-col gap-4 rounded-lg border bg-card p-4 shadow-card">
       <div className="flex flex-col gap-1">
         <h2 className="text-lg font-semibold">{t('owners')}</h2>
         <p className="text-sm text-muted-foreground">{t('resetPasswordHint')}</p>

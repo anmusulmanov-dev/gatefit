@@ -1,7 +1,11 @@
+import { DEFAULT_THEME } from '@gatefit/shared';
 import type { Metadata } from 'next';
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getTranslations } from 'next-intl/server';
 import type { ReactNode } from 'react';
+
+import { getBranding, getColorMode } from '@/lib/branding';
+import { fontVariables } from '@/lib/fonts';
 
 import './globals.css';
 
@@ -14,10 +18,16 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
-  const locale = await getLocale();
+  const [locale, branding, mode] = await Promise.all([getLocale(), getBranding(), getColorMode()]);
 
   return (
-    <html lang={locale}>
+    <html
+      lang={locale}
+      data-theme={branding?.theme ?? DEFAULT_THEME}
+      data-mode={mode}
+      className={fontVariables}
+      suppressHydrationWarning
+    >
       <body className="min-h-dvh antialiased">
         <NextIntlClientProvider>{children}</NextIntlClientProvider>
       </body>

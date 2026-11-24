@@ -98,7 +98,10 @@ export function BillingSection({
       ) : invoices.data.items.length === 0 ? (
         <Empty>{t('billing.member.noInvoices')}</Empty>
       ) : (
-        <ul className="flex flex-col divide-y rounded-lg border" aria-busy={invoices.loading}>
+        <ul
+          className="flex flex-col divide-y overflow-hidden rounded-lg border bg-card shadow-card [&>li]:transition-colors [&>li:hover]:bg-muted/50"
+          aria-busy={invoices.loading}
+        >
           {invoices.data.items.map((invoice) => (
             <li
               key={invoice.id}
@@ -155,7 +158,10 @@ export function BillingSection({
             error={sms.error}
             success={smsSentFor ? t('billing.receipt.smsSent') : null}
           />
-          <ul className="flex flex-col divide-y rounded-lg border" aria-busy={payments.loading}>
+          <ul
+            className="flex flex-col divide-y overflow-hidden rounded-lg border bg-card shadow-card [&>li]:transition-colors [&>li:hover]:bg-muted/50"
+            aria-busy={payments.loading}
+          >
             {payments.data.items.map((payment) => (
               <li
                 key={payment.id}

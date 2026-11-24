@@ -18,13 +18,13 @@ export function LocationSelect({ locations, currentId }: Props) {
   const [pending, startTransition] = useTransition();
 
   if (locations.length === 0) {
-    return <span className="text-sm text-muted-foreground">{t('noLocations')}</span>;
+    return <span className="text-sm opacity-75">{t('noLocations')}</span>;
   }
 
   return (
     <select
       aria-label={t('location')}
-      className="h-8 rounded-md border border-input bg-background px-2 text-sm"
+      className="h-8 rounded-md border border-input bg-card px-2 text-sm text-foreground"
       value={currentId ?? ''}
       disabled={pending || locations.length === 1}
       onChange={(event) => {

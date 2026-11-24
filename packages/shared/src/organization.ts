@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import type { SaasModule } from './modules';
 import type { PlanLimits } from './platform';
+import { type Theme, themeSchema } from './theme';
 
 export const ORGANIZATION_LOCALES = ['uz', 'ru', 'en'] as const;
 
@@ -11,6 +12,7 @@ export const organizationUpdateSchema = z
   .object({
     name: nameSchema.optional(),
     locale: z.enum(ORGANIZATION_LOCALES).optional(),
+    theme: themeSchema.optional(),
   })
   .refine((value) => Object.keys(value).length > 0, 'Nothing to update');
 export type OrganizationUpdateInput = z.infer<typeof organizationUpdateSchema>;
@@ -22,6 +24,7 @@ export interface OrganizationDto {
   country: string;
   currency: string;
   locale: string;
+  theme: Theme;
   status: 'trial' | 'active' | 'blocked';
   trialEndsAt: string | null;
   /** What the organization's tariff includes; null until the platform assigns one. */

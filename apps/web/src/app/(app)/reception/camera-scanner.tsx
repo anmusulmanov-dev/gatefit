@@ -83,7 +83,7 @@ export function CameraScanner({ onCode }: { onCode: (code: string) => void }) {
   }, []);
 
   if (error) {
-    return <p className="text-sm text-amber-800 dark:text-amber-300">{t(error)}</p>;
+    return <p className="text-sm text-warn-ink">{t(error)}</p>;
   }
   return (
     <video

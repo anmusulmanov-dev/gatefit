@@ -20,3 +20,4 @@ export * from './platform';
 export * from './roles';
 export * from './server-session';
 export * from './staff';
+export * from './theme';

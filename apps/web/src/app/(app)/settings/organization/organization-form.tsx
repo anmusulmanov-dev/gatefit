@@ -4,6 +4,7 @@ import {
   ORGANIZATION_LOCALES,
   type OrganizationDto,
   organizationUpdateSchema,
+  type Theme,
 } from '@gatefit/shared';
 import { useFormatter, useTranslations } from 'next-intl';
 import { type SubmitEvent, useState } from 'react';
@@ -16,6 +17,8 @@ import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { api } from '@/lib/api';
 import { useApiAction, useApiGet } from '@/lib/use-api';
+
+import { ThemePicker } from './theme-picker';
 
 export function OrganizationForm() {
   const organization = useApiGet<OrganizationDto>('/organization');
@@ -38,12 +41,13 @@ function Editor({ organization, onSaved }: { organization: OrganizationDto; onSa
   const action = useApiAction();
   const [name, setName] = useState(organization.name);
   const [locale, setLocale] = useState(organization.locale);
+  const [theme, setTheme] = useState<Theme>(organization.theme);
   const [saved, setSaved] = useState(false);
 
   function onSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     setSaved(false);
-    const input = organizationUpdateSchema.safeParse({ name, locale });
+    const input = organizationUpdateSchema.safeParse({ name, locale, theme });
     if (!input.success) {
       action.fail();
       return;
@@ -52,6 +56,8 @@ function Editor({ organization, onSaved }: { organization: OrganizationDto; onSa
       () => api.patch('/organization', input.data),
       () => {
         setSaved(true);
+        // The whole panel takes the new look at once, without a reload.
+        document.documentElement.dataset.theme = theme;
         onSaved();
       },
     );
@@ -112,6 +118,7 @@ function Editor({ organization, onSaved }: { organization: OrganizationDto; onSa
             ))}
           </Select>
         </Field>
+        <ThemePicker value={theme} onChange={setTheme} disabled={!canEdit} />
         <FormMessage error={action.error} success={saved ? t('common.saved') : null} />
         {canEdit ? (
           <FormActions>
@@ -124,7 +131,7 @@ function Editor({ organization, onSaved }: { organization: OrganizationDto; onSa
         )}
       </form>
 
-      <dl className="grid grid-cols-1 gap-x-6 gap-y-3 rounded-lg border p-4 text-sm sm:grid-cols-[auto_1fr]">
+      <dl className="grid grid-cols-1 gap-x-6 gap-y-3 rounded-lg border bg-card p-4 text-sm shadow-card sm:grid-cols-[auto_1fr]">
         {facts.map(([label, value]) => (
           <div key={label} className="contents">
             <dt className="text-muted-foreground">{label}</dt>

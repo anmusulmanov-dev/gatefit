@@ -87,7 +87,7 @@ export function MemberCard({ id, scope }: { id: string; scope: MemberScope }) {
 
       {editing ? (
         <>
-          <h1 className="text-2xl font-semibold">{t('members.editTitle')}</h1>
+          <h1 className="text-2xl font-extrabold tracking-tight">{t('members.editTitle')}</h1>
           <MemberForm
             member={data}
             scope={scope}
@@ -144,12 +144,12 @@ export function MemberCard({ id, scope }: { id: string; scope: MemberScope }) {
 
             <div className="flex min-w-0 flex-1 flex-col gap-3">
               <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-2xl font-semibold">{name}</h1>
+                <h1 className="text-2xl font-extrabold tracking-tight">{name}</h1>
                 <MemberStatusBadge status={data.status} />
                 {data.archived && <Badge tone="muted">{t('members.archive.archived')}</Badge>}
               </div>
               {data.status === 'blocked' && data.blockedReason && (
-                <p className="text-sm text-amber-800 dark:text-amber-300">
+                <p className="text-sm text-warn-ink">
                   {t('members.block.reasonShown', { reason: data.blockedReason })}
                 </p>
               )}

@@ -17,7 +17,7 @@ export function LocaleSwitcher() {
   return (
     <select
       aria-label={t('common.language')}
-      className="h-11 rounded-md border border-border bg-background px-3 text-base"
+      className="h-11 rounded-md border border-border bg-card px-3 text-base"
       value={current}
       disabled={pending}
       onChange={(event) => {

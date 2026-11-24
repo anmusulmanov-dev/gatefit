@@ -72,7 +72,7 @@ export function LoginForm() {
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-5" noValidate>
       <div className="flex flex-col gap-2">
-        <h1 className="text-2xl font-semibold tracking-tight">{t('auth.memberTitle')}</h1>
+        <h1 className="text-2xl font-extrabold tracking-tight">{t('auth.memberTitle')}</h1>
         <p className="text-muted-foreground">
           {step.name === 'phone'
             ? t('auth.memberIntro')

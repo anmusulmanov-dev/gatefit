@@ -93,7 +93,10 @@ function TemplateCard({
   };
 
   return (
-    <section className="flex flex-col gap-3 rounded-lg border p-4" aria-labelledby={`${id}-title`}>
+    <section
+      className="flex flex-col gap-3 rounded-lg border bg-card p-4 shadow-card"
+      aria-labelledby={`${id}-title`}
+    >
       <div className="flex flex-wrap items-center gap-2">
         <h3 id={`${id}-title`} className="font-semibold">
           {t(`keys.${template.key}`)}

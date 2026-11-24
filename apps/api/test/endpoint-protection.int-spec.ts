@@ -98,6 +98,7 @@ describe('Endpoint protection coverage', () => {
       .sort();
     // Adding a public endpoint is a security decision: update this list deliberately.
     expect(publicEndpoints).toEqual([
+      'GET BrandingController.get',
       'GET FilesController.get',
       'GET HealthController.check',
       'GET TlsController.allowed',

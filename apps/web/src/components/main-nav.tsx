@@ -6,7 +6,6 @@ import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 
 import { useStaffSession } from '@/components/staff-session';
-import { cn } from '@/lib/utils';
 
 const items: {
   href: string;
@@ -31,7 +30,10 @@ export function MainNav() {
   const { permissions } = useStaffSession();
 
   return (
-    <nav aria-label={t('settings')} className="flex gap-1">
+    <nav
+      aria-label={t('settings')}
+      className="-mx-1 flex gap-1 overflow-x-auto px-1 [scrollbar-width:none]"
+    >
       {items
         .filter((item) => !item.permission || permissions.has(item.permission))
         .map((item) => {
@@ -41,10 +43,7 @@ export function MainNav() {
               key={item.href}
               href={item.href}
               aria-current={active ? 'page' : undefined}
-              className={cn(
-                'rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground',
-                active && 'bg-accent text-accent-foreground',
-              )}
+              className="gf-nav-link shrink-0 px-3 py-1.5 text-sm font-semibold whitespace-nowrap"
             >
               {t(item.key)}
             </Link>

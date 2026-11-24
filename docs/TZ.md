@@ -114,6 +114,7 @@ Uch daraja: platforma, tashkilot, filial. Huquqlar ruxsatlar (permissions) to'pl
 ### 3.10. Platforma boshqaruvi
 - F-10.1 (M) Tashkilot yaratish, bloklash, sinov muddati.
 - F-10.2 (M) Tarif rejalari va limitlar (a'zolar soni, filiallar soni, modullar).
+- F-10.6 (M) Tashkilot interfeys mavzusini tanlaydi (to'rt tayyor mavzu, xodimlar paneli va a'zo ilovasi uchun umumiy); yorug' yoki qorong'i rejimni har foydalanuvchi o'zi tanlaydi.
 - F-10.3 (1) Obuna uchun avtomatik hisob-kitob; to'lanmasa cheklash, keyin bloklash.
 - F-10.4 (1) O'z-o'zidan ro'yxatdan o'tish va sozlash ustasi.
 - F-10.5 (1) Tizim holati va foydalanish statistikasi.

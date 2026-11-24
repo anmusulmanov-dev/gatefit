@@ -1,4 +1,5 @@
 import {
+  type BrandingDto,
   ErrorCode,
   type LocationCreateInput,
   type LocationDto,
@@ -23,6 +24,7 @@ interface OrganizationRow {
   country: string;
   currency: string;
   locale: string;
+  theme: OrganizationDto['theme'];
   status: 'trial' | 'active' | 'blocked';
   trialEndsAt: Date | null;
 }
@@ -44,6 +46,7 @@ function toOrganizationDto(row: OrganizationRow, plan: OrganizationDto['plan']):
     country: row.country,
     currency: row.currency,
     locale: row.locale,
+    theme: row.theme,
     status: row.status,
     trialEndsAt: row.trialEndsAt?.toISOString() ?? null,
     plan,
@@ -83,7 +86,16 @@ export class OrganizationService {
     return toOrganizationDto(row, plan);
   }
 
-  /** Changes the name or default language. Country and currency belong to the platform. */
+  /** The name and look shown before sign-in (login pages, member app). */
+  async branding(tx: TenantTransaction, organizationId: string): Promise<BrandingDto> {
+    const row = await tx.organization.findUniqueOrThrow({
+      where: { id: organizationId },
+      select: { name: true, theme: true },
+    });
+    return { name: row.name, theme: row.theme };
+  }
+
+  /** Changes the name, default language or theme. Country and currency belong to the platform. */
   async update(
     tx: TenantTransaction,
     caller: StaffCaller,
@@ -92,15 +104,15 @@ export class OrganizationService {
     const before = await this.get(tx, caller.organizationId);
     const updated = await tx.organization.update({
       where: { id: caller.organizationId },
-      data: { name: input.name, locale: input.locale },
+      data: { name: input.name, locale: input.locale, theme: input.theme },
     });
 
     await this.audit.record(tx, caller.organizationId, caller.actor, {
       action: 'organization.update',
       entity: 'organization',
       entityId: caller.organizationId,
-      before: { name: before.name, locale: before.locale },
-      after: { name: updated.name, locale: updated.locale },
+      before: { name: before.name, locale: before.locale, theme: before.theme },
+      after: { name: updated.name, locale: updated.locale, theme: updated.theme },
     });
     return toOrganizationDto(updated, before.plan);
   }

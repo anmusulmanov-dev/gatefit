@@ -16,7 +16,7 @@ export default async function HomePage() {
     <PageFrame align="top">
       <div className="flex flex-col gap-1">
         <p className="text-sm text-muted-foreground">{me?.organization.name}</p>
-        <h1 className="text-2xl font-semibold tracking-tight">{t('member.home.title')}</h1>
+        <h1 className="text-2xl font-extrabold tracking-tight">{t('member.home.title')}</h1>
       </div>
       <QrCard />
       <MembershipSummary />

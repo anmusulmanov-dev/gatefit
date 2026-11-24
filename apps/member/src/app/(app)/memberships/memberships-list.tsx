@@ -22,7 +22,7 @@ export function MembershipsList() {
     return <p className="text-sm text-muted-foreground">{t('memberships.empty')}</p>;
   }
   return (
-    <ul className="flex flex-col divide-y divide-border rounded-xl border border-border">
+    <ul className="flex flex-col divide-y divide-border overflow-hidden rounded-lg border border-border bg-card shadow-card">
       {memberships.data.items.map((membership) => (
         <li key={membership.id} className="p-4">
           <MembershipLine membership={membership} />

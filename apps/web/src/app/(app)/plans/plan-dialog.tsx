@@ -252,7 +252,7 @@ export function PlanDialog({
           />
         </Field>
 
-        <fieldset className="flex flex-col gap-3 rounded-lg border p-3">
+        <fieldset className="flex flex-col gap-3 rounded-lg border bg-card p-3 shadow-card">
           <legend className="px-1 text-sm font-medium">{t('plans.fields.restrictions')}</legend>
           <div className="flex flex-col gap-2">
             <span className="text-sm">{t('plans.fields.timeWindows')}</span>
@@ -370,7 +370,7 @@ export function PlanDialog({
           )}
         </fieldset>
 
-        <fieldset className="flex flex-col gap-3 rounded-lg border p-3">
+        <fieldset className="flex flex-col gap-3 rounded-lg border bg-card p-3 shadow-card">
           <legend className="px-1 text-sm font-medium">{t('plans.fields.freeze')}</legend>
           <CheckboxRow
             label={t('plans.fields.freezeAllowed')}

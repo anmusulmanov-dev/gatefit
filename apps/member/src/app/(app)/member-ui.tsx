@@ -44,6 +44,25 @@ export function useDay() {
     });
 }
 
+/** Whole days from one calendar date (YYYY-MM-DD) to another, inclusive. */
+function daysBetween(from: string, to: string): number {
+  const ms = new Date(`${to}T00:00:00Z`).getTime() - new Date(`${from}T00:00:00Z`).getTime();
+  return Math.max(1, Math.round(ms / 86_400_000) + 1);
+}
+
+/** How much of the membership is left, as a bar; the text beside it says the same. */
+function DaysBar({ left, total }: { left: number; total: number }) {
+  const share = Math.min(100, Math.max(0, Math.round((left / total) * 100)));
+  return (
+    <div aria-hidden="true" className="h-2 overflow-hidden rounded-full bg-muted">
+      <div
+        className="gf-primary-fill h-full origin-left animate-grow rounded-full"
+        style={{ width: `${share}%` }}
+      />
+    </div>
+  );
+}
+
 /** One membership: plan, status and what is left. */
 export function MembershipLine({ membership }: { membership: MembershipDto }) {
   const t = useTranslations();
@@ -53,17 +72,23 @@ export function MembershipLine({ membership }: { membership: MembershipDto }) {
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <span className="text-lg font-semibold">{membership.plan.name}</span>
         <span
-          className={`rounded-full px-2 py-0.5 text-sm ${
+          className={`rounded-full px-2.5 py-0.5 text-sm font-semibold ${
             membership.status === 'active'
-              ? 'bg-emerald-100 text-emerald-900'
+              ? 'bg-ok-soft text-ok-ink'
               : membership.status === 'frozen' || membership.status === 'scheduled'
-                ? 'bg-amber-100 text-amber-900'
+                ? 'bg-warn-soft text-warn-ink'
                 : 'border border-border text-muted-foreground'
           }`}
         >
           {t(`memberships.status.${membership.status}`)}
         </span>
       </div>
+      {membership.daysLeft !== null && membership.status === 'active' && (
+        <DaysBar
+          left={membership.daysLeft}
+          total={daysBetween(membership.startsOn, membership.endsOn)}
+        />
+      )}
       <p className="text-sm text-muted-foreground">
         {[
           t('memberships.period', { from: day(membership.startsOn), to: day(membership.endsOn) }),
@@ -93,9 +118,9 @@ export function MembershipSummary() {
   return (
     <section
       aria-labelledby="membership-title"
-      className="flex flex-col gap-3 rounded-xl border border-border p-4"
+      className="gf-glass flex flex-col gap-3 rounded-lg border border-border bg-card p-4 shadow-card"
     >
-      <h2 id="membership-title" className="text-lg font-semibold">
+      <h2 id="membership-title" className="text-lg font-bold">
         {t('home.membership')}
       </h2>
       {memberships.error ? (
@@ -108,7 +133,7 @@ export function MembershipSummary() {
         <p className="text-sm text-muted-foreground">{t('home.noMembership')}</p>
       )}
       {payments.data?.owed.map((debt) => (
-        <p key={debt.currency} className="rounded-md bg-amber-100 px-3 py-2 text-sm text-amber-900">
+        <p key={debt.currency} className="rounded-md bg-warn-soft px-3 py-2 text-sm text-warn-ink">
           {t('payments.owed', { amount: money(debt.amountMinor, debt.currency) })}
         </p>
       ))}
