@@ -327,6 +327,18 @@ export class AccessService {
     return { entries, members: members.length, refused };
   }
 
+  /** Whether a member has come in on any of these memberships. */
+  async anyEntryOn(tx: TenantTransaction, membershipIds: readonly string[]): Promise<boolean> {
+    if (membershipIds.length === 0) {
+      return false;
+    }
+    const entry = await tx.checkIn.findFirst({
+      where: { membershipId: { in: [...membershipIds] }, direction: 'in', result: 'allowed' },
+      select: { id: true },
+    });
+    return entry !== null;
+  }
+
   // --- helpers ---
 
   private async decide(

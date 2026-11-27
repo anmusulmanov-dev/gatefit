@@ -461,6 +461,35 @@ export class MembersService {
     return new Map(rows.map((row) => [row.id, row]));
   }
 
+  /**
+   * Members the caller may see, by phone (international format), archived ones included:
+   * for imports that refer to members by phone.
+   */
+  async findByPhones(
+    tx: TenantTransaction,
+    caller: StaffCaller,
+    phones: readonly string[],
+  ): Promise<Map<string, { id: string; homeLocationId: string; archived: boolean }>> {
+    const found = new Map<string, { id: string; homeLocationId: string; archived: boolean }>();
+    const unique = [...new Set(phones)];
+    for (let start = 0; start < unique.length; start += 1000) {
+      const rows = await tx.member.findMany({
+        where: {
+          AND: [{ phone: { in: unique.slice(start, start + 1000) } }, this.visibleTo(caller)],
+        },
+        select: { id: true, phone: true, homeLocationId: true, deletedAt: true },
+      });
+      for (const row of rows) {
+        found.set(row.phone, {
+          id: row.id,
+          homeLocationId: row.homeLocationId,
+          archived: row.deletedAt !== null,
+        });
+      }
+    }
+    return found;
+  }
+
   /** The member the signed-in member app user is, in the current organization. */
   async memberIdOfUser(tx: TenantTransaction, userId: string): Promise<string | null> {
     const row = await tx.member.findFirst({

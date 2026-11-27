@@ -88,6 +88,11 @@ export class PlansService {
   }
 
   /** A plan that has not been deleted, for selling and showing. */
+  /** Every plan that is not deleted, inactive ones too (imports refer to them by name). */
+  async listAll(tx: TenantTransaction): Promise<Plan[]> {
+    return tx.plan.findMany({ where: { deletedAt: null }, orderBy: { id: 'asc' } });
+  }
+
   async find(tx: TenantTransaction, id: string): Promise<Plan> {
     const row = await tx.plan.findFirst({ where: { id, deletedAt: null } });
     if (!row) {

@@ -149,6 +149,12 @@ export function normalizePhone(raw: string, country: string): string | null {
 
 /** `YYYY-MM-DD`, `DD.MM.YYYY` or `DD/MM/YYYY`; null when it is not a real past date. */
 export function normalizeDate(raw: string, today: string): string | null {
+  const value = parseCalendarDate(raw);
+  return value && value >= '1900-01-01' && value <= today ? value : null;
+}
+
+/** `YYYY-MM-DD`, `DD.MM.YYYY` or `DD/MM/YYYY` as `YYYY-MM-DD`; null when not a real date. */
+export function parseCalendarDate(raw: string): string | null {
   const text = raw.trim();
   const iso = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(text);
   const dotted = /^(\d{1,2})[./](\d{1,2})[./](\d{4})$/.exec(text);
@@ -165,7 +171,7 @@ export function normalizeDate(raw: string, today: string): string | null {
   if (Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== value) {
     return null;
   }
-  return value >= '1900-01-01' && value <= today ? value : null;
+  return value;
 }
 
 /**
