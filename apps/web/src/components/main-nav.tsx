@@ -10,7 +10,15 @@ import { useStaffSession } from '@/components/staff-session';
 const items: {
   href: string;
   key:
-    'home' | 'reception' | 'members' | 'checkIns' | 'plans' | 'payments' | 'cashShift' | 'settings';
+    | 'home'
+    | 'reception'
+    | 'members'
+    | 'checkIns'
+    | 'plans'
+    | 'payments'
+    | 'cashShift'
+    | 'shop'
+    | 'settings';
   exact: boolean;
   permission?: Permission;
 }[] = [
@@ -21,6 +29,7 @@ const items: {
   { href: '/plans', key: 'plans', exact: false, permission: 'plans.read' },
   { href: '/payments', key: 'payments', exact: false, permission: 'payments.read' },
   { href: '/cash-shift', key: 'cashShift', exact: false, permission: 'cash_shifts.manage' },
+  { href: '/shop', key: 'shop', exact: false, permission: 'shop.sell' },
   { href: '/settings', key: 'settings', exact: false },
 ];
 

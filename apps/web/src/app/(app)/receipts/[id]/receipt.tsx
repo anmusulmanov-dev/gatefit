@@ -51,10 +51,14 @@ export function Receipt({ id }: { id: string }) {
           <dd className="text-right">
             {format.dateTime(new Date(data.paidAt), { dateStyle: 'short', timeStyle: 'short' })}
           </dd>
-          <dt>{t('member')}</dt>
-          <dd className="text-right">
-            {data.member.lastName} {data.member.firstName}
-          </dd>
+          {data.member && (
+            <>
+              <dt>{t('member')}</dt>
+              <dd className="text-right">
+                {data.member.lastName} {data.member.firstName}
+              </dd>
+            </>
+          )}
         </dl>
         <hr className="my-3 border-dashed" />
         <ul className="flex flex-col gap-1">
