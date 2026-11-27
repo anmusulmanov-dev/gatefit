@@ -10,10 +10,12 @@ import { fontVariables } from '@/lib/fonts';
 import './globals.css';
 
 export async function generateMetadata(): Promise<Metadata> {
-  const t = await getTranslations();
+  const [t, branding] = await Promise.all([getTranslations(), getBranding()]);
   return {
     title: `${t('web.home.title')} · ${t('common.appName')}`,
     description: t('web.home.subtitle'),
+    // The organization's logo in the browser tab, when it has one.
+    ...(branding?.logoUrl ? { icons: { icon: branding.logoUrl } } : {}),
   };
 }
 

@@ -27,7 +27,7 @@ export async function PageFrame({
     <div className="mx-auto flex min-h-dvh max-w-md flex-col px-4">
       <header className="flex flex-wrap items-center justify-between gap-3 py-4">
         <span className="flex items-center gap-2">
-          <BrandMark />
+          <BrandMark logoUrl={branding?.logoUrl} />
           <span className="font-heading text-lg font-extrabold tracking-tight">
             {t('common.appName')}
           </span>
@@ -42,6 +42,15 @@ export async function PageFrame({
       >
         {brand && (
           <div className="gf-brand-panel flex flex-col gap-1 rounded-xl px-5 py-6 shadow-card">
+            {branding?.logoUrl && (
+              // A light tile keeps a dark logo readable on the brand colour.
+              // eslint-disable-next-line @next/next/no-img-element -- signed link from our own API
+              <img
+                src={branding.logoUrl}
+                alt={t('orgSettings.logoAlt', { name: branding.name })}
+                className="mb-2 h-14 w-auto max-w-44 self-start rounded-md bg-white object-contain p-1.5"
+              />
+            )}
             {branding && (
               <p className="font-heading text-xl font-extrabold tracking-tight">{branding.name}</p>
             )}

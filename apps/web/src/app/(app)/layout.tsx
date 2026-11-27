@@ -11,7 +11,7 @@ import { ModeSwitcher } from '@/components/mode-switcher';
 import { OrganizationNotice, SessionExpired } from '@/components/session-gate';
 import { SignOutButton } from '@/components/sign-out-button';
 import { StaffSessionProvider } from '@/components/staff-session';
-import { getColorMode } from '@/lib/branding';
+import { getBranding, getColorMode } from '@/lib/branding';
 import { isPlatformHost, requestHost } from '@/lib/host';
 import { currentLocation } from '@/lib/location';
 import { getSession } from '@/lib/session';
@@ -41,7 +41,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   const t = await getTranslations();
   const roleKey = roleMessageKey(me.staff.role);
   const location = await currentLocation(me.staff.locations);
-  const mode = await getColorMode();
+  const [mode, branding] = await Promise.all([getColorMode(), getBranding()]);
 
   return (
     <StaffSessionProvider staffId={me.staff.id} permissions={me.staff.permissions}>
@@ -49,7 +49,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
         <header className="gf-topbar z-30 border-b md:sticky md:top-0 print:hidden">
           <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-6 gap-y-3 px-4 py-3">
             <div className="flex min-w-0 items-center gap-3">
-              <BrandMark />
+              <BrandMark logoUrl={branding?.logoUrl} />
               <span className="font-heading text-lg font-extrabold tracking-tight">
                 {t('common.appName')}
               </span>

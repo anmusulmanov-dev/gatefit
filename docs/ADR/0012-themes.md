@@ -12,6 +12,8 @@ Sana: 2026-11-24. Holat: qabul qilingan.
 6. **Shriftlar `next/font/google` orqali** (yangi paket yo'q), lotin va kirill. Faqat standart mavzu shriftlari oldindan yuklanadi; qolganlarini brauzer mavzu ishlatgandagina oladi. Build vaqtida Google Fonts'ga internet kerak.
 7. **Harakat:** animatsiyalar Tailwind tokenlari (`animate-pop`, `animate-shake`, `gf-skeleton`, ...); `prefers-reduced-motion: reduce` da hammasi o'chadi.
 
+8. **Logo (F-10.7, 2026-11-27).** `organizations.logo_key`, fayl `FileStorage` da (`orgs/<id>/branding/logo-<uuid>.<ext>`). `PUT/DELETE /organization/logo` (`organization.update`, audit). Faqat PNG, JPEG, WebP, baytlariga qarab; 2 MB va 4096 px gacha (o'lcham sarlavhadan o'qiladi, rasm ochilmaydi). SVG rad etiladi: ichida skript bo'lishi mumkin, tozalash uchun paket kerak. `GET /organization` va `GET /branding` imzolangan `logoUrl` qaytaradi (bir xil vaqt oynasida bir xil havola, brauzer keshlaydi), alohida ommaviy endpoint shart bo'lmadi. PWA o'rnatish belgisi Gatefit'niki qoladi: aniq 192/512 px kerak, kichraytirish paket talab qiladi.
+
 ## Oqibatlar
 
 - Yangi mavzu: `THEMES` ga kalit, migratsiyada enum qiymati, `themes.css` da blok, tarjimalarda nom va tavsif.
