@@ -5,6 +5,10 @@ import { type Theme, themeSchema } from './theme';
 
 export const ORGANIZATION_LOCALES = ['uz', 'ru', 'en'] as const;
 
+/** The logo (TZ F-10.7): PNG, JPEG or WebP, by its bytes. SVG is refused: it can carry script. */
+export const ORGANIZATION_LOGO_MAX_BYTES = 2 * 1024 * 1024;
+export const ORGANIZATION_LOGO_MAX_SIDE = 4096;
+
 const nameSchema = z.string().trim().min(1).max(120);
 
 // Country and currency are deliberately absent: only the platform may change them.
@@ -25,6 +29,8 @@ export interface OrganizationDto {
   currency: string;
   locale: string;
   theme: Theme;
+  /** A short-lived link to the uploaded logo; null when there is none. */
+  logoUrl: string | null;
   status: 'trial' | 'active' | 'blocked';
   trialEndsAt: string | null;
   /** What the organization's tariff includes; null until the platform assigns one. */

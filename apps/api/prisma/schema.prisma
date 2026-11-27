@@ -166,6 +166,8 @@ model Organization {
   currency    String             @db.Char(3)
   locale      String
   theme       OrganizationTheme  @default(zumrad)
+  // Storage key of the uploaded logo (FileStorage); null when there is none.
+  logoKey     String?            @map("logo_key")
   status      OrganizationStatus @default(trial)
   trialEndsAt DateTime?          @map("trial_ends_at") @db.Timestamptz(3)
   // The plan in force now; saas_subscriptions keeps the history.

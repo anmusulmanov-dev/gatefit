@@ -115,6 +115,7 @@
     "INVALID_TEMPLATE": "Matnda bu xabarda yo'q o'zgaruvchi ishlatilgan.",
     "FILE_REQUIRED": "Faylni tanlang.",
     "FILE_TOO_LARGE": "Fayl juda katta (5 MB gacha).",
+    "IMAGE_TOO_LARGE": "Rasm juda katta: 2 MB va 4096×4096 px gacha bo'lsin.",
     "UNSUPPORTED_FILE_TYPE": "JPEG, PNG yoki WebP rasm yuklang.",
     "FILE_UNREADABLE": "Faylni o'qib bo'lmadi. XLSX yoki CSV (UTF-8) qilib saqlang.",
     "IMPORT_TOO_MANY_ROWS": "Qatorlar juda ko'p: bitta faylda 10 000 tagacha a'zo.",
@@ -257,7 +258,14 @@
         "name": "Moviy",
         "description": "Ishonchli ko'k, aniq chiziqlar, soya kam."
       }
-    }
+    },
+    "logo": "Logo",
+    "logoHint": "PNG, JPG yoki WebP, 2 MB gacha. Shaffof fonli, kvadrat yoki keng logo yaxshi ko'rinadi.",
+    "logoUpload": "Logo yuklash",
+    "logoReplace": "Logoni almashtirish",
+    "logoRemove": "Logoni o'chirish",
+    "logoAlt": "{name} logosi",
+    "logoNone": "Logo yuklanmagan"
   },
   "locations": {
     "add": "Filial qo'shish",

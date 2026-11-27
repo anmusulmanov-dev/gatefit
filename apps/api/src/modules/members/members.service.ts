@@ -28,7 +28,7 @@ import { uuidv7 } from '../../common/ids/uuid-v7';
 import { FileLinksService } from '../../common/storage/file-links.service';
 import { FILE_STORAGE, type FileStorage } from '../../common/storage/file-storage';
 import type { Prisma } from '../../generated/prisma/client';
-import { imageType } from './image-type';
+import { imageType } from '../../common/storage/image-type';
 import {
   DEBT_FACTS,
   type DebtFacts,

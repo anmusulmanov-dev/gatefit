@@ -31,6 +31,8 @@ export function parseColorMode(value: string | undefined | null): ColorMode {
 export interface BrandingDto {
   name: string;
   theme: Theme;
+  /** A short-lived link to the organization's logo; null when it has none. */
+  logoUrl: string | null;
 }
 
 export interface BrandingRequest {
@@ -59,7 +61,11 @@ export async function fetchBranding(request: BrandingRequest): Promise<BrandingD
     const body = (await response.json()) as Partial<BrandingDto>;
     const theme = themeSchema.safeParse(body.theme);
     return typeof body.name === 'string' && theme.success
-      ? { name: body.name, theme: theme.data }
+      ? {
+          name: body.name,
+          theme: theme.data,
+          logoUrl: typeof body.logoUrl === 'string' ? body.logoUrl : null,
+        }
       : null;
   } catch {
     return null;
