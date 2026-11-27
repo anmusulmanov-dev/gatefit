@@ -29,7 +29,8 @@ function e2eDatabase(name: string): string {
 
 // Ports of their own, so the suite runs next to `pnpm dev` (3000 and 8000). Not 8100:
 // Windows (Hyper-V) may reserve ranges around it, see `netsh int ipv4 show excludedportrange`.
-export const API_PORT = 7100;
+// E2E_API_PORT moves the API when a reservation covers 7100 on this machine.
+export const API_PORT = Number(process.env.E2E_API_PORT ?? 7100);
 export const WEB_PORT = 3100;
 export const MEMBER_PORT = 3101;
 export const E2E_DATABASE = 'gatefit_e2e';
