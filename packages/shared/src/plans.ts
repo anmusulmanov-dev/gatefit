@@ -244,6 +244,8 @@ export interface MembershipDto {
   freezes: MembershipFreezeDto[];
   cancelledAt: string | null;
   cancelReason: string | null;
+  /** The import that brought it in from another system; null when sold here. */
+  importId: string | null;
   createdAt: string;
 }
 

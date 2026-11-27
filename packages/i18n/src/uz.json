@@ -127,7 +127,9 @@
     "PRODUCT_UNIT_FIXED": "Mavjud birlikning hajmini o'zgartirib bo'lmaydi. Yangi birlik qo'shing.",
     "PRODUCT_BARCODE_TAKEN": "Bu shtrix-kod boshqa mahsulotda bor.",
     "WALK_IN_FULL_PAYMENT": "Begona xaridor summani to'liq to'laydi.",
-    "RETURN_EXCEEDS_SOLD": "Sotilganidan ko'p qaytarib bo'lmaydi."
+    "RETURN_EXCEEDS_SOLD": "Sotilganidan ko'p qaytarib bo'lmaydi.",
+    "IMPORT_NOT_FINISHED": "Faqat tugagan importni bekor qilish mumkin.",
+    "IMPORT_REVERT_BLOCKED": "Bekor qilib bo'lmaydi: a'zolar bu abonementlar bilan kirgan yoki pul to'lagan."
   },
   "organization": {
     "missingTitle": "Tashkilot topilmadi",
@@ -795,7 +797,8 @@
       "reason": "Sabab",
       "confirm": "Abonementni bekor qilish",
       "reasonShown": "Bekor qilingan: {reason}"
-    }
+    },
+    "imported": "Ko'chirilgan"
   },
   "billing": {
     "method": "To'lov usuli",
@@ -1147,6 +1150,73 @@
       "sold": "Sotildi",
       "stockValue": "Ombordagi tovar tannarxi: {amount}",
       "empty": "Bu davrda harakat yo'q."
+    }
+  },
+  "membershipFile": {
+    "columns": {
+      "phone": "Telefon",
+      "plan": "Tarif",
+      "startsOn": "Boshlanish sanasi",
+      "endsOn": "Tugash sanasi",
+      "visitsLeft": "Qolgan tashriflar",
+      "debt": "Qarz",
+      "dueOn": "To'lov muddati",
+      "location": "Filial"
+    }
+  },
+  "membershipImport": {
+    "open": "Abonementlarni import qilish",
+    "title": "Abonementlarni import qilish",
+    "intro": "Eski tizimdagi amaldagi abonementlarni ko'chirish: har qatorda bitta abonement. Avval a'zolarni import qiling va tariflarni yarating. Tushum va kassaga hech narsa yozilmaydi; qarz bo'lsa, ochiq hisob ochiladi.",
+    "uploadHint": "XLSX yoki CSV, 5 MB va 5 000 qatorgacha. Sanalar 17.05.2026 yoki 2026-05-17 ko'rinishida.",
+    "mappingHint": "Qaysi ustunda nima borligini ko'rsating. Telefon, tarif, boshlanish va tugash sanasi majburiy. Filial bo'sh bo'lsa, a'zoning asosiy filiali olinadi.",
+    "mappingInvalid": "Telefon, tarif va ikkala sana uchun ustun tanlang. Har ma'noga bitta ustun.",
+    "debtTotal": "Ochiladigan qarz: {amount}",
+    "start": "{count} ta abonementni import qilish",
+    "finished": "Tayyor: {created} ta abonement qo'shildi.",
+    "skipped": "{count} ta qator o'tkazib yuborildi: shu orada a'zoda boshqa abonement paydo bo'ldi.",
+    "toMembers": "A'zolarga o'tish",
+    "history": "Oldingi importlar",
+    "historyEmpty": "Hali abonement importi bo'lmagan.",
+    "created": "Qo'shildi: {count}",
+    "statusLabel": "Holati",
+    "statuses": {
+      "uploaded": "Yuklandi",
+      "validated": "Tekshirildi",
+      "queued": "Navbatda",
+      "running": "Import qilinmoqda",
+      "done": "Tayyor",
+      "failed": "Muvaffaqiyatsiz"
+    },
+    "reverted": "Bekor qilingan",
+    "revert": "Importni bekor qilish",
+    "revertTitle": "Importni bekor qilish",
+    "revertHint": "Shu importdan kelgan barcha abonementlar bekor qilinadi va ulardagi qarz hisobdan chiqariladi. Agar a'zo ulardan biri bilan zalga kirgan yoki pul to'lagan bo'lsa, bekor qilib bo'lmaydi.",
+    "revertReason": "Sabab",
+    "revertConfirm": "Bekor qilish",
+    "revertDone": "Import bekor qilindi.",
+    "rowErrors": {
+      "PHONE_REQUIRED": "Telefon yo'q",
+      "PHONE_INVALID": "Telefon raqami noto'g'ri",
+      "MEMBER_NOT_FOUND": "Bu telefon bilan a'zo yo'q (avval a'zolarni import qiling)",
+      "MEMBER_ARCHIVED": "A'zo arxivda",
+      "PLAN_REQUIRED": "Tarif yo'q",
+      "PLAN_NOT_FOUND": "Bunday nomli tarif yo'q",
+      "PLAN_AMBIGUOUS": "Bu nomli tariflar bir nechta",
+      "DATE_REQUIRED": "Sana yo'q",
+      "DATE_INVALID": "Sana noto'g'ri (masalan 17.05.2026)",
+      "END_BEFORE_START": "Tugash sanasi boshlanishdan oldin",
+      "ALREADY_ENDED": "Abonement allaqachon tugagan",
+      "START_TOO_FAR_AHEAD": "Boshlanish sanasi 90 kundan uzoq kelajakda",
+      "VISITS_REQUIRED": "Qolgan tashriflar soni yo'q",
+      "VISITS_INVALID": "Qolgan tashriflar 1 dan tarif limitigacha bo'lishi kerak",
+      "VISITS_NOT_APPLICABLE": "Bu tarifda tashriflar cheklanmagan",
+      "DEBT_INVALID": "Qarz summasi noto'g'ri",
+      "DUE_DATE_INVALID": "To'lov muddati noto'g'ri yoki o'tib ketgan",
+      "LOCATION_NOT_FOUND": "Bunday nomli filial yo'q",
+      "LOCATION_NOT_ASSIGNED": "Siz bu filialda ishlamaysiz",
+      "PLAN_NOT_AT_LOCATION": "Tarif bu filialda amal qilmaydi",
+      "OVERLAP": "A'zoda shu kunlarga boshqa abonement bor"
     }
   }
 }

@@ -38,6 +38,7 @@ Uch daraja: platforma, tashkilot, filial. Huquqlar ruxsatlar (permissions) to'pl
 - F-1.2 (M) Telefon bo'yicha qidiruv va takrorlanishni aniqlash.
 - F-1.3 (M) Holat: active, frozen, expired, debtor, blocked.
 - F-1.4 (M) Excel/CSV import va eksport.
+- F-1.4.1 (M) Amaldagi abonementlarni ko'chirish (Excel/CSV): har qatorda telefon, tarif nomi, boshlanish va tugash sanasi; ixtiyoriy qolgan tashriflar, qarz, to'lov muddati, filial. Sanalar fayldan olinadi, sotuv va tushum yozilmaydi; qarz bo'lsa ochiq hisob ochiladi. A'zoda shu kunlarga boshqa abonement bo'lsa, qator o'tkazib yuboriladi. Kirish yoki to'lov bo'lmaguncha butun importni bekor qilish mumkin. Joriy etildi (2026-11-27, `docs/ADR/0014-membership-import.md`).
 - F-1.5 (1) Oila va korporativ guruhlar: bitta to'lovchi, bir nechta a'zo.
 - F-1.6 (1) Elektron shartnoma va rozilik hujjatlari.
 - F-1.7 (1) Tana o'lchovlari va maqsadlar tarixi.
@@ -183,6 +184,7 @@ Barcha biznes jadvallarida: `id` (UUID v7), `organization_id`, `created_at`, `up
 | roles, role_permissions | name, permissions | organization | M |
 | members | first_name, last_name, phone, birth_date, gender, photo_key, status, blocked_reason, source, notes, emergency_contact_name, emergency_contact_phone | organization, user?, home_location | M |
 | member_imports | file_key, file_name, status, headers, mapping, total_rows, valid_rows, errors, created_count, skipped_count | organization, home_location?, members | M |
+| membership_imports | file_key, file_name, status, staff_id, location_ids, headers, mapping, total_rows, valid_rows, debt_minor, errors, created_count, skipped_count, reverted_at, revert_reason | organization, memberships (import_id, import_row) | M |
 | plans | name, description, type (duration, visits, single, trial), duration_value, duration_unit (day, month, year), visit_limit, price_minor, currency, restrictions (JSONB: time_windows, weekdays, daily_visit_limit, location_ids), freeze_max_days, freeze_max_times, freeze_min_days, freeze_fee_minor, is_active | organization | M |
 | memberships | tarif shartlari nusxasi (plan_name, plan_type, visit_limit, price_minor, currency, restrictions, freeze_*), starts_on, ends_on, starts_at, ends_at, visits_left, status (scheduled, active, frozen, expired, cancelled), status_changes_at, auto_renew, sold_by, cancelled_at, cancel_reason | member, plan, location (sotilgan filial) | M |
 | membership_freezes | starts_on, ends_on, starts_at, ends_at, days, reason, source (staff, member_request), fee_minor, currency, ended_early_at, cancelled_at | membership | M |
@@ -231,6 +233,7 @@ Qoidalar:
 | Tashkilot | GET/PATCH /organization, GET/POST/PATCH /locations | M |
 | Xodimlar | GET/POST/PATCH /staff, POST /staff/{id}/reset-password, POST /staff/{id}/reset-totp, GET/POST/PATCH /roles | M |
 | A'zolar | GET/POST /members, GET /members/duplicates, GET/PATCH /members/{id}, POST /members/{id}/block, /unblock, /archive, /restore, PUT/DELETE /members/{id}/photo, POST /members/imports, GET /members/imports/{id}, POST /members/imports/{id}/validate, /commit, GET /members/imports/template, GET /members/export; GET /files/{token} (imzolangan havola) | M |
+| Abonement importi | GET/POST /membership-imports, GET /membership-imports/template, GET /membership-imports/{id}, POST /membership-imports/{id}/validate, /commit, /revert | M |
 | Tariflar | GET/POST /plans, GET/PATCH /plans/{id} | M |
 | Abonementlar | GET/POST /members/{id}/memberships, GET /memberships/{id}, POST /memberships/{id}/freeze, /unfreeze, /cancel | M |
 | Xabarlar | GET /notification-templates, PUT /notification-templates/{key}/{locale}, GET /notifications?memberId= | M |

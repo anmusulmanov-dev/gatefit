@@ -34,6 +34,59 @@ Har sessiya oxirida yangilanadi: nima qilindi, nima qoldi, ma'lum muammolar.
 | M8d E2e: mezonlar 1, 2, 3, 11     | Tayyor (2026-11-23)                         |
 | UI mavzulari (F-10.6)             | Tayyor (2026-11-24)                         |
 | Do'kon (F-4.8, v1)                | Tayyor (2026-11-27)                         |
+| Abonement importi (F-1.4.1)       | Tayyor (2026-11-27)                         |
+
+## 2026-11-27 — Amaldagi abonementlarni ko'chirish (F-1.4.1)
+
+Branch: `feat/membership-import`. Yangi paket yo'q. ADR: `docs/ADR/0014-membership-import.md`. Anvar tasdiqlagan qarorlar (taklif qilinganicha):
+
+- tarif nom bo'yicha topiladi (nofaol tariflar ham);
+- muzlatish kunlari ko'chirilmaydi;
+- qarz muddati ixtiyoriy;
+- ustma-ust abonement — xato qator;
+- import ruxsati `members.import` + `memberships.sell`;
+- butun importni bekor qilish mumkin, faqat kirish va to'lov bo'lmagan bo'lsa.
+
+### Qilindi
+
+- **Baza** (`20261127160000_membership_imports`, `..._rls`):
+  - `membership_imports` jadvali, RLS bilan;
+  - `memberships.import_id` va `import_row`, `(organization_id, import_id, import_row)` yagona;
+  - CHECK: ikkalasi birga to'ldiriladi.
+- **API** (`/membership-imports`): ro'yxat, shablon, yuklash, tekshirish, tasdiqlash va bekor qilish.
+  - **Fon vazifasi:** 100 qatordan tranzaksiya bilan ishlaydi. Qayta ishlasa, yozilgan qatorlarni o'tkazib yuboradi.
+  - **Abonement:** tarif shartlari tarifdan, sanalar va qolgan tashriflar fayldan olinadi. Holat sanaga qarab aniqlanadi (`active` yoki `scheduled`).
+  - **Pul:** tushum ham, to'lov ham yozilmaydi. Qarz bo'lsa, `standard` hisob ochiladi.
+  - **Audit:** `membership.import`, `membership_import.finish`, `membership_import.revert`.
+  - **Joylashuv:** filial bo'yicha cheklangan xodim faqat o'z filiallari va o'z yuklamalarini ko'radi.
+  - **Bekor qilish:** abonementlar bekor qilinadi va qarz hisobdan chiqariladi. Kirish yoki to'lov bo'lsa rad etiladi (`IMPORT_REVERT_BLOCKED`).
+- **Yordamchilar:**
+  - `MembersService.findByPhones`
+  - `MembershipsService.createImported`, `spansOf`, `cancelImported`
+  - `InvoicesService.anyPaidForMemberships`
+  - `AccessService.anyEntryOn`
+  - `PlansService.listAll`
+  - `parseCalendarDate` (`member-rows.ts`)
+- **Web** `/members/import/memberships`:
+  - a'zolar ro'yxatida "Abonementlarni import qilish" tugmasi;
+  - 4 qadamli ustoz (fayl, ustunlar, tekshiruv, tayyor), ochiladigan qarz summasi bilan;
+  - oldingi importlar ro'yxati va "Importni bekor qilish";
+  - a'zo kartasida "Ko'chirilgan" belgisi;
+  - uz/ru/en tarjimalari.
+- **Testlar:**
+  - `membership-rows.spec.ts` (7 ta);
+  - `test/membership-imports.int-spec.ts` (7 ta: sanalar, tashriflar, qarz, xatolar, bekor qilish, filiallar, "A tashkilot B ni ko'rmaydi" HTTP va RLS bilan);
+  - e2e `tests/owner/membership-import.spec.ts`.
+
+### Tekshirildi
+
+- `pnpm format:check && pnpm lint && pnpm typecheck && pnpm test` yashil (API 548, shared 83, i18n 78).
+- `pnpm test:e2e` 10/10 yashil (`E2E_API_PORT=7600` bilan).
+
+### Ma'lum muammolar / qoldi
+
+- Eski tizimdagi muzlatish tarixi ko'chirilmaydi.
+- Bekor qilish fonda bajariladi: ro'yxatda darhol "Bekor qilingan" ko'rinadi, abonementlar esa bir necha soniyada bekor bo'ladi.
 
 ## 2026-11-27 — Do'kon: mahsulotlar, ombor, sotuv (F-4.8)
 

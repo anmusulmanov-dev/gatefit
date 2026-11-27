@@ -271,6 +271,175 @@ export class MembershipsService implements MembershipFacts {
     return { membership: toMembershipDto(row, now), invoice, payment };
   }
 
+  /**
+   * Writes a membership brought in from another system (docs/TZ.md F-1.4.1): the plan's
+   * terms as they are now, the dates and visits left as the file gives them, no sale and
+   * no money. What is still owed is billed by the caller.
+   */
+  async createImported(
+    tx: TenantTransaction,
+    caller: StaffCaller,
+    input: {
+      importId: string;
+      importRow: number;
+      memberId: string;
+      planId: string;
+      locationId: string;
+      timeZone: string;
+      startsOn: string;
+      endsOn: string;
+      visitsLeft: number | null;
+    },
+  ): Promise<MembershipRow> {
+    const plan = await this.plans.find(tx, input.planId);
+    const restrictions = readRestrictions(plan.restrictions);
+    const visitLimit = plan.type === 'single' ? 1 : plan.visitLimit;
+    const now = this.clock.now();
+    const terms: MembershipTerms = {
+      startsOn: input.startsOn,
+      endsOn: input.endsOn,
+      visitsLeft: input.visitsLeft,
+      cancelled: false,
+      freezes: [],
+    };
+    const row = await tx.membership.create({
+      data: {
+        organizationId: caller.organizationId,
+        memberId: input.memberId,
+        planId: plan.id,
+        locationId: input.locationId,
+        planName: plan.name,
+        planType: plan.type,
+        visitLimit,
+        priceMinor: plan.priceMinor,
+        currency: plan.currency,
+        restrictions,
+        freezeMaxDays: plan.freezeMaxDays,
+        freezeMaxTimes: plan.freezeMaxTimes,
+        freezeMinDays: plan.freezeMinDays,
+        freezeFeeMinor: plan.freezeFeeMinor,
+        startsOn: dateColumn(input.startsOn),
+        endsOn: dateColumn(input.endsOn),
+        startsAt: startOfLocalDay(input.startsOn, input.timeZone),
+        endsAt: startOfLocalDay(addDays(input.endsOn, 1), input.timeZone),
+        visitsLeft: input.visitsLeft,
+        status: statusOn(terms, localDate(now, input.timeZone)),
+        statusChangesAt: nextStatusChange(terms, now, input.timeZone),
+        soldBy: caller.actor.userId,
+        importId: input.importId,
+        importRow: input.importRow,
+      },
+      include: membershipInclude,
+    });
+    await this.audit.record(tx, caller.organizationId, caller.actor, {
+      action: 'membership.import',
+      entity: 'membership',
+      entityId: row.id,
+      after: {
+        importId: input.importId,
+        importRow: input.importRow,
+        memberId: input.memberId,
+        planId: plan.id,
+        locationId: input.locationId,
+        startsOn: input.startsOn,
+        endsOn: input.endsOn,
+        visitsLeft: input.visitsLeft,
+        status: row.status,
+      },
+    });
+    return row;
+  }
+
+  /** First and last days of the members' memberships that are not cancelled. */
+  async spansOf(
+    tx: TenantTransaction,
+    memberIds: readonly string[],
+    exceptImportId?: string,
+  ): Promise<Map<string, { startsOn: string; endsOn: string }[]>> {
+    const spans = new Map<string, { startsOn: string; endsOn: string }[]>();
+    const unique = [...new Set(memberIds)];
+    for (let start = 0; start < unique.length; start += 1000) {
+      const rows = await tx.membership.findMany({
+        where: {
+          memberId: { in: unique.slice(start, start + 1000) },
+          cancelledAt: null,
+          deletedAt: null,
+          ...(exceptImportId
+            ? { OR: [{ importId: null }, { importId: { not: exceptImportId } }] }
+            : {}),
+        },
+        select: { memberId: true, startsOn: true, endsOn: true },
+      });
+      for (const row of rows) {
+        const list = spans.get(row.memberId) ?? [];
+        list.push({ startsOn: isoDate(row.startsOn), endsOn: isoDate(row.endsOn) });
+        spans.set(row.memberId, list);
+      }
+    }
+    return spans;
+  }
+
+  /** Rows of an import already written, so a repeated run skips them. */
+  async importedRows(tx: TenantTransaction, importId: string): Promise<Set<number>> {
+    const rows = await tx.membership.findMany({
+      where: { importId },
+      select: { importRow: true },
+    });
+    return new Set(rows.flatMap((row) => (row.importRow === null ? [] : [row.importRow])));
+  }
+
+  /** Ids of the memberships an import wrote. */
+  async idsOfImport(tx: TenantTransaction, importId: string): Promise<string[]> {
+    const rows = await tx.membership.findMany({ where: { importId }, select: { id: true } });
+    return rows.map((row) => row.id);
+  }
+
+  /**
+   * Cancels memberships an import wrote that are not cancelled yet, up to `limit` of them,
+   * and writes off what is owed on them. Returns how many it cancelled.
+   */
+  async cancelImported(
+    tx: TenantTransaction,
+    caller: StaffCaller,
+    importId: string,
+    reason: string,
+    limit: number,
+  ): Promise<number> {
+    const rows = await tx.membership.findMany({
+      where: { importId, cancelledAt: null, deletedAt: null },
+      include: membershipInclude,
+      orderBy: { id: 'asc' },
+      take: limit,
+    });
+    const now = this.clock.now();
+    const members = new Set<string>();
+    for (const row of rows) {
+      await tx.membership.update({
+        where: { id: row.id },
+        data: {
+          status: 'cancelled',
+          statusChangesAt: null,
+          cancelledAt: now,
+          cancelledBy: caller.actor.userId,
+          cancelReason: reason,
+        },
+      });
+      await this.audit.record(tx, caller.organizationId, caller.actor, {
+        action: 'membership.cancel',
+        entity: 'membership',
+        entityId: row.id,
+        before: { status: row.status },
+        after: { status: 'cancelled', reason, importId },
+      });
+      await this.invoices.voidForMembership(tx, caller, row.id, reason);
+      members.add(row.memberId);
+    }
+    for (const memberId of members) {
+      await this.refreshMember(tx, memberId);
+    }
+    return rows.length;
+  }
+
   /** Freezes a membership from a day on; its last day moves later by the frozen days. */
   async freeze(
     tx: TenantTransaction,
@@ -805,6 +974,7 @@ export function toMembershipDto(row: MembershipRow, now: Date): MembershipDto {
     freezes: counted.map(toFreezeDto),
     cancelledAt: row.cancelledAt?.toISOString() ?? null,
     cancelReason: row.cancelReason,
+    importId: row.importId,
     createdAt: row.createdAt.toISOString(),
   };
 }

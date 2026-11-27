@@ -326,6 +326,25 @@ export class InvoicesService implements DebtFacts {
     }
   }
 
+  /** Whether any money has been paid on invoices for these memberships. */
+  async anyPaidForMemberships(
+    tx: TenantTransaction,
+    membershipIds: readonly string[],
+  ): Promise<boolean> {
+    if (membershipIds.length === 0) {
+      return false;
+    }
+    const paid = await tx.invoice.findFirst({
+      where: {
+        deletedAt: null,
+        paidMinor: { gt: 0n },
+        items: { some: { membershipId: { in: [...membershipIds] } } },
+      },
+      select: { id: true },
+    });
+    return paid !== null;
+  }
+
   /** Whether the member owes money past its due moment (DebtFacts, for member status). */
   async isDebtor(tx: TenantTransaction, memberId: string): Promise<boolean> {
     const overdue = await tx.invoice.findFirst({
