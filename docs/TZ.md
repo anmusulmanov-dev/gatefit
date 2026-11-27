@@ -72,7 +72,7 @@ Uch daraja: platforma, tashkilot, filial. Huquqlar ruxsatlar (permissions) to'pl
 - F-4.5 (1) Onlayn to'lov va takroriy yechib olish.
 - F-4.6 (1) Muvaffaqiyatsiz to'lovni qayta urinish va eslatma.
 - F-4.7 (1) Hisob-fakturalar, soliq stavkalari mamlakat bo'yicha.
-- F-4.8 (1) Do'kon: tovarlar, ombor qoldig'i, sotuv.
+- F-4.8 (1) Do'kon: mahsulotlar, sotuv va kirim birliklari (dona, gramm, ml; porsiya, qadoq), filial bo'yicha qoldiq, kirim tannarx bilan, sotuv a'zoga yoki begona xaridorga, qaytarish, hisobdan chiqarish, inventarizatsiya, o'rtacha tannarx va foyda hisoboti, qabulxonadan tezkor sotuv. Mahsulot qarzi a'zoni qarzdor qilmaydi (zalga kirishni to'smaydi); begona xaridor to'liq to'laydi. Qoldiqdan ko'p sotib bo'lmaydi. Joriy etildi (2026-11-27, `docs/ADR/0013-shop.md`).
 - F-4.9 (2) Buxgalteriya tizimlariga eksport.
 
 ### 3.5. Jadval va guruh mashg'ulotlari
@@ -200,7 +200,7 @@ Barcha biznes jadvallarida: `id` (UUID v7), `organization_id`, `created_at`, `up
 | saas_subscriptions, saas_invoices | period, status | organization | M (qo'lda), 1 (avtomatik) |
 | platform_admins, platform_sessions | phone, name, password_hash, totp_secret, status; token_hash, expires_at | — (platforma, tashkilotga tegishli emas) | M |
 | devices, agents | type, model, status, last_seen_at | location | 1 |
-| products, stock_movements | name, price_minor, quantity | location | 1 |
+| products, product_units, stock_levels, stock_movements | name, category, barcode, base_unit (piece, gram, ml), low_stock_threshold, ikpu_code, vat_rate_bp; birlik: name, base_quantity, price_minor; qoldiq: on_hand, value_minor; harakat: kind (receipt, sale, return, write_off, count_adjust), quantity_delta, value_delta_minor, revenue_minor, faqat qo'shiladi | organization, location, invoice_item? | 1 |
 | classes, class_sessions, bookings | — | — | 1 |
 | pt_packages, pt_sessions | — | — | 1 |
 | leads | name, phone, source, stage, next_contact_at | organization, staff | 1 |
@@ -213,6 +213,7 @@ Qoidalar:
 - Filialga bog'langan rol faqat o'z filiallari a'zolarini ko'radi; owner va accountant butun tashkilotni (`docs/ADR/0006-member-visibility.md`).
 - Xodimning paroli va TOTP si `staff` da, ya'ni har tashkilot uchun alohida (`docs/ADR/0003-staff-credentials.md`).
 - To'lov yozuvlari o'chirilmaydi.
+- Do'kon sotuvi `invoices.kind = shop` hisobi; begona xaridorda `member_id` bo'sh. Qaytarilgan mahsulot narxi `credited_minor` ga yoziladi: qarz = total − credited − paid.
 
 ## 7. API
 
@@ -238,6 +239,7 @@ Qoidalar:
 | Kirish | GET /me/qr, POST /access/verify, POST /access/manual, POST /access/exit, GET /check-ins, GET /locations/{id}/occupancy, GET /access/events (SSE), GET /access/offline, POST /access/sync | M |
 | To'lovlar | GET/POST /invoices, GET /invoices/{id}, POST /invoices/{id}/payments, /void, GET /payments, GET /payments/{id}, POST /payments/{id}/refund, GET /payments/{id}/receipt, POST /payments/{id}/receipt/sms; abonement sotish to'lov bilan (`POST /members/{id}/memberships`) | M |
 | Kassa | POST /cash-shifts/open, POST /cash-shifts/{id}/close, GET /cash-shifts/current?locationId=, GET /cash-shifts, GET /cash-shifts/{id} | M |
+| Do'kon | GET/POST /shop/products, GET/PATCH /shop/products/{id}, GET /shop/stock/movements, POST /shop/stock/receipts, /shop/stock/write-offs, /shop/stock/counts, GET/POST /shop/sales, GET /shop/sales/{id}, POST /shop/sales/{id}/returns, GET /shop/reports/summary | 1 |
 | Hisobotlar | GET /reports/daily | M |
 | A'zo | GET /me, GET /me/memberships, GET /me/payments | M |
 | Platforma | POST /platform/auth/login, /platform/auth/totp/setup, /platform/auth/totp/confirm, /platform/auth/logout, GET /platform/me; GET/POST /platform/organizations, GET/PATCH /platform/organizations/{id}, POST /platform/organizations/{id}/staff/{staffId}/reset-password, .../reset-totp; GET/POST /platform/saas-plans, PATCH /platform/saas-plans/{id} | M |
@@ -313,7 +315,7 @@ Uchta qat'iy tarif, to'lov har filial uchun oylik, har tarifda faol a'zolar limi
 
 | Tarif | Faol a'zolar (bir filialda) | Modullar |
 | --- | --- | --- |
-| Start | 200 gacha | A'zolar, abonementlar, QR kirish, to'lovlar, kassa, kunlik hisobot, a'zo PWA |
+| Start | 200 gacha | A'zolar, abonementlar, QR kirish, to'lovlar, kassa, do'kon, kunlik hisobot, a'zo PWA |
 | Standard | 1 000 gacha | Start + onlayn to'lov, jadval, shaxsiy mashg'ulotlar, CRM, kengaytirilgan hisobotlar |
 | Pro | Cheklanmagan | Standard + turniket, tarmoq abonementi, API va vebhuklar |
 

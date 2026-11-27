@@ -33,6 +33,35 @@ Har sessiya oxirida yangilanadi: nima qilindi, nima qoldi, ma'lum muammolar.
 | M8c Demo ma'lumot, yuklama testi  | Tayyor (2026-11-23)                         |
 | M8d E2e: mezonlar 1, 2, 3, 11     | Tayyor (2026-11-23)                         |
 | UI mavzulari (F-10.6)             | Tayyor (2026-11-24)                         |
+| Do'kon (F-4.8, v1)                | Tayyor (2026-11-27)                         |
+
+## 2026-11-27 — Do'kon: mahsulotlar, ombor, sotuv (F-4.8)
+
+Branch: `feat/shop`. Yangi paket yo'q. ADR: `docs/ADR/0013-shop.md`. Anvar tasdiqlagan qarorlar (taklif qilinganicha): v1 talabi hozir; qarzga faqat a'zoga, mahsulot qarzi zalga kirishni to'smaydi; balans (depozit) keyinga; fiskal chek hozir yo'q, IKPU va QQS ustunlari joy uchun; `shop` moduli Start tarifidan; qoldiqdan ko'p sotish taqiq; narx tashkilot bo'yicha bitta; filiallar orasida ko'chirish keyinga; barkod ixtiyoriy.
+
+### Qilindi
+
+- **TZ**: F-4.8 kengaytirildi, ma'lumotlar modeli, API jadvali va Start tarifi yangilandi.
+- **Baza** (`20261127105340_shop`, `..._shop_rls`): `products`, `product_units`, `stock_levels`, `stock_movements` (RLS, `stock_movements` ga faqat `INSERT` + `SELECT`). CHECK: qoldiq va tannarx manfiy emas, har harakat turining ishorasi; barkod tashkilotda yagona. `invoices.kind` (`standard`/`shop`), `invoices.credited_minor`, `invoices.member_id` va `payments.member_id` ixtiyoriy (faqat `shop` hisobida), `invoice_item_kind` ga `product`. Qarz vazifasi funksiyasi faqat `standard` hisoblarni ko'radi. Mavjud tizim rollariga `shop.*` ruxsatlari, mavjud tariflarga `shop` moduli qo'shildi.
+- **Billing**: `charge()` a'zosiz (faqat to'liq to'lov bilan, `WALK_IN_FULL_PAYMENT`) va `kind` bilan; qarz = total − credited − paid; `shop` hisobi `debtor` qilmaydi; `PaymentsService.creditInvoice` (ortiqcha to'lovni oxirgi to'lovdan boshlab o'sha usulda qaytaradi); begona xaridor chekida a'zo yo'q, SMS — `RECEIPT_NO_MEMBER`.
+- **API** (`src/modules/shop`, `@RequireModule('shop')`, POST'lar `@Idempotent()`): `GET/POST /shop/products`, `GET/PATCH /shop/products/{id}` (birliklar, birlik hajmi o'zgarmaydi), `GET /shop/stock/movements`, `POST /shop/stock/receipts`, `/write-offs`, `/counts`, `GET/POST /shop/sales`, `GET /shop/sales/{id}`, `POST /shop/sales/{id}/returns` (`payments.refund`), `GET /shop/reports/summary` (`shop.reports`). O'rtacha tannarx bigint bilan; tannarx `shop.reports` siz `null`. Audit: `product.create/update`, `stock.receive/write_off/count`, `shop.return`, `invoice.credit` (+ billing'ning `invoice.create`, `payment.create`, `refund.create`).
+- **Web**: "Do'kon" menyusi (`/shop`): sotuvlar (savatcha bilan sotish, chek, qaytarish), mahsulotlar (qoldiq, kam qoldi belgisi, qo'shish/tahrirlash birliklar bilan), ombor (kirim, hisobdan chiqarish, inventarizatsiya, harakatlar), hisobot (tushum, tannarx, foyda, yo'qotish). Qabulxonada "Mahsulot sotish": skanerlangan a'zoga yoki begona xaridorga. To'lovlar jurnali va chekda begona xaridor. Tarjimalar uz/ru/en.
+- **Seed**: demo tashkilotga 4 mahsulot (Whey 5 kg → porsiya 30 g, BCAA, batonchik, suv) va har filialga kirim.
+- **E2e** `tests/owner/shop.spec.ts`: mahsulot qo'shish, 5 kg kirim, begona xaridorga 3 porsiya, qoldiq 4 910 g, hisobotda tushum. `E2E_API_PORT` bilan API portini almashtirish mumkin (Windows 7100 ni band qilishi mumkin).
+
+### Tekshirildi
+
+- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` — yashil. API: 534 test (yangi `test/shop.int-spec.ts`: 18), shared: 83, i18n: 76.
+- `pnpm test:e2e` — 9/9 yashil (bu mashinada `E2E_API_PORT=7600`: Docker qayta ishga tushgach Windows 7027–7126 portlarini band qildi).
+- `shop.int-spec`: porsiyalab sotish va grammda qoldiq, o'rtacha tannarx, qoldiqdan ko'p sotish rad etiladi va hech narsa yozilmaydi, begona xaridor to'liq to'laydi, naqd faqat ochiq smenada va smenada hisoblanadi, a'zo qarzi `debtor` qilmaydi, takror so'rov (idempotentlik), chek va SMS, filial bo'yicha qoldiq, qaytarish (pul qaytadi / qarz kamayadi, yaroqsiz hisobdan chiqadi, ko'p qaytarib bo'lmaydi, faqat `payments.refund`), hisobdan chiqarish, inventarizatsiya, hisobot raqamlari, ruxsatlar, harakatni o'zgartirib/o'chirib bo'lmaydi, "A tashkilot B ni ko'rmaydi" (HTTP va RLS).
+- Brauzerda e2e orqali: mahsulot qo'shish, kirim, sotuv, qoldiq 4,910 g, hisobot.
+
+### Ma'lum muammolar / qoldi
+
+- Filiallar orasida ko'chirish, a'zo balansi, filial bo'yicha narx, haqiqiy fiskal drayver — keyinga (ADR 0013).
+- A'zo kartasida alohida "Mahsulot sotish" tugmasi yo'q (qabulxona va `/shop` orqali); a'zo kartasidagi hisoblar ro'yxatida do'kon hisoblari ko'rinadi va to'lanadi.
+- Kirim va hisobdan chiqarish dialogi bir martada bitta mahsulot (API ko'p qatorni qabul qiladi).
+- Dev bazaga (`gatefit`) shop migratsiyasi qo'llangan: `main` dagi checkout'da `prisma migrate status` ikkita "noma'lum" migratsiyani ko'rsatadi, PR birlashgach yo'qoladi.
 
 ## 2026-11-24 — Interfeys mavzulari (F-10.6)
 
