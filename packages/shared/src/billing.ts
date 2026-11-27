@@ -16,8 +16,15 @@ export type DeskPaymentMethod = (typeof DESK_PAYMENT_METHODS)[number];
 export const INVOICE_STATUSES = ['open', 'partially_paid', 'paid', 'void'] as const;
 export type InvoiceStatus = (typeof INVOICE_STATUSES)[number];
 
-export const INVOICE_ITEM_KINDS = ['membership', 'freeze_fee', 'other'] as const;
+export const INVOICE_ITEM_KINDS = ['membership', 'freeze_fee', 'other', 'product'] as const;
 export type InvoiceItemKind = (typeof INVOICE_ITEM_KINDS)[number];
+
+/**
+ * `shop`: a sale of goods (docs/TZ.md F-4.8). What is owed on it does not make the member
+ * a debtor, so it never stops them at the door.
+ */
+export const INVOICE_KINDS = ['standard', 'shop'] as const;
+export type InvoiceKind = (typeof INVOICE_KINDS)[number];
 
 /** Header that every money-moving request carries (CLAUDE.md rule 6). */
 export const IDEMPOTENCY_HEADER = 'Idempotency-Key';
@@ -72,6 +79,8 @@ export type InvoiceVoidInput = z.infer<typeof invoiceVoidSchema>;
 export const invoiceListQuerySchema = pageQuerySchema.extend({
   memberId: z.uuid().optional(),
   status: z.enum(INVOICE_STATUSES).optional(),
+  kind: z.enum(INVOICE_KINDS).optional(),
+  locationId: z.uuid().optional(),
 });
 export type InvoiceListQuery = z.infer<typeof invoiceListQuerySchema>;
 
@@ -125,10 +134,14 @@ export interface InvoiceItemDto {
 export interface InvoiceDto {
   id: string;
   number: string;
-  memberId: string;
+  kind: InvoiceKind;
+  /** null: a shop sale to someone who is not a member. */
+  memberId: string | null;
   location: { id: string; name: string };
   status: InvoiceStatus;
   totalMinor: string;
+  /** Taken off the total by returned goods. */
+  creditedMinor: string;
   /** Paid less refunded. */
   paidMinor: string;
   /** Still owed; "0" once paid or void. */
@@ -146,7 +159,8 @@ export interface InvoiceDto {
 export interface PaymentDto {
   id: string;
   invoice: { id: string; number: string };
-  member: { id: string; firstName: string; lastName: string; phone: string };
+  /** null: a shop sale to someone who is not a member. */
+  member: { id: string; firstName: string; lastName: string; phone: string } | null;
   location: { id: string; name: string };
   cashShiftId: string | null;
   method: PaymentMethod;
@@ -202,7 +216,7 @@ export interface ReceiptDto {
   method: PaymentMethod;
   amountMinor: string;
   currency: string;
-  member: { firstName: string; lastName: string; phone: string };
+  member: { firstName: string; lastName: string; phone: string } | null;
   items: { kind: InvoiceItemKind; description: string; quantity: number; totalMinor: string }[];
   invoiceTotalMinor: string;
   balanceMinor: string;

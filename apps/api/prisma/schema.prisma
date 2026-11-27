@@ -122,8 +122,16 @@ enum InvoiceItemKind {
   membership
   freeze_fee
   other
+  product
 
   @@map("invoice_item_kind")
+}
+
+enum InvoiceKind {
+  standard
+  shop
+
+  @@map("invoice_kind")
 }
 
 enum PaymentMethod {
@@ -189,6 +197,10 @@ model Organization {
   payments              Payment[]
   refunds               Refund[]
   cashShifts            CashShift[]
+  products              Product[]
+  productUnits          ProductUnit[]
+  stockLevels           StockLevel[]
+  stockMovements        StockMovement[]
   checkIns              CheckIn[]
   notificationTemplates NotificationTemplate[]
   notifications         Notification[]
@@ -217,6 +229,8 @@ model Location {
   payments       Payment[]
   refunds        Refund[]
   cashShifts     CashShift[]
+  stockLevels    StockLevel[]
+  stockMovements StockMovement[]
   checkIns       CheckIn[]
 
   @@unique([organizationId, id])
@@ -567,11 +581,15 @@ model Invoice {
   organizationId  String        @map("organization_id") @db.Uuid
   // 2026-000001, per organization and year.
   number          String
-  memberId        String        @map("member_id") @db.Uuid
+  kind            InvoiceKind   @default(standard)
+  // null: a shop sale to someone who is not a member.
+  memberId        String?       @map("member_id") @db.Uuid
   locationId      String        @map("location_id") @db.Uuid
   currency        String        @db.Char(3)
   totalMinor      BigInt        @map("total_minor")
   paidMinor       BigInt        @default(0) @map("paid_minor")
+  // Taken off the total by returned goods; what is owed is total - credited - paid.
+  creditedMinor   BigInt        @default(0) @map("credited_minor")
   status          InvoiceStatus @default(open)
   // Last day to pay, in the location's time zone; null: owed at once.
   dueOn           DateTime?     @map("due_on") @db.Date
@@ -588,12 +606,13 @@ model Invoice {
   updatedAt       DateTime      @updatedAt @map("updated_at") @db.Timestamptz(3)
   deletedAt       DateTime?     @map("deleted_at") @db.Timestamptz(3)
 
-  organization Organization  @relation(fields: [organizationId], references: [id])
-  member       Member        @relation(fields: [organizationId, memberId], references: [organizationId, id])
-  location     Location      @relation(fields: [organizationId, locationId], references: [organizationId, id])
-  items        InvoiceItem[]
-  payments     Payment[]
-  refunds      Refund[]
+  organization   Organization    @relation(fields: [organizationId], references: [id])
+  member         Member?         @relation(fields: [organizationId, memberId], references: [organizationId, id], onDelete: Restrict)
+  location       Location        @relation(fields: [organizationId, locationId], references: [organizationId, id])
+  items          InvoiceItem[]
+  payments       Payment[]
+  refunds        Refund[]
+  stockMovements StockMovement[]
 
   @@unique([organizationId, id])
   @@unique([organizationId, number])
@@ -616,8 +635,9 @@ model InvoiceItem {
   freezeId       String?         @map("freeze_id") @db.Uuid
   createdAt      DateTime        @default(now()) @map("created_at") @db.Timestamptz(3)
 
-  organization Organization @relation(fields: [organizationId], references: [id])
-  invoice      Invoice      @relation(fields: [organizationId, invoiceId], references: [organizationId, id])
+  organization   Organization    @relation(fields: [organizationId], references: [id])
+  invoice        Invoice         @relation(fields: [organizationId, invoiceId], references: [organizationId, id])
+  stockMovements StockMovement[]
 
   @@unique([organizationId, id])
   @@index([organizationId, invoiceId])
@@ -631,7 +651,8 @@ model Payment {
   id             String        @id @default(uuid(7)) @db.Uuid
   organizationId String        @map("organization_id") @db.Uuid
   invoiceId      String        @map("invoice_id") @db.Uuid
-  memberId       String        @map("member_id") @db.Uuid
+  // null: a shop sale to someone who is not a member.
+  memberId       String?       @map("member_id") @db.Uuid
   locationId     String        @map("location_id") @db.Uuid
   cashShiftId    String?       @map("cash_shift_id") @db.Uuid
   method         PaymentMethod
@@ -647,7 +668,7 @@ model Payment {
 
   organization Organization @relation(fields: [organizationId], references: [id])
   invoice      Invoice      @relation(fields: [organizationId, invoiceId], references: [organizationId, id])
-  member       Member       @relation(fields: [organizationId, memberId], references: [organizationId, id])
+  member       Member?      @relation(fields: [organizationId, memberId], references: [organizationId, id], onDelete: Restrict)
   location     Location     @relation(fields: [organizationId, locationId], references: [organizationId, id])
   cashShift    CashShift?   @relation(fields: [organizationId, cashShiftId], references: [organizationId, id])
   refunds      Refund[]
@@ -1012,4 +1033,136 @@ model Notification {
   @@unique([organizationId, dedupeKey])
   @@index([organizationId, memberId, createdAt])
   @@map("notifications")
+}
+
+// ---------------------------------------------------------------------------
+// Shop (docs/TZ.md F-4.8, docs/ADR/0013-shop.md)
+// ---------------------------------------------------------------------------
+
+enum ProductBaseUnit {
+  piece
+  gram
+  ml
+
+  @@map("product_base_unit")
+}
+
+enum StockMovementKind {
+  receipt
+  sale
+  return
+  write_off
+  count_adjust
+
+  @@map("stock_movement_kind")
+}
+
+// Goods the club sells. Stock is counted in the base unit as whole numbers.
+model Product {
+  id                String          @id @default(uuid(7)) @db.Uuid
+  organizationId    String          @map("organization_id") @db.Uuid
+  name              String
+  category          String?
+  barcode           String?
+  baseUnit          ProductBaseUnit @map("base_unit")
+  lowStockThreshold Int?            @map("low_stock_threshold")
+  // For fiscal receipts later (docs/TZ.md section 8): IKPU / MXIK code, VAT in basis points.
+  ikpuCode          String?         @map("ikpu_code")
+  vatRateBp         Int?            @map("vat_rate_bp")
+  currency          String          @db.Char(3)
+  isActive          Boolean         @default(true) @map("is_active")
+  createdAt         DateTime        @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt         DateTime        @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt         DateTime?       @map("deleted_at") @db.Timestamptz(3)
+
+  organization Organization    @relation(fields: [organizationId], references: [id])
+  units        ProductUnit[]
+  stockLevels  StockLevel[]
+  movements    StockMovement[]
+
+  @@unique([organizationId, id])
+  @@index([organizationId, name])
+  @@map("products")
+}
+
+// A way to count a product when buying or selling it: "Portion" = 30 g. Priced units can
+// be sold; the price is copied to the invoice line at the sale.
+model ProductUnit {
+  id             String    @id @default(uuid(7)) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  productId      String    @map("product_id") @db.Uuid
+  name           String
+  baseQuantity   Int       @map("base_quantity")
+  priceMinor     BigInt?   @map("price_minor")
+  isActive       Boolean   @default(true) @map("is_active")
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt      DateTime? @map("deleted_at") @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  product      Product      @relation(fields: [organizationId, productId], references: [organizationId, id])
+
+  @@unique([organizationId, id])
+  @@index([organizationId, productId])
+  @@map("product_units")
+}
+
+// Stock of a product at a location and what it cost in total (average cost). Changed
+// only together with a stock_movements row, under a row lock.
+model StockLevel {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  productId      String   @map("product_id") @db.Uuid
+  locationId     String   @map("location_id") @db.Uuid
+  onHand         Int      @default(0) @map("on_hand")
+  valueMinor     BigInt   @default(0) @map("value_minor")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  product      Product      @relation(fields: [organizationId, productId], references: [organizationId, id])
+  location     Location     @relation(fields: [organizationId, locationId], references: [organizationId, id])
+
+  @@unique([organizationId, id])
+  @@unique([organizationId, productId, locationId])
+  @@map("stock_levels")
+}
+
+// Every change of stock. Insert and read only, like payments.
+model StockMovement {
+  id              String            @id @default(uuid(7)) @db.Uuid
+  organizationId  String            @map("organization_id") @db.Uuid
+  productId       String            @map("product_id") @db.Uuid
+  locationId      String            @map("location_id") @db.Uuid
+  kind            StockMovementKind
+  // Signed, in base units.
+  quantityDelta   Int               @map("quantity_delta")
+  // Signed change of the stock's total cost.
+  valueDeltaMinor BigInt            @map("value_delta_minor")
+  // Sales positive, returns negative, otherwise 0.
+  revenueMinor    BigInt            @default(0) @map("revenue_minor")
+  currency        String            @db.Char(3)
+  // The unit as entered, copied: its name, how many, and its size in base units.
+  unitName        String?           @map("unit_name")
+  unitCount       Int?              @map("unit_count")
+  unitBase        Int?              @map("unit_base")
+  reason          String?
+  supplier        String?
+  invoiceId       String?           @map("invoice_id") @db.Uuid
+  invoiceItemId   String?           @map("invoice_item_id") @db.Uuid
+  // users.id
+  createdBy       String            @map("created_by") @db.Uuid
+  createdAt       DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  product      Product      @relation(fields: [organizationId, productId], references: [organizationId, id])
+  location     Location     @relation(fields: [organizationId, locationId], references: [organizationId, id])
+  invoice      Invoice?     @relation(fields: [organizationId, invoiceId], references: [organizationId, id], onDelete: Restrict)
+  invoiceItem  InvoiceItem? @relation(fields: [organizationId, invoiceItemId], references: [organizationId, id], onDelete: Restrict)
+
+  @@unique([organizationId, id])
+  @@index([organizationId, locationId, createdAt])
+  @@index([organizationId, productId])
+  @@index([organizationId, invoiceItemId])
+  @@map("stock_movements")
 }
