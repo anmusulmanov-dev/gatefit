@@ -41,6 +41,7 @@ export function MembersList({ scope }: { scope: MemberScope }) {
   const t = useTranslations();
   const canManage = useCan('members.manage');
   const canImport = useCan('members.import');
+  const canImportMemberships = useCan('members.import', 'memberships.sell');
   const canExport = useCan('members.export');
   const locations = useMemberLocations(scope);
   const exporting = useApiAction();
@@ -130,6 +131,11 @@ export function MembersList({ scope }: { scope: MemberScope }) {
           {canImport && (
             <Button variant="outline" asChild>
               <Link href="/members/import">{t('members.import')}</Link>
+            </Button>
+          )}
+          {canImportMemberships && (
+            <Button variant="outline" asChild>
+              <Link href="/members/import/memberships">{t('membershipImport.open')}</Link>
             </Button>
           )}
           {canManage && (

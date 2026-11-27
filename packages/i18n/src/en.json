@@ -127,7 +127,9 @@
     "PRODUCT_UNIT_FIXED": "An existing unit keeps its size. Add a new unit instead.",
     "PRODUCT_BARCODE_TAKEN": "Another product has this barcode.",
     "WALK_IN_FULL_PAYMENT": "Someone who is not a member pays the whole amount.",
-    "RETURN_EXCEEDS_SOLD": "You cannot return more than was sold."
+    "RETURN_EXCEEDS_SOLD": "You cannot return more than was sold.",
+    "IMPORT_NOT_FINISHED": "Only a finished import can be undone.",
+    "IMPORT_REVERT_BLOCKED": "Cannot undo: members have come in on these memberships or paid."
   },
   "organization": {
     "missingTitle": "Organization not found",
@@ -795,7 +797,8 @@
       "reason": "Reason",
       "confirm": "Cancel membership",
       "reasonShown": "Cancelled: {reason}"
-    }
+    },
+    "imported": "Imported"
   },
   "billing": {
     "method": "Payment method",
@@ -1147,6 +1150,73 @@
       "sold": "Sold",
       "stockValue": "Cost of goods in stock: {amount}",
       "empty": "Nothing happened in this period."
+    }
+  },
+  "membershipFile": {
+    "columns": {
+      "phone": "Phone",
+      "plan": "Plan",
+      "startsOn": "Start date",
+      "endsOn": "End date",
+      "visitsLeft": "Visits left",
+      "debt": "Debt",
+      "dueOn": "Due date",
+      "location": "Location"
+    }
+  },
+  "membershipImport": {
+    "open": "Import memberships",
+    "title": "Import memberships",
+    "intro": "Bring in memberships running in your old system: one row per membership. Import the members and create the plans first. Nothing is recorded as revenue or in the till; a debt opens an invoice.",
+    "uploadHint": "XLSX or CSV, up to 5 MB and 5,000 rows. Dates as 17.05.2026 or 2026-05-17.",
+    "mappingHint": "Say what each column holds. Phone, plan, start and end date are required. Without a location, the member's home location is used.",
+    "mappingInvalid": "Choose columns for the phone, the plan and both dates. One column per field.",
+    "debtTotal": "Debt to be opened: {amount}",
+    "start": "Import {count} memberships",
+    "finished": "Done: {created} memberships added.",
+    "skipped": "{count} rows skipped: the member got another membership meanwhile.",
+    "toMembers": "Go to members",
+    "history": "Earlier imports",
+    "historyEmpty": "No membership imports yet.",
+    "created": "Added: {count}",
+    "statusLabel": "Status",
+    "statuses": {
+      "uploaded": "Uploaded",
+      "validated": "Checked",
+      "queued": "Queued",
+      "running": "Importing",
+      "done": "Done",
+      "failed": "Failed"
+    },
+    "reverted": "Undone",
+    "revert": "Undo import",
+    "revertTitle": "Undo import",
+    "revertHint": "Every membership from this import is cancelled and the debt on them written off. Not possible once a member has come in on one of them or paid.",
+    "revertReason": "Reason",
+    "revertConfirm": "Undo",
+    "revertDone": "The import has been undone.",
+    "rowErrors": {
+      "PHONE_REQUIRED": "No phone",
+      "PHONE_INVALID": "Invalid phone number",
+      "MEMBER_NOT_FOUND": "No member with this phone (import members first)",
+      "MEMBER_ARCHIVED": "The member is archived",
+      "PLAN_REQUIRED": "No plan",
+      "PLAN_NOT_FOUND": "No plan with this name",
+      "PLAN_AMBIGUOUS": "Several plans have this name",
+      "DATE_REQUIRED": "No date",
+      "DATE_INVALID": "Invalid date (e.g. 17.05.2026)",
+      "END_BEFORE_START": "Ends before it starts",
+      "ALREADY_ENDED": "The membership has already ended",
+      "START_TOO_FAR_AHEAD": "Starts more than 90 days ahead",
+      "VISITS_REQUIRED": "No visits left given",
+      "VISITS_INVALID": "Visits left must be from 1 to the plan's limit",
+      "VISITS_NOT_APPLICABLE": "This plan has unlimited visits",
+      "DEBT_INVALID": "Invalid debt amount",
+      "DUE_DATE_INVALID": "Invalid or past due date",
+      "LOCATION_NOT_FOUND": "No location with this name",
+      "LOCATION_NOT_ASSIGNED": "You don't work at this location",
+      "PLAN_NOT_AT_LOCATION": "The plan is not valid at this location",
+      "OVERLAP": "The member has another membership on these days"
     }
   }
 }

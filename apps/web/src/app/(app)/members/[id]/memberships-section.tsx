@@ -126,6 +126,7 @@ export function MembershipsSection({
                   <span className="font-medium">{membership.plan.name}</span>
                   <PlanTypeBadge type={membership.plan.type} />
                   <MembershipStatusBadge status={membership.status} />
+                  {membership.importId && <Badge tone="muted">{t('memberships.imported')}</Badge>}
                 </div>
                 <div className="text-sm text-muted-foreground">
                   {[

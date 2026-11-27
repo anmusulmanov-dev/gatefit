@@ -84,6 +84,8 @@ const TRANSLATED_ERROR_CODES = [
   'IMPORT_TOO_MANY_ROWS',
   'IMPORT_NOT_VALIDATED',
   'IMPORT_ALREADY_STARTED',
+  'IMPORT_NOT_FINISHED',
+  'IMPORT_REVERT_BLOCKED',
 ] as const;
 
 export type ErrorMessageKey = `errors.${(typeof TRANSLATED_ERROR_CODES)[number] | 'generic'}`;
