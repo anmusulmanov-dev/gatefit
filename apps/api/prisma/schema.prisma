@@ -187,6 +187,7 @@ model Organization {
   subscriptions         SaasSubscription[]
   members               Member[]
   memberImports         MemberImport[]
+  membershipImports     MembershipImport[]
   plans                 Plan[]
   memberships           Membership[]
   freezes               MembershipFreeze[]
@@ -504,12 +505,59 @@ model Membership {
   member       Member             @relation(fields: [organizationId, memberId], references: [organizationId, id])
   plan         Plan               @relation(fields: [organizationId, planId], references: [organizationId, id])
   location     Location           @relation(fields: [organizationId, locationId], references: [organizationId, id])
+  // Brought in from another system by a membership import, with its row in the file.
+  importId     String?            @map("import_id") @db.Uuid
+  importRow    Int?               @map("import_row")
   freezes      MembershipFreeze[]
+  import       MembershipImport?  @relation(fields: [organizationId, importId], references: [organizationId, id])
 
   @@unique([organizationId, id])
+  @@unique([organizationId, importId, importRow])
   @@index([organizationId, memberId])
   @@index([statusChangesAt])
   @@map("memberships")
+}
+
+// A file of memberships already running in a gym's old system (docs/TZ.md F-1.4.1).
+model MembershipImport {
+  id             String       @id @default(uuid(7)) @db.Uuid
+  organizationId String       @map("organization_id") @db.Uuid
+  // users.id of who uploaded it.
+  createdBy      String       @map("created_by") @db.Uuid
+  // The uploader's staff record and the locations they could see then (null: all), so the
+  // background job writes exactly what they were allowed to.
+  staffId        String       @map("staff_id") @db.Uuid
+  locationIds    Json?        @map("location_ids")
+  status         ImportStatus @default(uploaded)
+  fileKey        String       @map("file_key")
+  fileName       String       @map("file_name")
+  headers        Json
+  // { field: columnIndex }
+  mapping        Json
+  sampleRows     Json         @map("sample_rows")
+  totalRows      Int          @map("total_rows")
+  validRows      Int?         @map("valid_rows")
+  // Owed on the valid rows, in the organization's currency.
+  debtMinor      BigInt?      @map("debt_minor")
+  errorCount     Int          @default(0) @map("error_count")
+  // [{ row, field, code }], the first 1000
+  errors         Json         @default("[]")
+  createdCount   Int?         @map("created_count")
+  skippedCount   Int?         @map("skipped_count")
+  finishedAt     DateTime?    @map("finished_at") @db.Timestamptz(3)
+  revertedAt     DateTime?    @map("reverted_at") @db.Timestamptz(3)
+  revertedBy     String?      @map("reverted_by") @db.Uuid
+  revertReason   String?      @map("revert_reason")
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime     @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt      DateTime?    @map("deleted_at") @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  memberships  Membership[]
+
+  @@unique([organizationId, id])
+  @@index([organizationId, createdAt])
+  @@map("membership_imports")
 }
 
 // A pause of a membership (docs/TZ.md F-2.4). It moves the membership's last day later by

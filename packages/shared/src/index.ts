@@ -8,6 +8,7 @@ export * from './dates';
 export * from './errors';
 export * from './member-app';
 export * from './member-imports';
+export * from './membership-imports';
 export * from './members';
 export * from './modules';
 export * from './money';
