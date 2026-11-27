@@ -32,6 +32,7 @@ import { FilesModule } from './modules/files/files.module';
 import { HealthModule } from './modules/health/health.module';
 import { MembersModule } from './modules/members/members.module';
 import { PlansModule } from './modules/plans/plans.module';
+import { ShopModule } from './modules/shop/shop.module';
 import { PlatformModule } from './modules/platform/platform.module';
 import { StaffModule } from './modules/staff/staff.module';
 import { OrganizationModule } from './modules/tenancy/organization.module';
@@ -58,6 +59,7 @@ import { OrganizationModule } from './modules/tenancy/organization.module';
     StaffModule,
     MembersModule,
     PlansModule,
+    ShopModule,
     BillingModule,
     AccessModule,
     NotificationsModule,

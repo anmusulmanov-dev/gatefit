@@ -119,7 +119,15 @@
     "FILE_UNREADABLE": "The file cannot be read. Save it as XLSX or CSV (UTF-8).",
     "IMPORT_TOO_MANY_ROWS": "Too many rows: up to 10,000 members per file.",
     "IMPORT_NOT_VALIDATED": "Check the rows first.",
-    "IMPORT_ALREADY_STARTED": "This import has already been started."
+    "IMPORT_ALREADY_STARTED": "This import has already been started.",
+    "RECEIPT_NO_MEMBER": "The buyer is not a member: the receipt cannot be texted.",
+    "INSUFFICIENT_STOCK": "Not enough in stock.",
+    "PRODUCT_INACTIVE": "This product is not on sale.",
+    "PRODUCT_UNIT_NOT_FOR_SALE": "Not sold in this unit: it has no price.",
+    "PRODUCT_UNIT_FIXED": "An existing unit keeps its size. Add a new unit instead.",
+    "PRODUCT_BARCODE_TAKEN": "Another product has this barcode.",
+    "WALK_IN_FULL_PAYMENT": "Someone who is not a member pays the whole amount.",
+    "RETURN_EXCEEDS_SOLD": "You cannot return more than was sold."
   },
   "organization": {
     "missingTitle": "Organization not found",
@@ -193,7 +201,8 @@
     "checkIns": "Entries",
     "plans": "Plans",
     "payments": "Payments",
-    "cashShift": "Cash desk"
+    "cashShift": "Cash desk",
+    "shop": "Shop"
   },
   "settings": {
     "title": "Settings",
@@ -347,7 +356,8 @@
     "cash_shifts": "Cash desk",
     "reports": "Reports",
     "notifications": "Messages",
-    "audit": "Audit"
+    "audit": "Audit",
+    "shop": "Shop"
   },
   "permissions": {
     "organization": {
@@ -404,6 +414,12 @@
     },
     "audit": {
       "read": "View audit log"
+    },
+    "shop": {
+      "sell": "Sell goods",
+      "stock": "Receive goods, write off and count stock",
+      "manage": "Manage products and prices",
+      "reports": "See cost and profit reports"
     }
   },
   "platform": {
@@ -497,7 +513,8 @@
     "reports_extended": "Extended reports",
     "turnstile": "Turnstile",
     "network_membership": "Network membership",
-    "api_webhooks": "API and webhooks"
+    "api_webhooks": "API and webhooks",
+    "shop": "Shop"
   },
   "memberFile": {
     "columns": {
@@ -958,7 +975,8 @@
       "sending": "{count, plural, one {# entry} other {# entries}} waiting to be sent",
       "decided": "Checked offline: it will be sent when the internet is back.",
       "noSnapshot": "No internet and no saved member list for this location yet. Let the member in by hand when the internet is back."
-    }
+    },
+    "sell": "Sell goods"
   },
   "dashboard": {
     "title": "Day at a glance",
@@ -996,5 +1014,139 @@
     "preview": "Preview",
     "reset": "Back to standard",
     "save": "Save"
+  },
+  "shop": {
+    "title": "Shop",
+    "location": "Location",
+    "noLocation": "You are not assigned to a location.",
+    "walkIn": "Walk-in customer",
+    "tabs": {
+      "sales": "Sales",
+      "products": "Products",
+      "stock": "Stock",
+      "report": "Report"
+    },
+    "baseUnits": {
+      "piece": "pcs",
+      "gram": "g",
+      "ml": "ml"
+    },
+    "baseUnitNames": {
+      "piece": "Piece",
+      "gram": "Gram",
+      "ml": "Millilitre"
+    },
+    "line": {
+      "product": "Product",
+      "unit": "Unit",
+      "quantity": "Quantity",
+      "choose": "Choose",
+      "inStock": "In stock: {amount}",
+      "invalid": "Enter a product, a unit and a whole quantity."
+    },
+    "sale": {
+      "action": "Sell goods",
+      "title": "Sell goods",
+      "buyer": "Buyer",
+      "addTitle": "Add to cart",
+      "add": "Add",
+      "remove": "Remove",
+      "cart": "Cart",
+      "empty": "The cart is empty.",
+      "noProducts": "Nothing on sale. Add a product with a price first.",
+      "walkInFull": "A walk-in customer pays in full.",
+      "debt": "{amount} stays owed. It does not stop them at the door.",
+      "onCredit": "Sell on credit",
+      "doneTitle": "Sold"
+    },
+    "sales": {
+      "empty": "No sales yet.",
+      "credited": "{amount} returned",
+      "receipt": "Receipt",
+      "return": "Return"
+    },
+    "products": {
+      "search": "Search",
+      "add": "Add product",
+      "empty": "No products.",
+      "low": "Running low",
+      "inactive": "Not on sale",
+      "onHand": "In stock: {amount}",
+      "value": "cost {amount}",
+      "edit": "Edit",
+      "editNamed": "Edit {name}"
+    },
+    "product": {
+      "titleNew": "New product",
+      "titleEdit": "Edit product",
+      "name": "Name",
+      "category": "Category",
+      "baseUnit": "Stock unit",
+      "baseUnitHint": "Stock is counted in this unit, as whole numbers.",
+      "lowStock": "Running-low threshold",
+      "lowStockHint": "In {unit}. Below this the product is marked.",
+      "barcode": "Barcode",
+      "units": "Packs and portions",
+      "unitsHint": "For example: Portion = 30 g, Bag 5 kg = 5000 g. A unit without a price is for receiving only.",
+      "unitName": "Unit name",
+      "unitSize": "Size ({unit})",
+      "unitPrice": "Price ({currency})",
+      "unitActive": "In use",
+      "addUnit": "Add unit",
+      "isActive": "On sale",
+      "invalidUnit": "Give each unit a name, a whole size and a valid price."
+    },
+    "stock": {
+      "receive": "Receive",
+      "writeOff": "Write off",
+      "count": "Stocktake",
+      "empty": "No stock movements yet.",
+      "kinds": {
+        "receipt": "Received",
+        "sale": "Sale",
+        "return": "Return",
+        "write_off": "Written off",
+        "count_adjust": "Stocktake difference"
+      }
+    },
+    "receive": {
+      "title": "Receive goods",
+      "cost": "Cost (total)",
+      "supplier": "Supplier",
+      "confirm": "Receive"
+    },
+    "writeOff": {
+      "title": "Write off",
+      "reason": "Reason",
+      "confirm": "Write off"
+    },
+    "count": {
+      "title": "Stocktake",
+      "hint": "Enter what you counted, in the stock unit. Blank rows stay as they are; differences are booked.",
+      "booked": "On the books: {amount}",
+      "note": "Note",
+      "nothing": "Enter at least one product.",
+      "confirm": "Save"
+    },
+    "return": {
+      "title": "Return goods",
+      "description": "Money goes back the way it was paid; anything owed is reduced instead.",
+      "left": "Up to {count} can be returned",
+      "restock": "Back to stock (fit to sell)",
+      "reason": "Reason",
+      "nothing": "Enter how many to return and why.",
+      "confirm": "Return"
+    },
+    "report": {
+      "from": "From",
+      "to": "To",
+      "revenue": "Revenue",
+      "cost": "Cost",
+      "profit": "Profit",
+      "loss": "Losses",
+      "sold": "Sold",
+      "stockValue": "Cost of goods in stock: {amount}",
+      "empty": "Nothing happened in this period."
+    }
   }
 }

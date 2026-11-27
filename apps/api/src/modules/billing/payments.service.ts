@@ -204,7 +204,12 @@ export class PaymentsService {
       where: { id: invoice.id },
       data: {
         paidMinor: paid,
-        status: invoiceStatus(invoice.totalMinor, paid, invoice.status === 'void'),
+        status: invoiceStatus(
+          invoice.totalMinor,
+          paid,
+          invoice.status === 'void',
+          invoice.creditedMinor,
+        ),
       },
     });
     await this.audit.record(tx, caller.organizationId, caller.actor, {
@@ -227,7 +232,9 @@ export class PaymentsService {
       currency: refund.currency,
       items: [{ description: input.reason, quantity: 1, totalMinor: amount }],
     });
-    await this.members.refreshStatus(tx, payment.memberId);
+    if (payment.memberId) {
+      await this.members.refreshStatus(tx, payment.memberId);
+    }
     return {
       id: refund.id,
       paymentId: id,
@@ -258,7 +265,7 @@ export class PaymentsService {
       method: payment.method,
       amountMinor: payment.amountMinor.toString(),
       currency: payment.currency,
-      member: {
+      member: payment.member && {
         firstName: payment.member.firstName,
         lastName: payment.member.lastName,
         phone: payment.member.phone,
@@ -281,6 +288,9 @@ export class PaymentsService {
   async sendReceiptSms(tx: TenantTransaction, caller: StaffCaller, id: string): Promise<void> {
     const receipt = await this.receipt(tx, caller, id);
     const payment = await this.findVisible(tx, caller, id);
+    if (!payment.memberId || !receipt.member) {
+      throw unprocessable(ErrorCode.RECEIPT_NO_MEMBER, 'The buyer is not a member: no phone');
+    }
     await this.notifications.send(tx, caller.organizationId, {
       kind: 'payment_receipt',
       template: 'payment_receipt',
@@ -292,6 +302,49 @@ export class PaymentsService {
         balance: formatMinor(receipt.balanceMinor, receipt.currency, locale),
       }),
     });
+  }
+
+  /**
+   * Takes `amount` off an invoice as goods come back (docs/TZ.md F-4.8). Money paid beyond
+   * the new total is given back from the latest payments first, each in its own method;
+   * what was still owed simply shrinks. Returns the refunds made.
+   */
+  async creditInvoice(
+    tx: TenantTransaction,
+    caller: StaffCaller,
+    invoiceId: string,
+    amount: bigint,
+    reason: string,
+  ): Promise<RefundDto[]> {
+    const invoice = await this.invoices.lock(tx, invoiceId);
+    if (invoice.status === 'void') {
+      throw conflict(ErrorCode.INVOICE_VOID, 'This invoice was written off');
+    }
+    let excess = invoice.paidMinor - (invoice.totalMinor - invoice.creditedMinor - amount);
+    const refunds: RefundDto[] = [];
+    if (excess > 0n) {
+      const payments = await tx.payment.findMany({
+        where: { invoiceId },
+        orderBy: { id: 'desc' },
+        include: { refunds: { select: { amountMinor: true } } },
+      });
+      for (const payment of payments) {
+        const left =
+          payment.amountMinor - payment.refunds.reduce((sum, row) => sum + row.amountMinor, 0n);
+        const take = left < excess ? left : excess;
+        if (take > 0n) {
+          refunds.push(
+            await this.refund(tx, caller, payment.id, { amountMinor: take.toString(), reason }),
+          );
+          excess -= take;
+        }
+        if (excess === 0n) {
+          break;
+        }
+      }
+    }
+    await this.invoices.credit(tx, caller, invoiceId, amount, reason);
+    return refunds;
   }
 
   private async findVisible(tx: TenantTransaction, caller: StaffCaller, id: string) {

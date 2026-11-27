@@ -19,5 +19,6 @@ export * from './plans';
 export * from './platform';
 export * from './roles';
 export * from './server-session';
+export * from './shop';
 export * from './staff';
 export * from './theme';

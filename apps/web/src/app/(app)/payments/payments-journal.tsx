@@ -155,9 +155,13 @@ export function PaymentsJournal({ scope }: { scope: MemberScope }) {
                   <span className="text-muted-foreground">
                     {format.dateTime(new Date(payment.createdAt), { timeStyle: 'short' })}
                     {' · '}
-                    <Link href={`/members/${payment.member.id}`} className="hover:underline">
-                      {payment.member.lastName} {payment.member.firstName}
-                    </Link>
+                    {payment.member ? (
+                      <Link href={`/members/${payment.member.id}`} className="hover:underline">
+                        {payment.member.lastName} {payment.member.firstName}
+                      </Link>
+                    ) : (
+                      t('shop.walkIn')
+                    )}
                     {' · '}
                     {t('billing.invoiceNumber', { number: payment.invoice.number })}
                     {payment.refundedMinor !== '0' &&

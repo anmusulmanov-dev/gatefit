@@ -119,7 +119,15 @@
     "FILE_UNREADABLE": "Faylni o'qib bo'lmadi. XLSX yoki CSV (UTF-8) qilib saqlang.",
     "IMPORT_TOO_MANY_ROWS": "Qatorlar juda ko'p: bitta faylda 10 000 tagacha a'zo.",
     "IMPORT_NOT_VALIDATED": "Avval qatorlarni tekshiring.",
-    "IMPORT_ALREADY_STARTED": "Bu import allaqachon boshlangan."
+    "IMPORT_ALREADY_STARTED": "Bu import allaqachon boshlangan.",
+    "RECEIPT_NO_MEMBER": "Xaridor a'zo emas: chekni SMS bilan yuborib bo'lmaydi.",
+    "INSUFFICIENT_STOCK": "Omborda yetarli mahsulot yo'q.",
+    "PRODUCT_INACTIVE": "Bu mahsulot sotuvda emas.",
+    "PRODUCT_UNIT_NOT_FOR_SALE": "Bu birlikda sotilmaydi: narxi yo'q.",
+    "PRODUCT_UNIT_FIXED": "Mavjud birlikning hajmini o'zgartirib bo'lmaydi. Yangi birlik qo'shing.",
+    "PRODUCT_BARCODE_TAKEN": "Bu shtrix-kod boshqa mahsulotda bor.",
+    "WALK_IN_FULL_PAYMENT": "Begona xaridor summani to'liq to'laydi.",
+    "RETURN_EXCEEDS_SOLD": "Sotilganidan ko'p qaytarib bo'lmaydi."
   },
   "organization": {
     "missingTitle": "Tashkilot topilmadi",
@@ -193,7 +201,8 @@
     "checkIns": "Kirishlar",
     "plans": "Tariflar",
     "payments": "To'lovlar",
-    "cashShift": "Kassa"
+    "cashShift": "Kassa",
+    "shop": "Do'kon"
   },
   "settings": {
     "title": "Sozlamalar",
@@ -347,7 +356,8 @@
     "cash_shifts": "Kassa",
     "reports": "Hisobotlar",
     "notifications": "Xabarlar",
-    "audit": "Audit"
+    "audit": "Audit",
+    "shop": "Do'kon"
   },
   "permissions": {
     "organization": {
@@ -404,6 +414,12 @@
     },
     "audit": {
       "read": "Audit jurnalini ko'rish"
+    },
+    "shop": {
+      "sell": "Mahsulot sotish",
+      "stock": "Kirim, hisobdan chiqarish va inventarizatsiya",
+      "manage": "Mahsulotlar va narxlarni boshqarish",
+      "reports": "Tannarx va foyda hisobotini ko'rish"
     }
   },
   "platform": {
@@ -497,7 +513,8 @@
     "reports_extended": "Kengaytirilgan hisobotlar",
     "turnstile": "Turniket",
     "network_membership": "Tarmoq abonementi",
-    "api_webhooks": "API va vebhuklar"
+    "api_webhooks": "API va vebhuklar",
+    "shop": "Do'kon"
   },
   "memberFile": {
     "columns": {
@@ -958,7 +975,8 @@
       "sending": "Yuborilishi kutilmoqda: {count} ta",
       "decided": "Oflayn tekshirildi: internet qaytganda yuboriladi.",
       "noSnapshot": "Internet yo'q va bu filial uchun saqlangan a'zolar ro'yxati hali yo'q. Internet qaytganda a'zoni qo'lda kiriting."
-    }
+    },
+    "sell": "Mahsulot sotish"
   },
   "dashboard": {
     "title": "Kun xulosasi",
@@ -996,5 +1014,139 @@
     "preview": "Namuna",
     "reset": "Standartga qaytarish",
     "save": "Saqlash"
+  },
+  "shop": {
+    "title": "Do'kon",
+    "location": "Filial",
+    "noLocation": "Sizga filial biriktirilmagan.",
+    "walkIn": "Begona xaridor",
+    "tabs": {
+      "sales": "Sotuvlar",
+      "products": "Mahsulotlar",
+      "stock": "Ombor",
+      "report": "Hisobot"
+    },
+    "baseUnits": {
+      "piece": "dona",
+      "gram": "g",
+      "ml": "ml"
+    },
+    "baseUnitNames": {
+      "piece": "Dona",
+      "gram": "Gramm",
+      "ml": "Millilitr"
+    },
+    "line": {
+      "product": "Mahsulot",
+      "unit": "Birlik",
+      "quantity": "Soni",
+      "choose": "Tanlang",
+      "inStock": "Qoldiq: {amount}",
+      "invalid": "Mahsulot, birlik va to'g'ri sonni kiriting."
+    },
+    "sale": {
+      "action": "Mahsulot sotish",
+      "title": "Mahsulot sotish",
+      "buyer": "Xaridor",
+      "addTitle": "Savatchaga qo'shish",
+      "add": "Qo'shish",
+      "remove": "Olib tashlash",
+      "cart": "Savatcha",
+      "empty": "Savatcha bo'sh.",
+      "noProducts": "Sotuvdagi mahsulot yo'q. Avval mahsulot qo'shing va narx bering.",
+      "walkInFull": "Begona xaridor to'liq to'laydi.",
+      "debt": "{amount} qarz qoladi. Bu qarz zalga kirishni to'smaydi.",
+      "onCredit": "Qarzga sotish",
+      "doneTitle": "Sotildi"
+    },
+    "sales": {
+      "empty": "Hali sotuvlar yo'q.",
+      "credited": "{amount} qaytarilgan",
+      "receipt": "Chek",
+      "return": "Qaytarish"
+    },
+    "products": {
+      "search": "Qidirish",
+      "add": "Mahsulot qo'shish",
+      "empty": "Mahsulotlar yo'q.",
+      "low": "Kam qoldi",
+      "inactive": "Sotuvda emas",
+      "onHand": "Qoldiq: {amount}",
+      "value": "tannarxi {amount}",
+      "edit": "Tahrirlash",
+      "editNamed": "{name}: tahrirlash"
+    },
+    "product": {
+      "titleNew": "Yangi mahsulot",
+      "titleEdit": "Mahsulotni tahrirlash",
+      "name": "Nomi",
+      "category": "Turkumi",
+      "baseUnit": "O'lchov birligi",
+      "baseUnitHint": "Qoldiq shu birlikda butun son bilan hisoblanadi.",
+      "lowStock": "Kam qoldi chegarasi",
+      "lowStockHint": "{unit} da. Qoldiq shundan kam bo'lsa belgilanadi.",
+      "barcode": "Shtrix-kod",
+      "units": "Qadoq va porsiyalar",
+      "unitsHint": "Masalan: Porsiya = 30 g, Qadoq 5 kg = 5000 g. Narxsiz birlik faqat kirim uchun.",
+      "unitName": "Birlik nomi",
+      "unitSize": "Hajmi ({unit})",
+      "unitPrice": "Narxi ({currency})",
+      "unitActive": "Ishlatiladi",
+      "addUnit": "Birlik qo'shish",
+      "isActive": "Sotuvda",
+      "invalidUnit": "Har birlikka nom, butun son hajm va to'g'ri narx kiriting."
+    },
+    "stock": {
+      "receive": "Kirim",
+      "writeOff": "Hisobdan chiqarish",
+      "count": "Inventarizatsiya",
+      "empty": "Hali harakatlar yo'q.",
+      "kinds": {
+        "receipt": "Kirim",
+        "sale": "Sotuv",
+        "return": "Qaytarish",
+        "write_off": "Hisobdan chiqarish",
+        "count_adjust": "Inventarizatsiya farqi"
+      }
+    },
+    "receive": {
+      "title": "Mahsulot kirimi",
+      "cost": "Tannarxi (jami)",
+      "supplier": "Yetkazib beruvchi",
+      "confirm": "Kirim qilish"
+    },
+    "writeOff": {
+      "title": "Hisobdan chiqarish",
+      "reason": "Sabab",
+      "confirm": "Hisobdan chiqarish"
+    },
+    "count": {
+      "title": "Inventarizatsiya",
+      "hint": "Sanalgan miqdorni o'lchov birligida kiriting. Bo'sh qoldirilganlar o'zgarmaydi, farq hisobga yoziladi.",
+      "booked": "Hisobda: {amount}",
+      "note": "Izoh",
+      "nothing": "Hech bo'lmasa bitta mahsulotni kiriting.",
+      "confirm": "Saqlash"
+    },
+    "return": {
+      "title": "Mahsulotni qaytarish",
+      "description": "Pul to'langan usulda qaytariladi; qarz bo'lsa qarz kamayadi.",
+      "left": "{count} tagacha qaytarish mumkin",
+      "restock": "Omborga qaytarish (yana sotsa bo'ladi)",
+      "reason": "Sabab",
+      "nothing": "Qaytariladigan miqdor va sababni kiriting.",
+      "confirm": "Qaytarish"
+    },
+    "report": {
+      "from": "Dan",
+      "to": "Gacha",
+      "revenue": "Tushum",
+      "cost": "Tannarx",
+      "profit": "Foyda",
+      "loss": "Yo'qotish",
+      "sold": "Sotildi",
+      "stockValue": "Ombordagi tovar tannarxi: {amount}",
+      "empty": "Bu davrda harakat yo'q."
+    }
   }
 }

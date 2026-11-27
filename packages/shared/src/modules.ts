@@ -12,6 +12,7 @@ export const SAAS_MODULES = [
   'cash_shifts',
   'reports_daily',
   'member_app',
+  'shop',
   // Standard
   'online_payments',
   'schedule',
@@ -38,6 +39,7 @@ const START: SaasModule[] = [
   'cash_shifts',
   'reports_daily',
   'member_app',
+  'shop',
 ];
 const STANDARD: SaasModule[] = [
   ...START,

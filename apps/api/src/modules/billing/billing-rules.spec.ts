@@ -17,19 +17,35 @@ describe('invoiceStatus', () => {
   it('goes back from paid after a refund', () => {
     expect(invoiceStatus(100n, 70n, false)).toBe('partially_paid');
   });
+
+  it('asks only for what is left after returned goods are taken off', () => {
+    expect(invoiceStatus(100n, 70n, false, 30n)).toBe('paid');
+    expect(invoiceStatus(100n, 0n, false, 100n)).toBe('paid');
+    expect(invoiceStatus(100n, 20n, false, 30n)).toBe('partially_paid');
+  });
 });
 
 describe('balanceOf', () => {
   it('is what is left, or nothing once void', () => {
-    expect(balanceOf({ totalMinor: 100n, paidMinor: 30n, status: 'partially_paid' })).toBe(70n);
-    expect(balanceOf({ totalMinor: 100n, paidMinor: 30n, status: 'void' })).toBe(0n);
+    expect(
+      balanceOf({ totalMinor: 100n, creditedMinor: 0n, paidMinor: 30n, status: 'partially_paid' }),
+    ).toBe(70n);
+    expect(balanceOf({ totalMinor: 100n, creditedMinor: 0n, paidMinor: 30n, status: 'void' })).toBe(
+      0n,
+    );
+  });
+
+  it('takes returned goods off what is owed', () => {
+    expect(
+      balanceOf({ totalMinor: 100n, creditedMinor: 30n, paidMinor: 20n, status: 'partially_paid' }),
+    ).toBe(50n);
   });
 
   it('handles amounts beyond what a float holds exactly', () => {
     const total = 9_007_199_254_740_993n;
-    expect(balanceOf({ totalMinor: total, paidMinor: 1n, status: 'partially_paid' })).toBe(
-      9_007_199_254_740_992n,
-    );
+    expect(
+      balanceOf({ totalMinor: total, creditedMinor: 0n, paidMinor: 1n, status: 'partially_paid' }),
+    ).toBe(9_007_199_254_740_992n);
   });
 });
 

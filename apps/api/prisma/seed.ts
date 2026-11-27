@@ -145,6 +145,55 @@ const DEMO_MEMBERSHIPS = [
 /** Members beyond this many have no membership yet. */
 const DEMO_MEMBERS_WITH_MEMBERSHIPS = 20;
 
+// Demo goods: protein bought by the 5 kg bag and sold by the 30 g portion, and so on.
+const SHOP_PRODUCTS: {
+  name: string;
+  category: string;
+  baseUnit: 'piece' | 'gram' | 'ml';
+  lowStockThreshold: number;
+  units: { name: string; baseQuantity: number; priceMinor: bigint | null }[];
+  received: { quantity: number; costMinor: bigint };
+}[] = [
+  {
+    name: 'Whey protein',
+    category: 'Sport ovqati',
+    baseUnit: 'gram',
+    lowStockThreshold: 1000,
+    units: [
+      { name: 'Qadoq 5 kg', baseQuantity: 5000, priceMinor: null },
+      { name: 'Porsiya 30 g', baseQuantity: 30, priceMinor: 1_500_000n },
+    ],
+    received: { quantity: 10_000, costMinor: 70_000_000n },
+  },
+  {
+    name: 'BCAA',
+    category: 'Sport ovqati',
+    baseUnit: 'gram',
+    lowStockThreshold: 200,
+    units: [
+      { name: 'Banka 400 g', baseQuantity: 400, priceMinor: 25_000_000n },
+      { name: 'Porsiya 10 g', baseQuantity: 10, priceMinor: 800_000n },
+    ],
+    received: { quantity: 2000, costMinor: 90_000_000n },
+  },
+  {
+    name: 'Protein batonchik',
+    category: 'Gazaklar',
+    baseUnit: 'piece',
+    lowStockThreshold: 10,
+    units: [{ name: 'Dona', baseQuantity: 1, priceMinor: 2_500_000n }],
+    received: { quantity: 48, costMinor: 72_000_000n },
+  },
+  {
+    name: 'Suv 0,5 l',
+    category: 'Ichimliklar',
+    baseUnit: 'piece',
+    lowStockThreshold: 24,
+    units: [{ name: 'Dona', baseQuantity: 1, priceMinor: 500_000n }],
+    received: { quantity: 120, costMinor: 36_000_000n },
+  },
+];
+
 function requireEnv(name: string): string {
   const value = process.env[name];
   if (!value) {
@@ -343,6 +392,49 @@ async function seed(prisma: PrismaClient): Promise<void> {
     );
   }
 
+  // The club's shop (docs/TZ.md F-4.8). Each product is created once, with one delivery
+  // at every location; later edits and stock changes are kept.
+  for (const item of SHOP_PRODUCTS) {
+    if (await prisma.product.findFirst({ where: { organizationId, name: item.name } })) {
+      continue;
+    }
+    const product = await prisma.product.create({
+      data: {
+        organizationId,
+        name: item.name,
+        category: item.category,
+        baseUnit: item.baseUnit,
+        lowStockThreshold: item.lowStockThreshold,
+        currency: organization.currency,
+        units: { create: item.units.map((unit) => ({ ...unit })) },
+      },
+    });
+    for (const location of locations) {
+      await prisma.stockLevel.create({
+        data: {
+          organizationId,
+          productId: product.id,
+          locationId: location.id,
+          onHand: item.received.quantity,
+          valueMinor: item.received.costMinor,
+        },
+      });
+      await prisma.stockMovement.create({
+        data: {
+          organizationId,
+          productId: product.id,
+          locationId: location.id,
+          kind: 'receipt',
+          quantityDelta: item.received.quantity,
+          valueDeltaMinor: item.received.costMinor,
+          currency: organization.currency,
+          supplier: 'Demo',
+          createdBy: owner.id,
+        },
+      });
+    }
+  }
+
   // Demo memberships, dated from today, for members who have none: in force, expired,
   // frozen. Statuses are computed by the same rules the API uses.
   const now = new Date();
@@ -487,7 +579,7 @@ async function seed(prisma: PrismaClient): Promise<void> {
   }
 
   console.log(
-    `Seeded organization "${organization.slug}": ${locations.length} locations, ${SYSTEM_ROLES.length} roles, 1 owner, ${DEMO_MEMBER_COUNT} members, ${CLUB_PLANS.length} club plans, demo memberships, 3 SaaS plans, 1 platform operator (credentials: SEED_* in .env).`,
+    `Seeded organization "${organization.slug}": ${locations.length} locations, ${SYSTEM_ROLES.length} roles, 1 owner, ${DEMO_MEMBER_COUNT} members, ${CLUB_PLANS.length} club plans, ${SHOP_PRODUCTS.length} shop products, demo memberships, 3 SaaS plans, 1 platform operator (credentials: SEED_* in .env).`,
   );
 }
 

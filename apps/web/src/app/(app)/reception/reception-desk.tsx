@@ -25,6 +25,7 @@ import { useApiAction, useApiGet } from '@/lib/use-api';
 
 import type { MemberScope } from '../members/member-scope';
 import { useMemberLocations } from '../members/member-ui';
+import { ShopSaleDialog } from '../shop/sale-dialog';
 import { CheckInBadge, useCheckInTime } from './access-ui';
 import { CameraScanner } from './camera-scanner';
 import { ManualEntryDialog } from './manual-entry-dialog';
@@ -44,6 +45,7 @@ const RECENT_LIMIT = 20;
 export function ReceptionDesk({ scope }: { scope: MemberScope }) {
   const t = useTranslations('access');
   const canManual = useCan('access.manual');
+  const canSell = useCan('shop.sell');
   const locations = useMemberLocations(scope);
   const [locationId, setLocationId] = useState(scope.currentLocationId ?? '');
   const location =
@@ -64,6 +66,7 @@ export function ReceptionDesk({ scope }: { scope: MemberScope }) {
   const [decidedOffline, setDecidedOffline] = useState(false);
   const [camera, setCamera] = useState(false);
   const [manual, setManual] = useState(false);
+  const [selling, setSelling] = useState(false);
   const [leftIds, setLeftIds] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const lastCode = useRef<{ code: string; at: number } | null>(null);
@@ -120,10 +123,10 @@ export function ReceptionDesk({ scope }: { scope: MemberScope }) {
 
   // The scanner types into the field: keep it focused unless a dialog is open.
   useEffect(() => {
-    if (!manual) {
+    if (!manual && !selling) {
       inputRef.current?.focus();
     }
-  }, [manual, result, location]);
+  }, [manual, selling, result, location]);
 
   function onKeyDown(event: KeyboardEvent<HTMLInputElement>) {
     if (event.key === 'Enter') {
@@ -224,6 +227,16 @@ export function ReceptionDesk({ scope }: { scope: MemberScope }) {
                 {t('manual.action')}
               </Button>
             )}
+            {canSell && (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setSelling(true);
+                }}
+              >
+                {t('sell')}
+              </Button>
+            )}
           </div>
           {camera && <CameraScanner onCode={check} />}
           <FormMessage error={verify.error} />
@@ -261,6 +274,19 @@ export function ReceptionDesk({ scope }: { scope: MemberScope }) {
         )}
       </section>
 
+      {selling && (
+        <ShopSaleDialog
+          location={location}
+          // The member just let in buys on their card; anyone else pays in full.
+          member={result?.member ?? null}
+          onClose={() => {
+            setSelling(false);
+          }}
+          onDone={() => {
+            setSelling(false);
+          }}
+        />
+      )}
       {manual && (
         <ManualEntryDialog
           locationId={location.id}

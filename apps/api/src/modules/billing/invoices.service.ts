@@ -4,6 +4,7 @@ import {
   type InvoiceCreateInput,
   type InvoiceDto,
   type InvoiceItemKind,
+  type InvoiceKind,
   type InvoiceListQuery,
   type InvoicePayInput,
   type InvoiceStatus,
@@ -65,19 +66,29 @@ export function toPaymentDto(row: PaymentRow): PaymentDto {
   };
 }
 
-/** An invoice's status from its amounts. */
-export function invoiceStatus(total: bigint, paid: bigint, voided: boolean): InvoiceStatus {
+/** An invoice's status from its amounts; `credited` is taken off the total by returns. */
+export function invoiceStatus(
+  total: bigint,
+  paid: bigint,
+  voided: boolean,
+  credited = 0n,
+): InvoiceStatus {
   if (voided) {
     return 'void';
   }
-  if (paid >= total) {
+  if (paid >= total - credited) {
     return 'paid';
   }
   return paid > 0n ? 'partially_paid' : 'open';
 }
 
-export function balanceOf(row: { totalMinor: bigint; paidMinor: bigint; status: InvoiceStatus }) {
-  return row.status === 'void' ? 0n : row.totalMinor - row.paidMinor;
+export function balanceOf(row: {
+  totalMinor: bigint;
+  creditedMinor: bigint;
+  paidMinor: bigint;
+  status: InvoiceStatus;
+}) {
+  return row.status === 'void' ? 0n : row.totalMinor - row.creditedMinor - row.paidMinor;
 }
 
 export interface ChargeItem {
@@ -90,7 +101,10 @@ export interface ChargeItem {
 }
 
 export interface ChargeInput {
-  memberId: string;
+  /** null: a shop sale to someone who is not a member; they must pay in full at once. */
+  memberId: string | null;
+  /** `shop`: what is owed does not make the member a debtor. Default `standard`. */
+  kind?: InvoiceKind;
   locationId: string;
   items: ChargeItem[];
   /** Last day to pay; omitted: owed at once. */
@@ -122,6 +136,9 @@ export class InvoicesService implements DebtFacts {
     if (query.memberId) {
       await this.members.findVisible(tx, caller, query.memberId);
     }
+    if (query.locationId && !canSeeLocation(caller, query.locationId)) {
+      return { items: [], nextCursor: null };
+    }
     const page = pageArgs(query, 'desc');
     const rows = await tx.invoice.findMany({
       ...page,
@@ -130,7 +147,10 @@ export class InvoicesService implements DebtFacts {
         deletedAt: null,
         memberId: query.memberId,
         status: query.status,
-        locationId: caller.locationIds === null ? undefined : { in: [...caller.locationIds] },
+        kind: query.kind,
+        locationId:
+          query.locationId ??
+          (caller.locationIds === null ? undefined : { in: [...caller.locationIds] }),
       },
       include: invoiceInclude,
     });
@@ -170,8 +190,10 @@ export class InvoicesService implements DebtFacts {
     tx: TenantTransaction,
     caller: StaffCaller,
     input: ChargeInput,
-  ): Promise<{ invoice: InvoiceRow; payment: Payment | null }> {
-    const member = await this.members.findEditable(tx, caller, input.memberId);
+  ): Promise<{ invoice: InvoiceRow; payment: Payment | null; itemIds: string[] }> {
+    const member = input.memberId
+      ? await this.members.findEditable(tx, caller, input.memberId)
+      : null;
     const location = await this.organizations.findLocation(tx, input.locationId);
     if (!location) {
       throw unprocessable(ErrorCode.INVALID_REFERENCE, 'Unknown location');
@@ -189,12 +211,20 @@ export class InvoicesService implements DebtFacts {
       (sum, item) => sum + item.unitMinor * BigInt(item.quantity),
       0n,
     );
+    if (!member && (input.payment === undefined || BigInt(input.payment.amountMinor) !== total)) {
+      throw unprocessable(
+        ErrorCode.WALK_IN_FULL_PAYMENT,
+        'Someone who is not a member pays the whole amount at once',
+        { totalMinor: total.toString() },
+      );
+    }
 
     const invoice = await tx.invoice.create({
       data: {
         organizationId: caller.organizationId,
         number: await this.nextNumber(tx, caller.organizationId, Number(today.slice(0, 4))),
-        memberId: member.id,
+        kind: input.kind ?? 'standard',
+        memberId: member?.id ?? null,
         locationId: location.id,
         currency: await this.organizations.currency(tx, caller.organizationId),
         totalMinor: total,
@@ -204,28 +234,35 @@ export class InvoicesService implements DebtFacts {
         // Owed at once: the member's status is brought up to date below, not by the job.
         overdueMarkedAt: dueAt <= now ? now : null,
         createdBy: caller.actor.userId,
-        items: {
-          // organization_id comes from the invoice through the composite key.
-          create: input.items.map((item) => ({
-            kind: item.kind,
-            description: item.description,
-            quantity: item.quantity,
-            unitMinor: item.unitMinor,
-            totalMinor: item.unitMinor * BigInt(item.quantity),
-            membershipId: item.membershipId ?? null,
-            freezeId: item.freezeId ?? null,
-          })),
-        },
       },
-      include: invoiceInclude,
     });
+    // One by one, so the caller learns which line got which id.
+    const itemIds: string[] = [];
+    for (const item of input.items) {
+      const row = await tx.invoiceItem.create({
+        data: {
+          organizationId: caller.organizationId,
+          invoiceId: invoice.id,
+          kind: item.kind,
+          description: item.description,
+          quantity: item.quantity,
+          unitMinor: item.unitMinor,
+          totalMinor: item.unitMinor * BigInt(item.quantity),
+          membershipId: item.membershipId ?? null,
+          freezeId: item.freezeId ?? null,
+        },
+        select: { id: true },
+      });
+      itemIds.push(row.id);
+    }
     await this.audit.record(tx, caller.organizationId, caller.actor, {
       action: 'invoice.create',
       entity: 'invoice',
       entityId: invoice.id,
       after: {
         number: invoice.number,
-        memberId: member.id,
+        kind: invoice.kind,
+        memberId: member?.id ?? null,
         totalMinor: total.toString(),
         currency: invoice.currency,
         dueOn: input.dueOn ?? null,
@@ -235,10 +272,10 @@ export class InvoicesService implements DebtFacts {
     let payment: Payment | null = null;
     if (input.payment && input.payment.amountMinor !== '0') {
       payment = await this.takePayment(tx, caller, invoice.id, input.payment);
-    } else {
+    } else if (member) {
       await this.members.refreshStatus(tx, member.id);
     }
-    return { invoice: await this.reload(tx, invoice.id), payment };
+    return { invoice: await this.reload(tx, invoice.id), payment, itemIds };
   }
 
   /** Records money received against an invoice; partial payments are allowed. */
@@ -294,6 +331,8 @@ export class InvoicesService implements DebtFacts {
     const overdue = await tx.invoice.findFirst({
       where: {
         memberId,
+        // Money owed for goods does not stop a member at the door.
+        kind: 'standard',
         deletedAt: null,
         status: { in: ['open', 'partially_paid'] },
         dueAt: { lte: this.clock.now() },
@@ -312,6 +351,8 @@ export class InvoicesService implements DebtFacts {
       where: {
         dueAt: { lte: now },
         overdueMarkedAt: null,
+        kind: 'standard',
+        memberId: { not: null },
         status: { in: ['open', 'partially_paid'] },
         deletedAt: null,
       },
@@ -319,7 +360,9 @@ export class InvoicesService implements DebtFacts {
       take: 1000,
     });
     for (const memberId of new Set(due.map((row) => row.memberId))) {
-      await this.members.refreshStatus(tx, memberId);
+      if (memberId) {
+        await this.members.refreshStatus(tx, memberId);
+      }
     }
     if (due.length > 0) {
       await tx.invoice.updateMany({
@@ -376,7 +419,10 @@ export class InvoicesService implements DebtFacts {
     const paid = invoice.paidMinor + amount;
     await tx.invoice.update({
       where: { id: invoiceId },
-      data: { paidMinor: paid, status: invoiceStatus(invoice.totalMinor, paid, false) },
+      data: {
+        paidMinor: paid,
+        status: invoiceStatus(invoice.totalMinor, paid, false, invoice.creditedMinor),
+      },
     });
     await this.audit.record(tx, caller.organizationId, caller.actor, {
       action: 'payment.create',
@@ -402,7 +448,9 @@ export class InvoicesService implements DebtFacts {
         totalMinor: item.totalMinor,
       })),
     });
-    await this.members.refreshStatus(tx, invoice.memberId);
+    if (invoice.memberId) {
+      await this.members.refreshStatus(tx, invoice.memberId);
+    }
     return payment;
   }
 
@@ -411,6 +459,16 @@ export class InvoicesService implements DebtFacts {
     return toPaymentDto(
       await tx.payment.findUniqueOrThrow({ where: { id }, include: paymentInclude }),
     );
+  }
+
+  /** The invoice's latest payment, for its receipt; null when nothing was paid. */
+  async latestPayment(tx: TenantTransaction, invoiceId: string): Promise<PaymentDto | null> {
+    const row = await tx.payment.findFirst({
+      where: { invoiceId },
+      orderBy: { id: 'desc' },
+      include: paymentInclude,
+    });
+    return row && toPaymentDto(row);
   }
 
   /** Locks the invoice row for the rest of the transaction and reads it. */
@@ -459,7 +517,47 @@ export class InvoicesService implements DebtFacts {
       before: { status: invoice.status, balanceMinor: balanceOf(invoice).toString() },
       after: { status: 'void', reason },
     });
-    await this.members.refreshStatus(tx, invoice.memberId);
+    if (invoice.memberId) {
+      await this.members.refreshStatus(tx, invoice.memberId);
+    }
+  }
+
+  /**
+   * Takes `amount` off what the invoice asks for, as goods come back. Only what is left
+   * owed can be credited; the caller gives back any money paid beyond the new total first.
+   */
+  async credit(
+    tx: TenantTransaction,
+    caller: StaffCaller,
+    id: string,
+    amount: bigint,
+    reason: string,
+  ): Promise<void> {
+    const invoice = await this.lock(tx, id);
+    if (invoice.status === 'void') {
+      throw conflict(ErrorCode.INVOICE_VOID, 'This invoice was written off');
+    }
+    const credited = invoice.creditedMinor + amount;
+    if (amount <= 0n || invoice.paidMinor > invoice.totalMinor - credited) {
+      throw new Error('credit() needs the money paid beyond the new total given back first');
+    }
+    await tx.invoice.update({
+      where: { id },
+      data: {
+        creditedMinor: credited,
+        status: invoiceStatus(invoice.totalMinor, invoice.paidMinor, false, credited),
+      },
+    });
+    await this.audit.record(tx, caller.organizationId, caller.actor, {
+      action: 'invoice.credit',
+      entity: 'invoice',
+      entityId: id,
+      before: { creditedMinor: invoice.creditedMinor.toString() },
+      after: { creditedMinor: credited.toString(), amountMinor: amount.toString(), reason },
+    });
+    if (invoice.memberId) {
+      await this.members.refreshStatus(tx, invoice.memberId);
+    }
   }
 
   private reload(tx: TenantTransaction, id: string): Promise<InvoiceRow> {
@@ -483,10 +581,12 @@ export function toInvoiceDto(row: InvoiceRow, now: Date): InvoiceDto {
   return {
     id: row.id,
     number: row.number,
+    kind: row.kind,
     memberId: row.memberId,
     location: { id: row.location.id, name: row.location.name },
     status: row.status,
     totalMinor: row.totalMinor.toString(),
+    creditedMinor: row.creditedMinor.toString(),
     paidMinor: row.paidMinor.toString(),
     balanceMinor: balance.toString(),
     currency: row.currency,
