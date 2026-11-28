@@ -108,6 +108,7 @@ Uch daraja: platforma, tashkilot, filial. Huquqlar ruxsatlar (permissions) to'pl
 
 ### 3.9. A'zo ilovasi
 - F-9.1 (M) PWA: kirish (telefon va SMS-kod), QR, abonement holati, to'lov tarixi.
+- F-9.1.1 (M) Qabulxona kodi: SMS bo'lmasa xodim a'zo kartasida bir martalik kirish kodini oladi (15 daqiqa, oldingi kodlarni bekor qiladi, auditga yoziladi) va a'zoga aytadi; a'zo ilovada «Kodni qabulxonadan oldim» orqali kiradi. Joriy etildi (2026-11-28, `docs/ADR/0015-member-desk-code.md`).
 - F-9.2 (1) Yozilish, uzaytirish va sotib olish, muzlatish so'rovi.
 - F-9.3 (1) Push-xabarnomalar.
 - F-9.4 (2) Native ilova, dasturlar, white-label.
@@ -221,7 +222,7 @@ Qoidalar:
 ## 7. API
 
 - `/api/v1/...`, JSON, OpenAPI avtomatik.
-- Xodimlar: telefon va parol (+ TOTP owner va accountant uchun majburiy). A'zolar: telefon va SMS-kod.
+- Xodimlar: telefon va parol (+ TOTP owner va accountant uchun majburiy). A'zolar: telefon va SMS-kod yoki qabulxonada berilgan bir martalik kod (F-9.1.1).
 - Access token JWT 15 daqiqa, refresh token aylanadigan (rotation), httpOnly cookie.
 - Agent va integratsiyalar: API kalitlari (v1).
 - Xato formati: `{ code, message, details }`.

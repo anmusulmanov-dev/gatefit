@@ -37,6 +37,23 @@ Har sessiya oxirida yangilanadi: nima qilindi, nima qoldi, ma'lum muammolar.
 | Abonement importi (F-1.4.1)       | Tayyor (2026-11-27)                         |
 | Zal logosi (F-10.7)               | Tayyor (2026-11-27)                         |
 | gatefit.uz internetda (tunnel)    | Tayyor (2026-11-28)                         |
+| Qabulxona kodi (F-9.1.1)          | Tayyor (2026-11-28)                         |
+
+## 2026-11-28 — A'zo uchun qabulxona kodi (F-9.1.1)
+
+Branch: `feat/member-desk-code`. Qaror: `docs/ADR/0015-member-desk-code.md`.
+
+### Qilindi
+
+- **API:** `POST /members/{id}/sign-in-code` (`members.manage`, filial cheklovi): 15 daqiqalik bir martalik kod, oldingi kodlarni bekor qiladi, SMS yubormaydi, `member.sign_in_code.issue` auditi. Arxivdagi a'zoga 409 `MEMBER_ARCHIVED`.
+- **Panel:** a'zo kartasida «Ilovaga kirish kodi» tugmasi; oynada katta kod, amal qilish vaqti va ilova manzili (`<slug>-my.<base>`).
+- **A'zo ilovasi:** kirish sahifasida «Kodni qabulxonadan oldim»: SMS so'ramay kod kiritishga o'tadi.
+- Tarjimalar uch tilda; TZ F-9.1.1 va 9-bo'lim yangilandi.
+
+### Tekshirildi
+
+- Integratsiya testlari (`member-desk-code.int-spec.ts`): kod bilan kirish, SMS yuborilmaydi, audit, SMS kodini almashtiradi, 15 daqiqada tugaydi, arxivdagi a'zo, filial, ruxsat va boshqa tashkilot.
+- E2e (`owner/member-desk-code.spec.ts`): xodim kodni oladi, a'zo yangi brauzerda shu kod bilan kiradi.
 
 ## 2026-11-28 — gatefit.uz internetga Cloudflare Tunnel orqali
 
