@@ -23,10 +23,22 @@ export const RESERVED_SLUGS: readonly string[] = [
 /** A DNS label: lower-case letters, digits and inner hyphens, at most 63 characters. */
 export const SLUG_PATTERN = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/;
 
+/**
+ * An organization's member app lives at `<slug>-my.<base>`, next to its staff panel at
+ * `<slug>.<base>`, so both stay one level under the base domain and one wildcard
+ * certificate covers them. A slug may therefore not end with this suffix, and must leave
+ * room for it within the 63-character DNS label.
+ */
+export const MEMBER_HOST_SUFFIX = '-my';
+
 export const organizationSlugSchema = z
   .string()
   .regex(SLUG_PATTERN, 'Use lower-case letters, digits and hyphens')
-  .refine((slug) => !RESERVED_SLUGS.includes(slug), 'This address is reserved');
+  .max(63 - MEMBER_HOST_SUFFIX.length, 'This address is too long')
+  .refine(
+    (slug) => !RESERVED_SLUGS.includes(slug) && !slug.endsWith(MEMBER_HOST_SUFFIX),
+    'This address is reserved',
+  );
 
 // ---------------------------------------------------------------------------
 // Money

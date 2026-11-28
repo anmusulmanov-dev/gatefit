@@ -1,3 +1,4 @@
+import { MEMBER_HOST_SUFFIX } from '@gatefit/shared';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../common/prisma/prisma.service';
@@ -22,7 +23,7 @@ export class TlsService {
 
   /**
    * Allowed: the bare domain, `admin.<base>`, and for an existing organization (blocked ones
-   * included, so they can see why) `<slug>.<base>` (staff panel) and `<slug>.my.<base>`
+   * included, so they can see why) `<slug>.<base>` (staff panel) and `<slug>-my.<base>`
    * (member app).
    */
   async isAllowed(domain: string): Promise<boolean> {
@@ -33,7 +34,7 @@ export class TlsService {
     }
 
     const slug = tenantSlugFromHost(host, base);
-    if (!slug || (host !== `${slug}.${base}` && host !== `${slug}.my.${base}`)) {
+    if (!slug || (host !== `${slug}.${base}` && host !== `${slug}${MEMBER_HOST_SUFFIX}.${base}`)) {
       return false;
     }
 
