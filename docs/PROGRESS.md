@@ -66,7 +66,7 @@ PR #39 (`feat/cloudflare-tunnel`). Qaror: `docs/ADR/0005-staging.md` (qo'shimcha
 
 ### Qoldi
 
-- Anvar: Cloudflare'da **Always Use HTTPS** ni yoqish (hozir `http://` ham 200 qaytaradi).
+- ~~Anvar: Cloudflare'da Always Use HTTPS~~ — yoqildi, `http://` endi 301 bilan `https://` ga.
 - `brothers` tashkilotini super-admin panelida yaratish.
 - `membership-imports` dagi beqaror testni tuzatish.
 
