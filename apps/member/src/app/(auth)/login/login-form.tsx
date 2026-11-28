@@ -10,8 +10,11 @@ import { api } from '@/lib/api';
 
 type Step =
   | { name: 'phone' }
-  /** A code was sent to this number (normalized to international format). */
-  | { name: 'code'; phone: string };
+  /**
+   * A code was sent to this number (normalized to international format), or the member
+   * got one at the front desk (`desk`), in which case nothing was sent.
+   */
+  | { name: 'code'; phone: string; desk: boolean };
 
 export function LoginForm() {
   const t = useTranslations();
@@ -40,7 +43,19 @@ export function LoginForm() {
       return;
     }
     setCode('');
-    setStep({ name: 'code', phone: input.data.phone });
+    setStep({ name: 'code', phone: input.data.phone, desk: false });
+  }
+
+  /** Straight to the code: requesting one by SMS would void the code from the front desk. */
+  function enterDeskCode(): void {
+    setError(null);
+    const input = otpRequestSchema.safeParse({ phone });
+    if (!input.success) {
+      setError(t('errors.VALIDATION_FAILED'));
+      return;
+    }
+    setCode('');
+    setStep({ name: 'code', phone: input.data.phone, desk: true });
   }
 
   async function verifyCode(sentTo: string): Promise<void> {
@@ -76,7 +91,9 @@ export function LoginForm() {
         <p className="text-muted-foreground">
           {step.name === 'phone'
             ? t('auth.memberIntro')
-            : t('auth.codeSentTo', { phone: step.phone })}
+            : step.desk
+              ? t('auth.deskCodeFor', { phone: step.phone })
+              : t('auth.codeSentTo', { phone: step.phone })}
         </p>
       </div>
 
@@ -105,7 +122,7 @@ export function LoginForm() {
       ) : (
         <div className="flex flex-col gap-2">
           <label htmlFor="code" className="text-sm font-medium">
-            {t('auth.smsCode')}
+            {step.desk ? t('auth.deskCode') : t('auth.smsCode')}
           </label>
           <input
             id="code"
@@ -136,6 +153,11 @@ export function LoginForm() {
         <button type="submit" className="button-primary" disabled={pending}>
           {step.name === 'phone' ? t('auth.sendCode') : t('auth.signIn')}
         </button>
+        {step.name === 'phone' && (
+          <button type="button" className="button-quiet" disabled={pending} onClick={enterDeskCode}>
+            {t('auth.haveDeskCode')}
+          </button>
+        )}
         {step.name === 'code' && (
           <>
             <button
@@ -147,7 +169,7 @@ export function LoginForm() {
                 startTransition(() => requestCode(step.phone));
               }}
             >
-              {t('auth.resendCode')}
+              {step.desk ? t('auth.sendCode') : t('auth.resendCode')}
             </button>
             <button
               type="button"

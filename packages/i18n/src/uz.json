@@ -60,7 +60,10 @@
     "newPasswordHint": "Sizga berilgan parol vaqtinchalik. Faqat o'zingiz biladigan yangi parol o'ylab toping.",
     "newPassword": "Yangi parol",
     "confirmPassword": "Yangi parolni takrorlang",
-    "passwordsMismatch": "Parollar bir xil emas."
+    "passwordsMismatch": "Parollar bir xil emas.",
+    "haveDeskCode": "Kodni qabulxonadan oldim",
+    "deskCodeFor": "{phone} uchun qabulxonada berilgan kodni kiriting.",
+    "deskCode": "Qabulxona kodi"
   },
   "errors": {
     "generic": "Xatolik yuz berdi. Qaytadan urinib ko'ring.",
@@ -668,6 +671,14 @@
         "SOURCE_INVALID": "Manba tanilmadi",
         "TOO_LONG": "Matn juda uzun"
       }
+    },
+    "signInCode": {
+      "action": "Ilovaga kirish kodi",
+      "title": "A'zo ilovasiga kirish kodi",
+      "hint": "A'zoga shu kodni ayting. U ilovani ochadi, telefon raqamini kiritadi, «Kodni qabulxonadan oldim» ni bosadi va kodni yozadi.",
+      "validUntil": "{time} gacha amal qiladi. Har yangi kod oldingisini bekor qiladi.",
+      "appAddress": "Ilova manzili",
+      "close": "Yopish"
     }
   },
   "plans": {

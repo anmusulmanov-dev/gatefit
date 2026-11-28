@@ -60,7 +60,10 @@
     "newPasswordHint": "The password you were given is temporary. Choose a new one that only you know.",
     "newPassword": "New password",
     "confirmPassword": "Repeat the new password",
-    "passwordsMismatch": "The passwords do not match."
+    "passwordsMismatch": "The passwords do not match.",
+    "haveDeskCode": "I got a code at the front desk",
+    "deskCodeFor": "Enter the code the front desk gave you for {phone}.",
+    "deskCode": "Front desk code"
   },
   "errors": {
     "generic": "Something went wrong. Please try again.",
@@ -668,6 +671,14 @@
         "SOURCE_INVALID": "Source is not recognised",
         "TOO_LONG": "Text is too long"
       }
+    },
+    "signInCode": {
+      "action": "App sign-in code",
+      "title": "Member app sign-in code",
+      "hint": "Tell the member this code. They open the app, enter their phone number, tap “I got a code at the front desk” and type the code.",
+      "validUntil": "Valid until {time}. Each new code cancels the previous one.",
+      "appAddress": "App address",
+      "close": "Close"
     }
   },
   "plans": {

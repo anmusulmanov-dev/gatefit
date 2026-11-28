@@ -1,17 +1,32 @@
 import { randomInt } from 'node:crypto';
 import { messages, resolveLocale } from '@gatefit/i18n';
-import type { OtpRequestInput, OtpVerifyInput } from '@gatefit/shared';
+import {
+  ErrorCode,
+  type MemberDeskCodeDto,
+  type OtpRequestInput,
+  type OtpVerifyInput,
+} from '@gatefit/shared';
 import { Inject, Injectable } from '@nestjs/common';
 import { Clock } from '../../common/clock/clock';
 import { CryptoService } from '../../common/crypto/crypto.service';
 import type { AppException } from '../../common/errors/app.exception';
+import { AuditService } from '../../common/audit/audit.service';
+import { conflict } from '../../common/errors/domain-errors';
+import type { StaffCaller } from '../../common/http/staff-request';
+import type { TenantTransaction } from '../../common/prisma/prisma.service';
 import type { ResolvedTenant } from '../../common/http/app-request';
 import { uuidv7 } from '../../common/ids/uuid-v7';
 import { RateLimiter } from '../../common/rate-limit/rate-limiter.service';
 import { SMS_PROVIDER, type SmsProvider } from '../../common/sms/sms.provider';
 import { TenantDb } from '../../common/tenancy/tenant-db.service';
 import { MemberAccountsService } from '../members/member-accounts.service';
-import { OTP_MAX_ATTEMPTS, OTP_REQUEST_LIMIT, OTP_TTL_SECONDS } from './auth.constants';
+import { MembersService } from '../members/members.service';
+import {
+  DESK_OTP_TTL_SECONDS,
+  OTP_MAX_ATTEMPTS,
+  OTP_REQUEST_LIMIT,
+  OTP_TTL_SECONDS,
+} from './auth.constants';
 import type { SessionTokens } from './auth.cookies';
 import { invalidOtp, otpAttemptsExceeded, otpExpired } from './auth.errors';
 import { type ClientMeta, SessionService } from './session.service';
@@ -20,7 +35,7 @@ const OTP_PURPOSE = 'otp-code';
 
 type VerifyOutcome = { tokens: SessionTokens } | { error: AppException };
 
-/** Member sign-in with a one-time code sent by SMS. */
+/** Member sign-in with a one-time code, sent by SMS or handed out at the front desk. */
 @Injectable()
 export class OtpService {
   constructor(
@@ -30,6 +45,8 @@ export class OtpService {
     private readonly rateLimiter: RateLimiter,
     private readonly clock: Clock,
     private readonly memberAccounts: MemberAccountsService,
+    private readonly members: MembersService,
+    private readonly audit: AuditService,
     @Inject(SMS_PROVIDER) private readonly sms: SmsProvider,
   ) {}
 
@@ -40,26 +57,13 @@ export class OtpService {
   async request(tenant: ResolvedTenant, input: OtpRequestInput): Promise<void> {
     await this.rateLimiter.consume(`otp-request:${tenant.id}:${input.phone}`, OTP_REQUEST_LIMIT);
 
-    const now = this.clock.now();
     const code = randomInt(0, 1_000_000).toString().padStart(6, '0');
 
     const isMember = await this.tenantDb.run(tenant.id, async (tx) => {
       if (!(await this.memberAccounts.findByPhone(tx, input.phone))) {
         return false;
       }
-      await tx.otpCode.updateMany({
-        where: { phone: input.phone, consumedAt: null },
-        data: { consumedAt: now },
-      });
-      await tx.otpCode.create({
-        data: {
-          organizationId: tenant.id,
-          phone: input.phone,
-          // Six digits are trivially brute-forced from a plain hash, hence the keyed one.
-          codeHash: this.hashCode(tenant.id, input.phone, code),
-          expiresAt: new Date(now.getTime() + OTP_TTL_SECONDS * 1000),
-        },
-      });
+      await this.replaceCode(tx, tenant.id, input.phone, code, OTP_TTL_SECONDS);
       return true;
     });
     if (!isMember) {
@@ -68,6 +72,38 @@ export class OtpService {
 
     const template = messages[resolveLocale(tenant.locale)].sms.otp;
     await this.sms.send(input.phone, template.replace('{code}', code));
+  }
+
+  /**
+   * A fresh code for a member, shown to the receptionist instead of being sent by SMS.
+   * It replaces earlier codes, so the member must use this one. Audited: whoever holds the
+   * code can sign in as the member.
+   */
+  async issueAtDesk(
+    tx: TenantTransaction,
+    caller: StaffCaller,
+    memberId: string,
+  ): Promise<MemberDeskCodeDto> {
+    // Not found outside the caller's branches.
+    const member = await this.members.get(tx, caller, memberId);
+    if (member.archived) {
+      throw conflict(ErrorCode.MEMBER_ARCHIVED, 'Restore the member before they sign in');
+    }
+
+    const code = randomInt(0, 1_000_000).toString().padStart(6, '0');
+    const expiresAt = await this.replaceCode(
+      tx,
+      caller.organizationId,
+      member.phone,
+      code,
+      DESK_OTP_TTL_SECONDS,
+    );
+    await this.audit.record(tx, caller.organizationId, caller.actor, {
+      action: 'member.sign_in_code.issue',
+      entity: 'member',
+      entityId: member.id,
+    });
+    return { code, expiresAt: expiresAt.toISOString() };
   }
 
   /** Signs the member in when the code matches. A code works once and allows five guesses. */
@@ -133,6 +169,32 @@ export class OtpService {
       throw outcome.error;
     }
     return outcome.tokens;
+  }
+
+  /** Stores a code for the phone and voids the earlier ones. Returns when it expires. */
+  private async replaceCode(
+    tx: TenantTransaction,
+    organizationId: string,
+    phone: string,
+    code: string,
+    ttlSeconds: number,
+  ): Promise<Date> {
+    const now = this.clock.now();
+    const expiresAt = new Date(now.getTime() + ttlSeconds * 1000);
+    await tx.otpCode.updateMany({
+      where: { phone, consumedAt: null },
+      data: { consumedAt: now },
+    });
+    await tx.otpCode.create({
+      data: {
+        organizationId,
+        phone,
+        // Six digits are trivially brute-forced from a plain hash, hence the keyed one.
+        codeHash: this.hashCode(organizationId, phone, code),
+        expiresAt,
+      },
+    });
+    return expiresAt;
   }
 
   // Bound to the organization and phone: a hash cannot be replayed for another number.

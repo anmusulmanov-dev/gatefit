@@ -23,6 +23,15 @@ export type StaffLoginInput = z.infer<typeof staffLoginSchema>;
 export const otpRequestSchema = z.object({ phone: phoneSchema });
 export type OtpRequestInput = z.infer<typeof otpRequestSchema>;
 
+/**
+ * A member sign-in code handed out at the front desk, for clubs without SMS: the
+ * receptionist reads it to the member, who types it into the member app with their phone.
+ */
+export interface MemberDeskCodeDto {
+  code: string;
+  expiresAt: string;
+}
+
 export const otpVerifySchema = z.object({ phone: phoneSchema, code: sixDigitCode });
 export type OtpVerifyInput = z.infer<typeof otpVerifySchema>;
 

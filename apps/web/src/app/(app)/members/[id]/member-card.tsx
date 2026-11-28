@@ -1,6 +1,6 @@
 'use client';
 
-import { MEMBER_PHOTO_MAX_BYTES, type MemberDto } from '@gatefit/shared';
+import { MEMBER_PHOTO_MAX_BYTES, type MemberDeskCodeDto, type MemberDto } from '@gatefit/shared';
 import Link from 'next/link';
 import { useFormatter, useTranslations } from 'next-intl';
 import { type ChangeEvent, type SubmitEvent, useRef, useState } from 'react';
@@ -34,6 +34,7 @@ export function MemberCard({ id, scope }: { id: string; scope: MemberScope }) {
   const [editing, setEditing] = useState(false);
   const [blocking, setBlocking] = useState(false);
   const [confirmArchive, setConfirmArchive] = useState(false);
+  const [signInCode, setSignInCode] = useState<MemberDeskCodeDto | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
 
   if (member.error && !member.data) {
@@ -195,6 +196,20 @@ export function MemberCard({ id, scope }: { id: string; scope: MemberScope }) {
                       {t('members.block.action')}
                     </Button>
                   ))}
+                {editable && (
+                  <Button
+                    variant="outline"
+                    disabled={action.pending}
+                    onClick={() => {
+                      action.run(
+                        () => api.post<MemberDeskCodeDto>(`/members/${id}/sign-in-code`),
+                        setSignInCode,
+                      );
+                    }}
+                  >
+                    {t('members.signInCode.action')}
+                  </Button>
+                )}
                 {canArchive &&
                   (data.archived ? (
                     <Button
@@ -249,6 +264,14 @@ export function MemberCard({ id, scope }: { id: string; scope: MemberScope }) {
           onDone={() => {
             setBlocking(false);
             member.reload();
+          }}
+        />
+      )}
+      {signInCode && (
+        <SignInCodeDialog
+          code={signInCode}
+          onClose={() => {
+            setSignInCode(null);
           }}
         />
       )}
@@ -346,6 +369,54 @@ function BlockDialog({
           </Button>
         </FormActions>
       </form>
+    </Dialog>
+  );
+}
+
+/** Where members of this club open their app: `<slug>-my.<base>`, or the next port locally. */
+function memberAppAddress(): string {
+  const { protocol, hostname, port } = window.location;
+  if (port) {
+    return `${protocol}//${hostname}:${String(Number(port) + 1)}`;
+  }
+  const [slug, ...base] = hostname.split('.');
+  return `${protocol}//${slug ?? ''}-my.${base.join('.')}`;
+}
+
+function SignInCodeDialog({ code, onClose }: { code: MemberDeskCodeDto; onClose: () => void }) {
+  const t = useTranslations();
+  const format = useFormatter();
+  const address = memberAppAddress();
+
+  return (
+    <Dialog
+      open
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+      title={t('members.signInCode.title')}
+      description={t('members.signInCode.hint')}
+    >
+      <div className="flex flex-col gap-4">
+        <p
+          className="rounded-lg bg-muted py-4 text-center font-mono text-4xl font-bold tracking-[0.3em]"
+          aria-live="polite"
+        >
+          {code.code}
+        </p>
+        <p className="text-sm text-muted-foreground">
+          {t('members.signInCode.validUntil', {
+            time: format.dateTime(new Date(code.expiresAt), { hour: '2-digit', minute: '2-digit' }),
+          })}
+        </p>
+        <p className="text-sm">
+          {t('members.signInCode.appAddress')}:{' '}
+          <span className="font-medium break-all">{address.replace(/^https?:\/\//, '')}</span>
+        </p>
+      </div>
+      <FormActions>
+        <Button onClick={onClose}>{t('members.signInCode.close')}</Button>
+      </FormActions>
     </Dialog>
   );
 }
