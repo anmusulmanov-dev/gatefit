@@ -8,22 +8,29 @@ import {
   locationUpdateSchema,
   type OrganizationDto,
   type OrganizationUpdateInput,
+  ORGANIZATION_LOGO_MAX_BYTES,
   organizationUpdateSchema,
 } from '@gatefit/shared';
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   ParseUUIDPipe,
   Patch,
   Post,
+  Put,
   Query,
   Req,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
-import { ApiBody, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiBody, ApiConsumes, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import type { AppRequest } from '../../common/http/app-request';
 import { staffCaller } from '../../common/http/staff-request';
+import type { UploadedFileData } from '../../common/http/uploaded-file';
 import { TenantDb } from '../../common/tenancy/tenant-db.service';
 import { ZodPipe, zodBody } from '../../common/validation/zod';
 import { Public, RequirePermission } from '../auth/auth.decorators';
@@ -54,6 +61,31 @@ export class OrganizationController {
     @Req() req: AppRequest,
   ): Promise<OrganizationDto> {
     return this.organization.update(this.tenantDb.tx, staffCaller(req), body);
+  }
+
+  @Put('logo')
+  @RequirePermission('organization.update')
+  // Room above the limit, so the service answers an oversized logo with its own error.
+  @UseInterceptors(
+    FileInterceptor('file', { limits: { fileSize: ORGANIZATION_LOGO_MAX_BYTES * 2, files: 1 } }),
+  )
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: { type: 'object', properties: { file: { type: 'string', format: 'binary' } } },
+  })
+  @ApiOperation({ summary: 'Upload or replace the logo (PNG, JPEG or WebP, up to 2 MB)' })
+  setLogo(
+    @UploadedFile() file: UploadedFileData | undefined,
+    @Req() req: AppRequest,
+  ): Promise<OrganizationDto> {
+    return this.organization.setLogo(this.tenantDb.tx, staffCaller(req), file);
+  }
+
+  @Delete('logo')
+  @RequirePermission('organization.update')
+  @ApiOperation({ summary: 'Remove the logo' })
+  removeLogo(@Req() req: AppRequest): Promise<OrganizationDto> {
+    return this.organization.removeLogo(this.tenantDb.tx, staffCaller(req));
   }
 }
 

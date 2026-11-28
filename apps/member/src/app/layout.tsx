@@ -11,11 +11,13 @@ import { fontVariables } from '@/lib/fonts';
 import './globals.css';
 
 export async function generateMetadata(): Promise<Metadata> {
-  const t = await getTranslations();
+  const [t, branding] = await Promise.all([getTranslations(), getBranding()]);
   return {
     title: `${t('member.home.title')} · ${t('common.appName')}`,
     description: t('member.home.subtitle'),
     appleWebApp: { capable: true, title: t('common.appName') },
+    // The club's logo in the browser tab, when it has one; the install icon stays Gatefit's.
+    ...(branding?.logoUrl ? { icons: { icon: branding.logoUrl } } : {}),
   };
 }
 

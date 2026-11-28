@@ -28,8 +28,12 @@ describe('fetchBranding', () => {
   }
 
   it('returns the name and theme and forwards the host', async () => {
-    answer(200, { name: 'Fit Club', theme: 'olov' });
-    await expect(fetchBranding(request)).resolves.toEqual({ name: 'Fit Club', theme: 'olov' });
+    answer(200, { name: 'Fit Club', theme: 'olov', logoUrl: '/api/v1/files/x' });
+    await expect(fetchBranding(request)).resolves.toEqual({
+      name: 'Fit Club',
+      theme: 'olov',
+      logoUrl: '/api/v1/files/x',
+    });
     expect(globalThis.fetch).toHaveBeenCalledWith(
       'http://api/api/v1/branding',
       expect.objectContaining({

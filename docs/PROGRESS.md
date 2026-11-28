@@ -35,6 +35,33 @@ Har sessiya oxirida yangilanadi: nima qilindi, nima qoldi, ma'lum muammolar.
 | UI mavzulari (F-10.6)             | Tayyor (2026-11-24)                         |
 | Do'kon (F-4.8, v1)                | Tayyor (2026-11-27)                         |
 | Abonement importi (F-1.4.1)       | Tayyor (2026-11-27)                         |
+| Zal logosi (F-10.7)               | Tayyor (2026-11-27)                         |
+
+## 2026-11-27 — Zal logosi (F-10.7)
+
+Branch: `feat/org-logo`. Yangi paket yo'q. ADR: `docs/ADR/0012-themes.md`, 8-band.
+
+### Qilindi
+
+- Anvar rejani tasdiqladi (SVG siz); TZ ga F-10.7 qo'shildi, to'liq white-label v2 da qoladi.
+- API: `organizations.logo_key` (migratsiya + `GRANT UPDATE (logo_key)`), `PUT /organization/logo` va `DELETE /organization/logo` (`organization.update`). Faqat PNG, JPEG, WebP baytlariga qarab; 2 MB va 4096×4096 px gacha, o'lcham sarlavhadan o'qiladi. Yuklash, almashtirish, o'chirish `audit_logs` da (`organization.logo.upload` / `.replace` / `.remove`). Eski fayl omborxonadan o'chiriladi.
+- `GET /organization` va `GET /branding` imzolangan `logoUrl` qaytaradi. Rasm tekshiruvi `common/storage/image-type.ts` ga ko'chdi (a'zo rasmi ham shuni ishlatadi). Yangi xato kodi `IMAGE_TOO_LARGE`.
+- Web: Sozlamalar → Tashkilot da logo bo'limi (ko'rinish, yuklash, almashtirish, o'chirish), sarlavhada "G" o'rnida logo, kirish sahifasi brend panelida logo, brauzer belgisi (favicon).
+- Member: sarlavha, kirish sahifasi brend paneli va favicon. PWA o'rnatish belgisi Gatefit'niki qoladi.
+- Testlar: `imageSize` birlik testlari; integratsiya (yuklash, almashtirish, SVG/GIF/katta rasm rad, menejerga ruxsat yo'q, B tashkilot A logosini ko'rmaydi, o'chirish, audit); e2e `tests/owner/settings-logo.spec.ts`.
+
+### Tekshirildi
+
+- `pnpm format:check && pnpm lint && pnpm typecheck && pnpm test` — yashil.
+- `pnpm test:e2e` — `E2E_API_PORT=8100` bilan (bu mashinada Hyper-V 7027–7326 portlarini band qilgan).
+
+### Qoldi
+
+- PWA o'rnatish belgisi uchun logodan 192/512 px rasm yasash (rasm kichraytirish paketi kerak).
+
+### Ma'lum muammolar
+
+- `membership-imports.int-spec.ts` to'liq ishga tushirishda bir marta yiqildi, alohida va qayta ishga tushirishda o'tdi (vaqtga sezgir bo'lishi mumkin).
 
 ## 2026-11-27 — Amaldagi abonementlarni ko'chirish (F-1.4.1)
 

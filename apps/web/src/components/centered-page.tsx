@@ -17,12 +17,22 @@ export async function CenteredPage({ children }: { children: ReactNode }) {
     <div className="flex min-h-dvh flex-col lg:flex-row">
       <aside className="gf-brand-panel flex flex-col justify-end gap-2 px-6 py-6 lg:w-[42%] lg:max-w-xl lg:p-12">
         <div className="flex items-center gap-3">
-          <span
-            aria-hidden="true"
-            className="grid size-9 place-items-center rounded-md bg-white/20 font-heading text-lg font-extrabold"
-          >
-            G
-          </span>
+          {branding?.logoUrl ? (
+            // A light tile keeps a dark logo readable on the brand colour.
+            // eslint-disable-next-line @next/next/no-img-element -- signed link from our own API
+            <img
+              src={branding.logoUrl}
+              alt={t('orgSettings.logoAlt', { name: branding.name })}
+              className="h-12 w-auto max-w-40 rounded-md bg-white object-contain p-1.5 shadow-card"
+            />
+          ) : (
+            <span
+              aria-hidden="true"
+              className="grid size-9 place-items-center rounded-md bg-white/20 font-heading text-lg font-extrabold"
+            >
+              G
+            </span>
+          )}
           <span className="font-heading text-xl font-extrabold tracking-tight lg:text-2xl">
             {t('common.appName')}
           </span>

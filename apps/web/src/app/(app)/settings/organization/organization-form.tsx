@@ -18,6 +18,7 @@ import { Select } from '@/components/ui/select';
 import { api } from '@/lib/api';
 import { useApiAction, useApiGet } from '@/lib/use-api';
 
+import { LogoSection } from './logo-section';
 import { ThemePicker } from './theme-picker';
 
 export function OrganizationForm() {
@@ -89,6 +90,7 @@ function Editor({ organization, onSaved }: { organization: OrganizationDto; onSa
 
   return (
     <div className="flex max-w-xl flex-col gap-8">
+      <LogoSection organization={organization} canEdit={canEdit} onChanged={onSaved} />
       <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
         <Field id="org-name" label={t('orgSettings.name')}>
           <Input

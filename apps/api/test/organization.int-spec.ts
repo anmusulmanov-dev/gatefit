@@ -1,3 +1,4 @@
+import type { BrandingDto, OrganizationDto } from '@gatefit/shared';
 import request from 'supertest';
 import type { Organization, PrismaClient } from '../src/generated/prisma/client';
 import {
@@ -5,12 +6,35 @@ import {
   cookiesFor,
   createStaff,
   createTestApp,
+  hostOf,
   type StaffFixture,
   type TestApp,
 } from './support/app';
 import { createAdminClient, createOrganization } from './support/db';
 
 const HOURS = { open: '06:00', close: '23:00' };
+
+/** A PNG header of the given size: enough for the API, which never decodes the image. */
+function png(width: number, height: number): Buffer {
+  const buffer = Buffer.alloc(64);
+  Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]).copy(buffer);
+  buffer.writeUInt32BE(13, 8);
+  buffer.write('IHDR', 12, 'ascii');
+  buffer.writeUInt32BE(width, 16);
+  buffer.writeUInt32BE(height, 20);
+  return buffer;
+}
+
+const binary = (req: request.Test) =>
+  req.buffer(true).parse((res, done) => {
+    const chunks: Buffer[] = [];
+    res.on('data', (chunk: Buffer) => {
+      chunks.push(chunk);
+    });
+    res.on('end', () => {
+      done(null, Buffer.concat(chunks));
+    });
+  });
 const WORKING_HOURS = {
   mon: HOURS,
   tue: HOURS,
@@ -59,6 +83,7 @@ describe('Organization settings and locations (integration)', () => {
         currency: 'UZS',
         locale: 'uz',
         theme: 'zumrad',
+        logoUrl: null,
         status: 'trial',
         trialEndsAt: null,
         plan: null,
@@ -138,12 +163,12 @@ describe('Organization settings and locations (integration)', () => {
   describe('GET /branding', () => {
     it('tells anyone at the address the name and theme, and nothing else', async () => {
       const response = await apiAs(t, orgA, []).get('/branding').expect(200);
-      expect(response.body).toEqual({ name: 'Fit Club', theme: 'olov' });
+      expect(response.body).toEqual({ name: 'Fit Club', theme: 'olov', logoUrl: null });
     });
 
     it('answers for the organization of the address only', async () => {
       const response = await apiAs(t, orgB, []).get('/branding').expect(200);
-      expect(response.body).toEqual({ name: orgB.name, theme: 'zumrad' });
+      expect(response.body).toEqual({ name: orgB.name, theme: 'zumrad', logoUrl: null });
     });
 
     it('needs an organization address', async () => {
@@ -155,6 +180,104 @@ describe('Organization settings and locations (integration)', () => {
         .get('/api/v1/branding')
         .set('Host', 'nobody.localhost')
         .expect(404);
+    });
+  });
+
+  describe('logo', () => {
+    const LOGO = png(512, 256);
+    const fetchFile = (org: Organization, url: string) =>
+      binary(request(t.app.getHttpServer()).get(url).set('Host', hostOf(org)));
+
+    it('lets the owner upload a logo, shows it in branding, and records it', async () => {
+      const response = await owner
+        .upload('put', '/organization/logo', LOGO, 'logo.png')
+        .expect(200);
+      const body = response.body as OrganizationDto;
+      expect(body.logoUrl).toMatch(/^\/api\/v1\/files\/[\w-]+\.[0-9a-f]{64}$/);
+
+      const branding = (await apiAs(t, orgA, []).get('/branding').expect(200)).body as BrandingDto;
+      expect(branding.logoUrl).toEqual(expect.any(String));
+      const file = await fetchFile(orgA, branding.logoUrl ?? '').expect(200);
+      expect(file.headers['content-type']).toBe('image/png');
+      expect(file.body).toEqual(LOGO);
+
+      const [entry] = await admin.auditLog.findMany({
+        where: { organizationId: orgA.id, action: 'organization.logo.upload' },
+      });
+      expect(entry).toMatchObject({
+        actorId: ownerUser.userId,
+        entityId: orgA.id,
+        before: { logoKey: null },
+        after: { contentType: 'image/png', width: 512, height: 256 },
+      });
+    });
+
+    it('replaces the old file and records the replacement', async () => {
+      const first = (await owner.get('/organization').expect(200)).body as OrganizationDto;
+      const second = (
+        await owner.upload('put', '/organization/logo', png(300, 300), 'new.png').expect(200)
+      ).body as OrganizationDto;
+      expect(second.logoUrl).not.toBe(first.logoUrl);
+      await fetchFile(orgA, first.logoUrl ?? '').expect(404);
+      await fetchFile(orgA, second.logoUrl ?? '').expect(200);
+      expect(
+        await admin.auditLog.count({
+          where: { organizationId: orgA.id, action: 'organization.logo.replace' },
+        }),
+      ).toBe(1);
+    });
+
+    it('refuses SVG, unknown files, a missing file and oversized images', async () => {
+      const svg = Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"><script/></svg>');
+      const refused = await owner.upload('put', '/organization/logo', svg, 'logo.png').expect(422);
+      expect(refused.body).toMatchObject({ code: 'UNSUPPORTED_FILE_TYPE' });
+      await owner
+        .upload('put', '/organization/logo', Buffer.from('GIF89a'), 'logo.gif')
+        .expect(422);
+      const missing = await owner.put('/organization/logo', {}).expect(422);
+      expect(missing.body).toMatchObject({ code: 'FILE_REQUIRED' });
+      const wide = await owner
+        .upload('put', '/organization/logo', png(5000, 100), 'wide.png')
+        .expect(422);
+      expect(wide.body).toMatchObject({ code: 'IMAGE_TOO_LARGE' });
+      const heavy = Buffer.concat([png(100, 100), Buffer.alloc(2 * 1024 * 1024)]);
+      const big = await owner.upload('put', '/organization/logo', heavy, 'big.png').expect(422);
+      expect(big.body).toMatchObject({ code: 'IMAGE_TOO_LARGE' });
+    });
+
+    it('is refused to a manager', async () => {
+      await manager.upload('put', '/organization/logo', LOGO, 'logo.png').expect(403);
+      await manager.delete('/organization/logo').expect(403);
+    });
+
+    it('stays with its own organization', async () => {
+      const other = (await apiAs(t, orgB, []).get('/branding').expect(200)).body as BrandingDto;
+      expect(other.logoUrl).toBeNull();
+      expect(
+        ((await outsider.get('/organization').expect(200)).body as OrganizationDto).logoUrl,
+      ).toBeNull();
+    });
+
+    it('lets the owner remove the logo, and records it', async () => {
+      const before = (await owner.get('/organization').expect(200)).body as OrganizationDto;
+      const response = await owner.delete('/organization/logo').expect(200);
+      expect((response.body as OrganizationDto).logoUrl).toBeNull();
+      await fetchFile(orgA, before.logoUrl ?? '').expect(404);
+      expect(
+        ((await apiAs(t, orgA, []).get('/branding').expect(200)).body as BrandingDto).logoUrl,
+      ).toBeNull();
+      expect(
+        await admin.auditLog.count({
+          where: { organizationId: orgA.id, action: 'organization.logo.remove' },
+        }),
+      ).toBe(1);
+      // Removing again changes nothing and records nothing.
+      await owner.delete('/organization/logo').expect(200);
+      expect(
+        await admin.auditLog.count({
+          where: { organizationId: orgA.id, action: 'organization.logo.remove' },
+        }),
+      ).toBe(1);
     });
   });
 

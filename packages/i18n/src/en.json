@@ -115,6 +115,7 @@
     "INVALID_TEMPLATE": "The text uses a placeholder this message does not have.",
     "FILE_REQUIRED": "Choose a file.",
     "FILE_TOO_LARGE": "The file is too large (up to 5 MB).",
+    "IMAGE_TOO_LARGE": "The image is too large: up to 2 MB and 4096×4096 px.",
     "UNSUPPORTED_FILE_TYPE": "Use a JPEG, PNG or WebP image.",
     "FILE_UNREADABLE": "The file cannot be read. Save it as XLSX or CSV (UTF-8).",
     "IMPORT_TOO_MANY_ROWS": "Too many rows: up to 10,000 members per file.",
@@ -257,7 +258,14 @@
         "name": "Blue",
         "description": "Trustworthy blue, crisp lines, few shadows."
       }
-    }
+    },
+    "logo": "Logo",
+    "logoHint": "PNG, JPG or WebP, up to 2 MB. A square or wide logo on a transparent background looks best.",
+    "logoUpload": "Upload logo",
+    "logoReplace": "Replace logo",
+    "logoRemove": "Remove logo",
+    "logoAlt": "{name} logo",
+    "logoNone": "No logo uploaded"
   },
   "locations": {
     "add": "Add location",
