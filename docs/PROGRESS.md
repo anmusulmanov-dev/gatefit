@@ -36,6 +36,39 @@ Har sessiya oxirida yangilanadi: nima qilindi, nima qoldi, ma'lum muammolar.
 | Do'kon (F-4.8, v1)                | Tayyor (2026-11-27)                         |
 | Abonement importi (F-1.4.1)       | Tayyor (2026-11-27)                         |
 | Zal logosi (F-10.7)               | Tayyor (2026-11-27)                         |
+| gatefit.uz internetda (tunnel)    | Tayyor (2026-11-28)                         |
+
+## 2026-11-28 — gatefit.uz internetga Cloudflare Tunnel orqali
+
+PR #39 (`feat/cloudflare-tunnel`). Qaror: `docs/ADR/0005-staging.md` (qo'shimcha). Runbook: `infra/staging/README.md`, "Public through Cloudflare Tunnel".
+
+### Qilindi
+
+- **A'zo ilovasi manzili** `<slug>.my.<base>` → `<slug>-my.<base>`: Cloudflare'ning bepul sertifikati bir darajani qoplaydi. Slug `-my` bilan tugay olmaydi va 60 belgidan oshmaydi (`organizationSlugSchema`, testlar bilan).
+- **Caddy:** marshrutlar `routes.caddy` da; `Caddyfile` (sertifikatni o'zi oladi) va `Caddyfile.cloudflare` (HTTP, `CF-Connecting-IP` faqat xususiy manzillardan). `CADDY_CONFIG` va `CADDY_BIND` compose'da; `deploy.sh` tanlangan faylni qayta yuklaydi. API'ga `X-Forwarded-For` ni endi doim Caddy qo'yadi.
+- **Cloudflare:** `gatefit.uz` zonasi (Free), nom serverlar ahost'da almashtirildi (reyestr 2026-11-28 da qabul qildi). Pochta uchun `mail` A yozuvi (DNS only) va MX `mail.gatefit.uz`.
+- **web01:** mavjud `cloudflared` xizmatining `WEB01` tunneliga `gatefit.uz` va `*.gatefit.uz` → `http://localhost:80`. `.env`: `APP_BASE_DOMAIN=gatefit.uz`, `CADDY_CONFIG=Caddyfile.cloudflare`, `CADDY_BIND=127.0.0.1` (zaxira: `.env.bak-*`).
+
+### Tekshirildi
+
+- `pnpm lint`, `pnpm typecheck`, `pnpm test` yashil (API 562/563: `membership-imports` dagi bitta test to'liq yugurishda ba'zan yiqiladi, alohida ikki marta o'tdi). CI yashil.
+- Ikkala Caddy sozlamasi web01'da `caddy validate` dan o'tdi.
+- Internetdan, Cloudflare orqali: `gatefit.uz`, `www`, `demo`, `demo-my` 200, `admin` kirishga yo'naltiradi, `/api/v1/health` ok, sertifikat to'g'ri, xavfsizlik sarlavhalari bor.
+- API mijozning haqiqiy IP'sini oladi; mijoz yuborgan soxta `X-Forwarded-For` tashlab yuboriladi.
+
+### Ma'lum muammolar
+
+- Birinchi deploy'da xotiradagi eski `deploy.sh` Caddy'ni eski `Caddyfile` bilan qayta yukladi (hamma manzil 301); qo'lda qayta yuklandi. Keyingi deploylarda takrorlanmaydi.
+- Ofisda tok yoki internet o'chsa, sayt ham o'chadi.
+- `main` ga tushgan har o'zgarish haqiqiy mijozlarga avtomatik chiqadi.
+- A'zolarga SMS uchun Eskiz hisobi kerak (`SMS_DRIVER=eskiz`); hozircha konsol.
+- Tailscale orqali `*.staging.gatefit.uz` manzillari endi ishlamaydi.
+
+### Qoldi
+
+- ~~Anvar: Cloudflare'da Always Use HTTPS~~ — yoqildi, `http://` endi 301 bilan `https://` ga.
+- `brothers` tashkilotini super-admin panelida yaratish.
+- `membership-imports` dagi beqaror testni tuzatish.
 
 ## 2026-11-27 — Zal logosi (F-10.7)
 
