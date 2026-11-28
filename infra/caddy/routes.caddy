@@ -31,7 +31,9 @@ handle /api/* {
 	}
 }
 
-@member host *-my.{$APP_BASE_DOMAIN}
+# A host wildcard stands for whole labels only (`*-my.<base>` would never match), so the
+# member app's hosts are matched with a pattern: one label ending in -my, then the base.
+@member header_regexp Host (?i)^[a-z0-9-]+-my\.{$APP_BASE_DOMAIN}(:[0-9]+)?$
 handle @member {
 	reverse_proxy member:3001 {
 		header_up X-Forwarded-For {client_ip}
