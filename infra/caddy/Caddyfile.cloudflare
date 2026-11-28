@@ -1,0 +1,21 @@
+# Behind a Cloudflare Tunnel (CADDY_CONFIG=Caddyfile.cloudflare). Routes: routes.caddy.
+#
+# Visitors reach Cloudflare over HTTPS with Cloudflare's certificate; cloudflared on the
+# server forwards their requests to Caddy over plain HTTP (http://localhost:80, published on
+# 127.0.0.1 only). Caddy needs no certificates and the server opens no ports to the
+# internet, so this works on a line without a public address (CGNAT).
+# Runbook: infra/staging/README.md.
+{
+	auto_https off
+	servers {
+		# Requests arrive through Docker's port publishing, from a private address. Only
+		# those may name the visitor's address (CF-Connecting-IP) and scheme
+		# (X-Forwarded-Proto: https); CADDY_BIND=127.0.0.1 keeps the office network out.
+		trusted_proxies static private_ranges
+		client_ip_headers CF-Connecting-IP
+	}
+}
+
+http:// {
+	import routes.caddy
+}

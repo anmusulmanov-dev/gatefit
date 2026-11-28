@@ -21,7 +21,7 @@ describe('TlsService', () => {
     },
   );
 
-  it.each(['demo.staging.gatefit.uz', 'demo.my.staging.gatefit.uz'])(
+  it.each(['demo.staging.gatefit.uz', 'demo-my.staging.gatefit.uz'])(
     'allows %s when the organization exists',
     async (domain) => {
       queryRaw.mockResolvedValueOnce([{ id: 'org' }]);
@@ -42,6 +42,8 @@ describe('TlsService', () => {
     'my.staging.gatefit.uz',
     'x.demo.staging.gatefit.uz',
     'demo.other.staging.gatefit.uz',
+    'demo.my.staging.gatefit.uz',
+    'admin-my.staging.gatefit.uz',
   ])('refuses %s without a database lookup', async (domain) => {
     await expect(service.isAllowed(domain)).resolves.toBe(false);
     expect(queryRaw).not.toHaveBeenCalled();

@@ -9,13 +9,13 @@ The whole platform runs on one server from `infra/docker-compose.prod.yml` (stag
 | `https://gatefit.uz`           | staff web panel                                         |
 | `https://admin.gatefit.uz`     | platform back office (super-admin)                      |
 | `https://<slug>.gatefit.uz`    | an organization's staff panel                           |
-| `https://<slug>.my.gatefit.uz` | an organization's member app                            |
+| `https://<slug>-my.gatefit.uz` | an organization's member app                            |
 | any host + `/api/*`            | API (Swagger off: `SWAGGER_ENABLED=true` to turn it on) |
 
 ## First start
 
 1. Server: Ubuntu LTS, Docker, a deploy user in the `docker` group, ports 80 and 443 open.
-2. DNS: `gatefit.uz`, `*.gatefit.uz` and `*.my.gatefit.uz` → the server's public address.
+2. DNS: `gatefit.uz`, `*.gatefit.uz` → the server's public address (member apps are `<slug>-my.gatefit.uz`).
 3. Code and secrets:
    ```bash
    git clone https://github.com/anmusulmanov-dev/gatefit.git /srv/gatefit && cd /srv/gatefit

@@ -134,13 +134,20 @@ services:
     image: caddy:2-alpine
     restart: unless-stopped
     logging: *logging
+    # Caddyfile: Caddy gets the certificates itself. Caddyfile.cloudflare: behind a
+    # Cloudflare Tunnel (cloudflared on the host forwards to http://localhost:80).
+    command:
+      ['sh', '-c', 'exec caddy run --config "/etc/caddy/$${CADDY_CONFIG}" --adapter caddyfile']
     environment:
       APP_BASE_DOMAIN: ${APP_BASE_DOMAIN}
       CADDY_TLS_ISSUER: ${CADDY_TLS_ISSUER:-acme}
+      CADDY_CONFIG: ${CADDY_CONFIG:-Caddyfile}
+    # Behind the tunnel CADDY_BIND=127.0.0.1: nothing on the office network can reach Caddy
+    # directly (and pretend to be Cloudflare, which Caddy trusts for the visitor's address).
     ports:
-      - '80:80'
-      - '443:443'
-      - '443:443/udp'
+      - '${CADDY_BIND:-0.0.0.0}:80:80'
+      - '${CADDY_BIND:-0.0.0.0}:443:443'
+      - '${CADDY_BIND:-0.0.0.0}:443:443/udp'
     volumes:
       # The directory, not the file: git replaces the Caddyfile on deploy, and a single-file
       # bind mount would keep showing the old one to Caddy (reload would change nothing).

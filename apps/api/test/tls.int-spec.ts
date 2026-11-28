@@ -35,7 +35,7 @@ describe('TLS ask hook (integration)', () => {
 
   it("allows an organization's staff and member hosts, in any case", async () => {
     await ask(`${organization.slug}.localhost`).expect(200);
-    await ask(`${organization.slug}.my.localhost`).expect(200);
+    await ask(`${organization.slug}-my.localhost`).expect(200);
     await ask(`${organization.slug.toUpperCase()}.LOCALHOST.`).expect(200);
   });
 
@@ -45,7 +45,7 @@ describe('TLS ask hook (integration)', () => {
 
   it.each([
     'nobody-here.localhost',
-    'nobody-here.my.localhost',
+    'nobody-here-my.localhost',
     'www.localhost',
     'my.localhost',
     'example.com',
@@ -57,6 +57,7 @@ describe('TLS ask hook (integration)', () => {
   it('refuses deeper names under an existing organization', async () => {
     await ask(`x.${organization.slug}.localhost`).expect(404);
     await ask(`${organization.slug}.other.localhost`).expect(404);
+    await ask(`${organization.slug}.my.localhost`).expect(404);
   });
 
   it('rejects a request without a domain', async () => {
