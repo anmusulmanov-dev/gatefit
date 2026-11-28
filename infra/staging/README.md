@@ -84,12 +84,14 @@ read TOTP secrets, including those in a restored backup.
 
 ## Public through Cloudflare Tunnel
 
-Until Gatefit moves to a server with a public address, `web01` can serve the real domain
-(`gatefit.uz`) to the internet through a Cloudflare Tunnel: `cloudflared` keeps an outbound
-connection to Cloudflare, Cloudflare serves `gatefit.uz` and `*.gatefit.uz` with its own
-certificate and forwards each request to Caddy (`Caddyfile.cloudflare`). Nothing is opened
-on the router and CGNAT does not matter. The free certificate covers one level below the
-domain only, which is why member apps live at `<slug>-my.gatefit.uz`.
+Until Gatefit moves to a server with a public address, `web01` serves the real domain
+(`gatefit.uz`) to the internet through a Cloudflare Tunnel. `cloudflared` already runs on
+the server as a system service (`systemctl status cloudflared`, tunnel `WEB01`, token in
+`/etc/cloudflared/token`) and keeps an outbound connection to Cloudflare. Cloudflare serves
+`gatefit.uz` and `*.gatefit.uz` with its own certificate and forwards each request to
+Caddy on `http://localhost:80` (`Caddyfile.cloudflare`). Nothing is opened on the router
+and CGNAT does not matter. The free certificate covers one level below the domain only,
+which is why member apps live at `<slug>-my.gatefit.uz`.
 
 | Host                           | What                          |
 | ------------------------------ | ----------------------------- |
@@ -98,28 +100,25 @@ domain only, which is why member apps live at `<slug>-my.gatefit.uz`.
 | `https://<slug>.gatefit.uz`    | an organization's staff panel |
 | `https://<slug>-my.gatefit.uz` | an organization's member app  |
 
-1. Cloudflare (free plan): add `gatefit.uz`; at the registrar (ahost) replace the name
+1. Cloudflare: add `gatefit.uz` (free plan); at the registrar (ahost) replace the name
    servers with the two Cloudflare gives. Wait until Cloudflare shows the domain as active.
 2. SSL/TLS: mode **Full**; Edge Certificates: **Always Use HTTPS** on.
-3. Zero Trust → Networks → Tunnels → create a tunnel (cloudflared). Copy its token
-   straight into the server's `.env` (below); never paste it anywhere else.
-4. In the tunnel, two public hostnames, both to the service `http://caddy:80`:
-   `gatefit.uz` and `*.gatefit.uz`. Cloudflare creates the DNS records.
-5. On the server, in `/srv/gatefit/.env`:
+3. Networking → Tunnels → `WEB01` → add two published application routes, both to the
+   service `http://localhost:80`: `gatefit.uz` and `*.gatefit.uz`. Cloudflare creates the
+   DNS records. The tunnel's other routes belong to other sites: leave them alone.
+4. On the server, in `/srv/gatefit/.env`:
 
    ```
    APP_BASE_DOMAIN=gatefit.uz
-   COMPOSE_PROFILES=tunnel
    CADDY_CONFIG=Caddyfile.cloudflare
    CADDY_BIND=127.0.0.1
-   CLOUDFLARE_TUNNEL_TOKEN=<token>
    ```
 
-   then `infra/staging/deploy.sh --force`. Check: `dc logs cloudflared` shows registered
-   connections; `https://demo.gatefit.uz` opens from a phone on mobile data.
+   then `infra/staging/deploy.sh --force`. Check: `https://demo.gatefit.uz` opens from a
+   phone on mobile data.
 
 Visitors' addresses reach the API from Cloudflare's `CF-Connecting-IP` header, trusted only
-from the Docker network; `CADDY_BIND=127.0.0.1` keeps the office network from talking to
+from private addresses; `CADDY_BIND=127.0.0.1` keeps the office network from talking to
 Caddy directly. If the office loses power or internet, the site is down.
 
 ## Everyday commands

@@ -23,9 +23,9 @@ Sana: 2026-11-18. Holat: qabul qilingan.
 ## Qo'shimcha (2026-11-28): Cloudflare Tunnel orqali ochiq
 
 - **Sabab:** birinchi 1–2 mijozni yangi server olmasdan sinash kerak (Anvar), web01 esa CGNAT ortida.
-- **Qaror:** web01 `gatefit.uz` ni Cloudflare Tunnel orqali internetga beradi. `cloudflared` konteyneri (`tunnel` profili) Cloudflare'ga o'zi ulanadi, routerda port ochilmaydi. Sertifikatni Cloudflare beradi, Caddy `Caddyfile.cloudflare` bilan HTTP'da ishlaydi, umumiy marshrutlar `routes.caddy` da.
+- **Qaror:** web01 `gatefit.uz` ni Cloudflare Tunnel orqali internetga beradi. serverda allaqachon ishlayotgan `cloudflared` xizmati (`WEB01` tunneli) Cloudflare'ga o'zi ulanadi, routerda port ochilmaydi. Sertifikatni Cloudflare beradi, Caddy `Caddyfile.cloudflare` bilan HTTP'da ishlaydi, umumiy marshrutlar `routes.caddy` da.
 - **A'zo ilovasi manzili `<slug>-my.<base>`:** Cloudflare'ning bepul sertifikati faqat bir darajani (`*.gatefit.uz`) qoplaydi. Slug `-my` bilan tugay olmaydi va 60 belgidan oshmaydi.
-- **Mijoz IP'si:** Caddy `CF-Connecting-IP` ni faqat Docker tarmog'idan ishonadi va API'ga `X-Forwarded-For` ni o'zi qo'yadi; tunnel rejimida Caddy faqat `127.0.0.1` da tinglaydi.
+- **Mijoz IP'si:** Caddy `CF-Connecting-IP` ni faqat xususiy manzillardan ishonadi va API'ga `X-Forwarded-For` ni o'zi qo'yadi; tunnel rejimida Caddy faqat `127.0.0.1` da tinglaydi.
 - **Cheklov:** ofisda tok yoki internet o'chsa, sayt ham o'chadi. Doimiy server alohida qaror.
 
 ## Oqibatlar
