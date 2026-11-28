@@ -11,6 +11,8 @@ export const TOTP_SETUP_TOKEN_TTL_SECONDS = 10 * 60;
 export const TOTP_TOLERANCE_SECONDS = 30;
 
 export const OTP_TTL_SECONDS = 5 * 60;
+// A code read out at the front desk: the member may still have to open the app.
+export const DESK_OTP_TTL_SECONDS = 15 * 60;
 export const OTP_MAX_ATTEMPTS = 5;
 
 /**

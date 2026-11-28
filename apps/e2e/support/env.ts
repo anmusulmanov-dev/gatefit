@@ -55,6 +55,8 @@ export const API_LOG = resolve(import.meta.dirname, '../.output/api.log');
 
 /** The member reception-sale.spec.ts adds and sells to; later flows use the same person. */
 export const SALE_MEMBER = { phone: '+998900009901', firstName: 'Sardor', lastName: 'E2E' };
+/** Added by owner/member-desk-code.spec.ts, signs in with a code from the front desk. */
+export const DESK_MEMBER = { phone: '+998900009902', firstName: 'Jasur', lastName: 'E2E' };
 
 export const organizationUrl = `http://demo.localhost:${WEB_PORT}`;
 export const platformUrl = `http://admin.localhost:${WEB_PORT}`;

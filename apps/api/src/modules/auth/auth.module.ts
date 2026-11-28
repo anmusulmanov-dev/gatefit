@@ -7,6 +7,7 @@ import { AccessService } from './access.service';
 import { AuthController } from './auth.controller';
 import { AuthGuard } from './auth.guard';
 import { MeController } from './me.controller';
+import { MemberDeskCodeController } from './member-desk-code.controller';
 import { OtpService } from './otp.service';
 import { SessionService } from './session.service';
 import { StaffAuthService } from './staff-auth.service';
@@ -18,7 +19,7 @@ import { TotpService } from './totp.service';
 @Module({
   // The secret and lifetimes are passed per call by TokenService.
   imports: [JwtModule.register({}), StaffModule, MembersModule],
-  controllers: [AuthController, MeController, StaffSecurityController],
+  controllers: [AuthController, MeController, MemberDeskCodeController, StaffSecurityController],
   providers: [
     AccessInterceptor,
     AccessService,
