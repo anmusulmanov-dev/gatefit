@@ -111,8 +111,13 @@ export function MembershipLine({ membership }: { membership: MembershipDto }) {
 export function MembershipSummary() {
   const t = useTranslations('member');
   const money = useMoneyText();
-  const memberships = useApiGet<Page<MembershipDto>>('/me/memberships?limit=20');
-  const payments = useApiGet<MemberPaymentsDto>('/me/payments?limit=1');
+  // A visit spent or a payment taken at the front desk shows up while the app stays open.
+  const memberships = useApiGet<Page<MembershipDto>>('/me/memberships?limit=20', {
+    refreshEverySeconds: 30,
+  });
+  const payments = useApiGet<MemberPaymentsDto>('/me/payments?limit=1', {
+    refreshEverySeconds: 30,
+  });
   const current = memberships.data ? currentMembership(memberships.data.items) : null;
 
   return (

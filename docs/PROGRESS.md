@@ -39,6 +39,13 @@ Har sessiya oxirida yangilanadi: nima qilindi, nima qoldi, ma'lum muammolar.
 | gatefit.uz internetda (tunnel)    | Tayyor (2026-11-28)                         |
 | Qabulxona kodi (F-9.1.1)          | Tayyor (2026-11-28)                         |
 
+## 2026-11-28 — A'zo ilovasida tashriflar soni yangilanadi
+
+Branch: `fix/member-app-refresh`. Anvar: "tashriflar kamaymayapti". Bazada kamaygan (QR kirish 12 → 11), lekin a'zo ilovasi abonementni faqat ochilganda yuklardi.
+
+- `useApiGet` ga `refreshEverySeconds`: sahifa ko'rinib turganda har 30 soniyada va ilovaga qaytilganda qayta so'raydi; fon so'rovi xato bersa oxirgi ma'lumot qoladi. Bosh sahifadagi abonement va qarz shu bilan.
+- E2e: ilovaga qaytilganda (`visibilitychange`) abonement qayta so'raladi. Lint, typecheck, e2e 12/12 yashil.
+
 ## 2026-11-28 — A'zo uchun qabulxona kodi (F-9.1.1)
 
 Branch: `feat/member-desk-code`. Qaror: `docs/ADR/0015-member-desk-code.md`.

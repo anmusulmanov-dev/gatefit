@@ -20,4 +20,11 @@ test('a member signs in with an SMS code and sees the QR code', async ({ page })
   await expect(page.getByRole('img', { name: t('member.qr.alt') })).toBeVisible();
 
   await page.context().storageState({ path: MEMBER_STATE });
+
+  // Back in the app (the phone was put away while the desk scanned the code): the
+  // membership, and so the visits left, is asked for again.
+  const refreshed = page.waitForRequest((sent) => sent.url().includes('/me/memberships'));
+  // A string: this package has no DOM types.
+  await page.evaluate("document.dispatchEvent(new Event('visibilitychange'))");
+  await refreshed;
 });
