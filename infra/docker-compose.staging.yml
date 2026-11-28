@@ -134,13 +134,20 @@ services:
     image: caddy:2-alpine
     restart: unless-stopped
     logging: *logging
+    # Caddyfile: Caddy gets the certificates itself. Caddyfile.cloudflare: behind the
+    # Cloudflare Tunnel (the `tunnel` profile below).
+    command:
+      ['sh', '-c', 'exec caddy run --config "/etc/caddy/$${CADDY_CONFIG}" --adapter caddyfile']
     environment:
       APP_BASE_DOMAIN: ${APP_BASE_DOMAIN}
       CADDY_TLS_ISSUER: ${CADDY_TLS_ISSUER:-acme}
+      CADDY_CONFIG: ${CADDY_CONFIG:-Caddyfile}
+    # Behind the tunnel CADDY_BIND=127.0.0.1: nothing on the office network can reach Caddy
+    # directly (and pretend to be Cloudflare, which Caddy trusts for the visitor's address).
     ports:
-      - '80:80'
-      - '443:443'
-      - '443:443/udp'
+      - '${CADDY_BIND:-0.0.0.0}:80:80'
+      - '${CADDY_BIND:-0.0.0.0}:443:443'
+      - '${CADDY_BIND:-0.0.0.0}:443:443/udp'
     volumes:
       # The directory, not the file: git replaces the Caddyfile on deploy, and a single-file
       # bind mount would keep showing the old one to Caddy (reload would change nothing).
@@ -152,6 +159,21 @@ services:
       - api
       - web
       - member
+
+  # Cloudflare Tunnel: an outbound connection from this server to Cloudflare, which serves
+  # gatefit.uz and *.gatefit.uz on the internet and forwards requests to Caddy. Started only
+  # with COMPOSE_PROFILES=tunnel; its routes (public hostnames -> http://caddy:80) are set
+  # in the Cloudflare dashboard. Runbook: infra/staging/README.md.
+  cloudflared:
+    image: cloudflare/cloudflared:${CLOUDFLARED_VERSION:-2026.11.2}
+    profiles: ['tunnel']
+    restart: unless-stopped
+    logging: *logging
+    command: ['tunnel', '--no-autoupdate', 'run']
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:-}
+    depends_on:
+      - caddy
 
 volumes:
   postgres-data:

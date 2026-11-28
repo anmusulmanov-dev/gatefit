@@ -38,7 +38,8 @@ main() {
   # The Caddyfile comes from a bind-mounted directory: an edit does not recreate the
   # container, so reload it.
   # A broken Caddyfile fails here and Caddy keeps serving the previous configuration.
-  if ! compose exec -T caddy caddy reload --config /etc/caddy/Caddyfile; then
+  # shellcheck disable=SC2016 # $CADDY_CONFIG is expanded inside the container
+  if ! compose exec -T caddy sh -c 'caddy reload --config "/etc/caddy/$CADDY_CONFIG" --adapter caddyfile'; then
     echo "$target" > .deploy-failed
     log "FAILED ${target:0:7}: Caddy rejected the Caddyfile; see: docker compose -p gatefit-staging logs caddy"
     return 1

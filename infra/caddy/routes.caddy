@@ -1,0 +1,45 @@
+# Routes shared by every Caddy configuration: imported by Caddyfile (Caddy obtains the
+# certificates itself) and Caddyfile.cloudflare (behind a Cloudflare Tunnel).
+#
+#   {$APP_BASE_DOMAIN}            staff web panel (landing)
+#   admin.{$APP_BASE_DOMAIN}      platform back office (same web app, chosen by host)
+#   <slug>.{$APP_BASE_DOMAIN}     an organization's staff panel
+#   <slug>-my.{$APP_BASE_DOMAIN}  an organization's member app (same level, so one
+#                                 wildcard certificate covers every host)
+#   any host, /api/*              the API (it finds the organization from the host)
+
+encode zstd gzip
+
+# Security headers for every host (OWASP A05). HSTS without includeSubDomains: each
+# organization's subdomain gets its certificate on its first visit. Pages may not be
+# framed by other sites; the camera is allowed for the reception screen only (same origin).
+header {
+	Strict-Transport-Security "max-age=31536000"
+	X-Content-Type-Options "nosniff"
+	X-Frame-Options "DENY"
+	Referrer-Policy "strict-origin-when-cross-origin"
+	Permissions-Policy "camera=(self), microphone=(), geolocation=()"
+	-Server
+}
+
+# The API trusts X-Forwarded-For (TRUST_PROXY) and takes its first address as the client:
+# rate limits and audit records depend on it. Replace whatever the client sent with the
+# address Caddy determined ({client_ip}: the peer, or a trusted proxy's client header).
+handle /api/* {
+	reverse_proxy api:8000 {
+		header_up X-Forwarded-For {client_ip}
+	}
+}
+
+@member host *-my.{$APP_BASE_DOMAIN}
+handle @member {
+	reverse_proxy member:3001 {
+		header_up X-Forwarded-For {client_ip}
+	}
+}
+
+handle {
+	reverse_proxy web:3000 {
+		header_up X-Forwarded-For {client_ip}
+	}
+}

@@ -8,7 +8,7 @@ Staging runs the whole platform on one server (`web01`, Ubuntu, Docker) from
 | `https://staging.gatefit.uz`           | staff web panel                        |
 | `https://admin.staging.gatefit.uz`     | platform back office (super-admin)     |
 | `https://<slug>.staging.gatefit.uz`    | an organization's staff panel (`demo`) |
-| `https://<slug>.my.staging.gatefit.uz` | an organization's member app           |
+| `https://<slug>-my.staging.gatefit.uz` | an organization's member app           |
 | any host + `/api/*`                    | API; Swagger at `/api/docs`            |
 
 Caddy obtains a certificate for each host on its first request, after asking the API
@@ -39,7 +39,7 @@ does not accept wildcard names, so every organization's two hosts are added by h
 staging.gatefit.uz          A  <tailscale IP>
 admin.staging.gatefit.uz    A  <tailscale IP>
 demo.staging.gatefit.uz     A  <tailscale IP>
-demo.my.staging.gatefit.uz  A  <tailscale IP>
+demo-my.staging.gatefit.uz  A  <tailscale IP>
 ```
 
 Server, as the deploy user (member of the `docker` group, no sudo needed):
@@ -81,6 +81,46 @@ read TOTP secrets, including those in a restored backup.
    It stays the same as long as the `caddy-data` volume is kept.
 
 3. Open `https://demo.staging.gatefit.uz`.
+
+## Public through Cloudflare Tunnel
+
+Until Gatefit moves to a server with a public address, `web01` can serve the real domain
+(`gatefit.uz`) to the internet through a Cloudflare Tunnel: `cloudflared` keeps an outbound
+connection to Cloudflare, Cloudflare serves `gatefit.uz` and `*.gatefit.uz` with its own
+certificate and forwards each request to Caddy (`Caddyfile.cloudflare`). Nothing is opened
+on the router and CGNAT does not matter. The free certificate covers one level below the
+domain only, which is why member apps live at `<slug>-my.gatefit.uz`.
+
+| Host                           | What                          |
+| ------------------------------ | ----------------------------- |
+| `https://gatefit.uz`           | staff web panel               |
+| `https://admin.gatefit.uz`     | platform back office          |
+| `https://<slug>.gatefit.uz`    | an organization's staff panel |
+| `https://<slug>-my.gatefit.uz` | an organization's member app  |
+
+1. Cloudflare (free plan): add `gatefit.uz`; at the registrar (ahost) replace the name
+   servers with the two Cloudflare gives. Wait until Cloudflare shows the domain as active.
+2. SSL/TLS: mode **Full**; Edge Certificates: **Always Use HTTPS** on.
+3. Zero Trust → Networks → Tunnels → create a tunnel (cloudflared). Copy its token
+   straight into the server's `.env` (below); never paste it anywhere else.
+4. In the tunnel, two public hostnames, both to the service `http://caddy:80`:
+   `gatefit.uz` and `*.gatefit.uz`. Cloudflare creates the DNS records.
+5. On the server, in `/srv/gatefit/.env`:
+
+   ```
+   APP_BASE_DOMAIN=gatefit.uz
+   COMPOSE_PROFILES=tunnel
+   CADDY_CONFIG=Caddyfile.cloudflare
+   CADDY_BIND=127.0.0.1
+   CLOUDFLARE_TUNNEL_TOKEN=<token>
+   ```
+
+   then `infra/staging/deploy.sh --force`. Check: `dc logs cloudflared` shows registered
+   connections; `https://demo.gatefit.uz` opens from a phone on mobile data.
+
+Visitors' addresses reach the API from Cloudflare's `CF-Connecting-IP` header, trusted only
+from the Docker network; `CADDY_BIND=127.0.0.1` keeps the office network from talking to
+Caddy directly. If the office loses power or internet, the site is down.
 
 ## Everyday commands
 

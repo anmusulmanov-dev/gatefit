@@ -1,10 +1,4 @@
-# Routes every Gatefit host to the right container and obtains TLS certificates.
-#
-#   {$APP_BASE_DOMAIN}            staff web panel (landing)
-#   admin.{$APP_BASE_DOMAIN}      platform back office (same web app, chosen by host)
-#   <slug>.{$APP_BASE_DOMAIN}     an organization's staff panel
-#   <slug>.my.{$APP_BASE_DOMAIN}  an organization's member app
-#   any host, /api/*              the API (it finds the organization from the host)
+# Caddy obtains a TLS certificate for every Gatefit host itself. Routes: routes.caddy.
 #
 # Organizations appear at run time, so certificates are issued on demand, on the first
 # request to a host. Before each one Caddy asks the API whether the host is real
@@ -21,36 +15,11 @@ https:// {
 		on_demand
 		# acme: public certificates from Let's Encrypt (the host must be reachable from the
 		# internet). internal: Caddy's own CA, for a server reachable only over a private
-		# network (staging over Tailscale); devices trust it once by installing its root
-		# certificate. Runbook: infra/staging/README.md.
+		# network; devices trust it once by installing its root certificate.
+		# Runbook: infra/staging/README.md.
 		issuer {$CADDY_TLS_ISSUER:acme}
 	}
-	encode zstd gzip
-
-	# Security headers for every host (OWASP A05). HSTS without includeSubDomains: each
-	# organization's subdomain gets its certificate on its first visit. Pages may not be
-	# framed by other sites; the camera is allowed for the reception screen only (same origin).
-	header {
-		Strict-Transport-Security "max-age=31536000"
-		X-Content-Type-Options "nosniff"
-		X-Frame-Options "DENY"
-		Referrer-Policy "strict-origin-when-cross-origin"
-		Permissions-Policy "camera=(self), microphone=(), geolocation=()"
-		-Server
-	}
-
-	handle /api/* {
-		reverse_proxy api:8000
-	}
-
-	@member host *.my.{$APP_BASE_DOMAIN}
-	handle @member {
-		reverse_proxy member:3001
-	}
-
-	handle {
-		reverse_proxy web:3000
-	}
+	import routes.caddy
 }
 
 http:// {
