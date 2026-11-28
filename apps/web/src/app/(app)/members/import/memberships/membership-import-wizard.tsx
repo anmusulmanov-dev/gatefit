@@ -493,7 +493,7 @@ function RevertDialog({
         <FormMessage error={action.error} />
         <FormActions>
           <Button type="button" variant="outline" onClick={onClose}>
-            {t('common.cancel')}
+            {t('common.close')}
           </Button>
           <Button
             type="submit"
