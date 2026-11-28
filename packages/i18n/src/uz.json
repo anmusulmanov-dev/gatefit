@@ -1193,7 +1193,7 @@
     "revertTitle": "Importni bekor qilish",
     "revertHint": "Shu importdan kelgan barcha abonementlar bekor qilinadi va ulardagi qarz hisobdan chiqariladi. Agar a'zo ulardan biri bilan zalga kirgan yoki pul to'lagan bo'lsa, bekor qilib bo'lmaydi.",
     "revertReason": "Sabab",
-    "revertConfirm": "Bekor qilish",
+    "revertConfirm": "Importni bekor qilish",
     "revertDone": "Import bekor qilindi.",
     "rowErrors": {
       "PHONE_REQUIRED": "Telefon yo'q",

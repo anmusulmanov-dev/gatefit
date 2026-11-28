@@ -1193,7 +1193,7 @@
     "revertTitle": "Undo import",
     "revertHint": "Every membership from this import is cancelled and the debt on them written off. Not possible once a member has come in on one of them or paid.",
     "revertReason": "Reason",
-    "revertConfirm": "Undo",
+    "revertConfirm": "Undo import",
     "revertDone": "The import has been undone.",
     "rowErrors": {
       "PHONE_REQUIRED": "No phone",
